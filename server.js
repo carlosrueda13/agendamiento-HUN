@@ -83,7 +83,6 @@ async function sendFlowMessage(to) {
           flow_action: "navigate",
           flow_action_payload: {
             screen: FLOW_SCREEN_ID,
-            data: {},
           },
         },
       },
