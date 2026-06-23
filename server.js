@@ -19,6 +19,38 @@ app.get("/", (req, res) => {
   res.send("Backend WhatsApp Flow activo");
 });
 
+// Diagnóstico: ¿Render alcanza la API del HUN?
+// Abrir en el navegador: https://agendamiento-hun.onrender.com/test-hun
+app.get("/test-hun", async (req, res) => {
+  const inicio = Date.now();
+  try {
+    const r = await axios.get(
+      "http://190.109.10.204/webServiceEspecialidad/especialidades",
+      {
+        headers: { "x-api-key": "HospitalUniversitarioNacionaldeColombia" },
+        timeout: 15000,
+      }
+    );
+    const total = r.data?.data?.length ?? 0;
+    res.status(200).json({
+      alcanzable: true,
+      mensaje: "✅ Render SÍ alcanza la API del HUN",
+      status_hun: r.status,
+      especialidades_recibidas: total,
+      ejemplo: r.data?.data?.slice(0, 2) ?? null,
+      tiempo_ms: Date.now() - inicio,
+    });
+  } catch (error) {
+    res.status(200).json({
+      alcanzable: false,
+      mensaje: "❌ Render NO alcanza la API del HUN",
+      error: error.message,
+      codigo: error.code ?? null,
+      tiempo_ms: Date.now() - inicio,
+    });
+  }
+});
+
 // 2. Verificación del webhook (Meta)
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
