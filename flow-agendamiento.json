@@ -1,0 +1,240 @@
+{
+  "version": "7.3",
+  "data_api_version": "3.0",
+  "routing_model": {
+    "IDENTIFICACION": ["ESPECIALIDAD"],
+    "ESPECIALIDAD": ["SLOTS"],
+    "SLOTS": ["CONFIRMAR"],
+    "CONFIRMAR": ["FINAL"],
+    "FINAL": []
+  },
+  "screens": [
+    {
+      "id": "IDENTIFICACION",
+      "title": "Identificación",
+      "data": {},
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextHeading",
+            "text": "Agendamiento de citas"
+          },
+          {
+            "type": "TextBody",
+            "text": "Ingresa tus datos para consultar la disponibilidad."
+          },
+          {
+            "type": "Form",
+            "name": "form_identificacion",
+            "children": [
+              {
+                "type": "Dropdown",
+                "name": "tipo_documento",
+                "label": "Tipo de documento",
+                "required": true,
+                "data-source": [
+                  { "id": "CC", "title": "Cédula de ciudadanía" },
+                  { "id": "CE", "title": "Cédula de extranjería" },
+                  { "id": "PT", "title": "Permiso por protección temporal" },
+                  { "id": "TI", "title": "Tarjeta de identidad" },
+                  { "id": "RC", "title": "Registro civil" },
+                  { "id": "PA", "title": "Pasaporte" }
+                ]
+              },
+              {
+                "type": "TextInput",
+                "name": "numero_documento",
+                "label": "Número de documento",
+                "input-type": "number",
+                "required": true
+              },
+              {
+                "type": "Footer",
+                "label": "Continuar",
+                "on-click-action": {
+                  "name": "data_exchange",
+                  "payload": {
+                    "tipo_documento": "${form.tipo_documento}",
+                    "numero_documento": "${form.numero_documento}"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "ESPECIALIDAD",
+      "title": "Especialidad",
+      "data": {
+        "especialidades": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "title": { "type": "string" }
+            }
+          },
+          "__example__": [
+            { "id": "21", "title": "ANESTESIOLOGIA" },
+            { "id": "2", "title": "ELECTROMIOGRAFIA" }
+          ]
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextBody",
+            "text": "Selecciona la especialidad que necesitas."
+          },
+          {
+            "type": "Form",
+            "name": "form_especialidad",
+            "children": [
+              {
+                "type": "Dropdown",
+                "name": "especialidad",
+                "label": "Especialidad",
+                "required": true,
+                "data-source": "${data.especialidades}"
+              },
+              {
+                "type": "Footer",
+                "label": "Ver disponibilidad",
+                "on-click-action": {
+                  "name": "data_exchange",
+                  "payload": {
+                    "especialidad": "${form.especialidad}"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "SLOTS",
+      "title": "Disponibilidad",
+      "data": {
+        "slots": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "title": { "type": "string" }
+            }
+          },
+          "__example__": [
+            { "id": "9913", "title": "Lun 29 jun · 07:00 · ALMA PRIETO" }
+          ]
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextBody",
+            "text": "Selecciona el horario disponible."
+          },
+          {
+            "type": "Form",
+            "name": "form_slot",
+            "children": [
+              {
+                "type": "Dropdown",
+                "name": "slot",
+                "label": "Horarios disponibles",
+                "required": true,
+                "data-source": "${data.slots}"
+              },
+              {
+                "type": "Footer",
+                "label": "Continuar",
+                "on-click-action": {
+                  "name": "data_exchange",
+                  "payload": {
+                    "slot": "${form.slot}"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "CONFIRMAR",
+      "title": "Confirmar cita",
+      "data": {
+        "resumen": {
+          "type": "string",
+          "__example__": "Especialidad: ANESTESIOLOGIA\nMédico: ALMA PRIETO\nFecha: 2026-06-29 07:00\nConsultorio: 204"
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextHeading",
+            "text": "Confirma tu cita"
+          },
+          {
+            "type": "TextBody",
+            "text": "${data.resumen}"
+          },
+          {
+            "type": "Footer",
+            "label": "Confirmar cita",
+            "on-click-action": {
+              "name": "data_exchange",
+              "payload": {}
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "FINAL",
+      "title": "Listo",
+      "terminal": true,
+      "success": true,
+      "data": {
+        "mensaje": {
+          "type": "string",
+          "__example__": "Tu cita quedó agendada."
+        },
+        "detalle": {
+          "type": "string",
+          "__example__": "Número de cita: 1534700"
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextHeading",
+            "text": "${data.mensaje}"
+          },
+          {
+            "type": "TextBody",
+            "text": "${data.detalle}"
+          },
+          {
+            "type": "Footer",
+            "label": "Finalizar",
+            "on-click-action": {
+              "name": "complete",
+              "payload": {}
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

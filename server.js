@@ -3,6 +3,9 @@ require("dotenv").config();
 const express = require("express");
 const axios = require("axios");
 
+const { decryptRequest, encryptResponse } = require("./lib/flowCrypto");
+const { handleFlow } = require("./lib/flowHandler");
+
 const app = express();
 app.use(express.json());
 
@@ -85,6 +88,27 @@ app.post("/webhook", async (req, res) => {
   return res.status(200).json({ status: "ok" });
 });
 
+// Endpoint del Flow dinámico (data_exchange).
+// Recibe peticiones cifradas de Meta, las descifra, procesa cada pantalla
+// consultando el HUN/Supabase, y devuelve la respuesta cifrada en base64.
+app.post("/flow-endpoint", async (req, res) => {
+  let aesKey, iv;
+  try {
+    const descifrado = decryptRequest(req.body);
+    aesKey = descifrado.aesKey;
+    iv = descifrado.iv;
+
+    const respuesta = await handleFlow(descifrado.payload);
+    const cifrada = encryptResponse(respuesta, aesKey, iv);
+    return res.status(200).type("text/plain").send(cifrada);
+  } catch (error) {
+    console.error("Error en /flow-endpoint:", error.message);
+    // Si falla el descifrado, 421 hace que Meta reintente refrescando la llave.
+    if (!aesKey) return res.sendStatus(421);
+    return res.sendStatus(500);
+  }
+});
+
 // 4. Enviar el WhatsApp Flow
 async function sendFlowMessage(to) {
   const url = `https://graph.facebook.com/${GRAPH_API_VERSION}/${PHONE_NUMBER_ID}/messages`;
@@ -109,7 +133,7 @@ async function sendFlowMessage(to) {
         name: "flow",
         parameters: {
           flow_message_version: "3",
-          flow_token: "test-flow-token",
+          flow_token: to,
           flow_id: FLOW_ID,
           flow_cta: "Agendar cita",
           flow_action: "navigate",
