@@ -98,11 +98,30 @@ app.post("/flow-endpoint", async (req, res) => {
     aesKey = descifrado.aesKey;
     iv = descifrado.iv;
 
+    const p = descifrado.payload;
+    console.log(
+      `Flow: action=${p.action} screen=${p.screen} data=${JSON.stringify(p.data || {})}`
+    );
+
     const respuesta = await handleFlow(descifrado.payload);
     const cifrada = encryptResponse(respuesta, aesKey, iv);
     return res.status(200).type("text/plain").send(cifrada);
   } catch (error) {
     console.error("Error en /flow-endpoint:", error.message);
+    if (error.response?.data) {
+      console.error(
+        "Detalle del error (HUN/API):",
+        JSON.stringify(error.response.data)
+      );
+    }
+    if (error.config?.url) {
+      console.error(
+        "URL llamada:",
+        error.config.url,
+        "params:",
+        JSON.stringify(error.config.params || {})
+      );
+    }
     // Si falla el descifrado, 421 hace que Meta reintente refrescando la llave.
     if (!aesKey) return res.sendStatus(421);
     return res.sendStatus(500);
