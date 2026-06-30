@@ -50,13 +50,21 @@
                 "required": true
               },
               {
+                "type": "TextInput",
+                "name": "correo",
+                "label": "Correo electrónico",
+                "input-type": "email",
+                "required": true
+              },
+              {
                 "type": "Footer",
                 "label": "Continuar",
                 "on-click-action": {
                   "name": "data_exchange",
                   "payload": {
                     "tipo_documento": "${form.tipo_documento}",
-                    "numero_documento": "${form.numero_documento}"
+                    "numero_documento": "${form.numero_documento}",
+                    "correo": "${form.correo}"
                   }
                 }
               }
@@ -127,11 +135,16 @@
             "type": "object",
             "properties": {
               "id": { "type": "string" },
-              "title": { "type": "string" }
+              "title": { "type": "string" },
+              "description": { "type": "string" }
             }
           },
           "__example__": [
-            { "id": "9913", "title": "Lun 29 jun · 07:00 · ALMA PRIETO" }
+            {
+              "id": "9913",
+              "title": "29 jun 07:00 · ALMA PRIETO RAMIREZ",
+              "description": "Consulta de primera vez por especialista en anestesiología"
+            }
           ]
         }
       },
@@ -147,7 +160,7 @@
             "name": "form_slot",
             "children": [
               {
-                "type": "Dropdown",
+                "type": "RadioButtonsGroup",
                 "name": "slot",
                 "label": "Horarios disponibles",
                 "required": true,
