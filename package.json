@@ -8,6 +8,7 @@
     "dev": "node server.js"
   },
   "dependencies": {
+    "@emailjs/nodejs": "^5.0.2",
     "@supabase/supabase-js": "^2.45.4",
     "axios": "^1.7.7",
     "dotenv": "^16.4.5",
