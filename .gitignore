@@ -3,4 +3,7 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+local-server*.log
+resultados-api-hun*.json
+resultados-api-hun*.txt
 .DS_Store

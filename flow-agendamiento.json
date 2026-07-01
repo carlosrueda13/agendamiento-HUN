@@ -11,7 +11,7 @@
   "screens": [
     {
       "id": "IDENTIFICACION",
-      "title": "Identificación",
+      "title": "Identificacion",
       "data": {},
       "layout": {
         "type": "SingleColumnLayout",
@@ -34,9 +34,9 @@
                 "label": "Tipo de documento",
                 "required": true,
                 "data-source": [
-                  { "id": "CC", "title": "Cédula de ciudadanía" },
-                  { "id": "CE", "title": "Cédula de extranjería" },
-                  { "id": "PT", "title": "Permiso por protección temporal" },
+                  { "id": "CC", "title": "Cedula de ciudadania" },
+                  { "id": "CE", "title": "Cedula de extranjeria" },
+                  { "id": "PT", "title": "Permiso por proteccion temporal" },
                   { "id": "TI", "title": "Tarjeta de identidad" },
                   { "id": "RC", "title": "Registro civil" },
                   { "id": "PA", "title": "Pasaporte" }
@@ -45,7 +45,7 @@
               {
                 "type": "TextInput",
                 "name": "numero_documento",
-                "label": "Número de documento",
+                "label": "Numero de documento",
                 "input-type": "number",
                 "required": true
               },
@@ -187,7 +187,7 @@
       "data": {
         "resumen": {
           "type": "string",
-          "__example__": "Especialidad: ANESTESIOLOGIA\nMédico: ALMA PRIETO\nFecha: 2026-06-29 07:00\nConsultorio: 204"
+          "__example__": "Especialidad: ANESTESIOLOGIA\nMedico: ALMA PRIETO\nFecha: 2026-06-29 07:00\nConsultorio: 204"
         }
       },
       "layout": {
@@ -220,11 +220,11 @@
       "data": {
         "mensaje": {
           "type": "string",
-          "__example__": "Tu cita quedó agendada."
+          "__example__": "Tu cita quedo agendada."
         },
         "detalle": {
           "type": "string",
-          "__example__": "Número de cita: 1534700"
+          "__example__": "Numero de cita: 1534700"
         }
       },
       "layout": {
