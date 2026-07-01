@@ -1,13 +1,13 @@
 ﻿# Project Status - Agendamiento HUN por WhatsApp
 
-Ultima actualizacion: 2026-06-30 17:48
+Ultima actualizacion: 2026-07-01 15:23
 Fase activa: Sprint 0 - Setup
 
 ## Resumen de avance
 
 | Fase | Total | Completados | En progreso | Bloqueados | Pendientes |
 |------|-------|-------------|-------------|------------|------------|
-| Sprint 0 - Setup | 5 | 4 | 1 | 0 | 0 |
+| Sprint 0 - Setup | 5 | 5 | 0 | 0 | 0 |
 | Sprint 1 - Core agendamiento | 5 | 0 | 0 | 0 | 5 |
 | Sprint 2 - Integracion WhatsApp | 3 | 0 | 0 | 0 | 3 |
 | Sprint 3 - Campanas y notificaciones | 5 | 0 | 0 | 0 | 5 |
@@ -15,29 +15,26 @@ Fase activa: Sprint 0 - Setup
 | Sprint 5 - Operacion y reportes | 2 | 0 | 0 | 0 | 2 |
 | Sprint 6 - QA y seguridad | 3 | 0 | 0 | 0 | 3 |
 | Sprint 7 - Deploy y cierre contractual | 3 | 0 | 0 | 0 | 3 |
-| **TOTAL** | **29** | **4** | **1** | **0** | **24** |
+| **TOTAL** | **29** | **5** | **0** | **0** | **24** |
 
-Avance global: 4 / 29 tickets completados (13.8%)
+Avance global: 5 / 29 tickets completados (17.2%)
 
 ## Estado actual
 
-**Proximo ticket recomendado:** SETUP-005 - pendiente de aprobacion para marcar `done`
-**Tickets en progreso:** ninguno; SETUP-005 esta en `ready_for_review`
+**Proximo ticket recomendado:** CORE-001 - Fortalecer cliente HUN y normalizacion de datos. Nota: `SETUP-006` no existe todavia en este tracker.
+**Tickets en progreso:** ninguno
 **Tickets bloqueados:** ver lista de dependencias abajo
 
 ### Tickets bloqueados por dependencias no resueltas
 
 | Ticket | Bloqueado por |
 |--------|---------------|
-| CORE-001 | SETUP-004 |
-| CORE-002 | SETUP-005 |
 | CORE-003 | CORE-001, CORE-002 |
 | CORE-004 | CORE-003 |
 | CORE-005 | CORE-004 |
 | FLOW-001 | CORE-003 |
 | FLOW-002 | FLOW-001, CORE-005 |
 | FLOW-003 | FLOW-001, CORE-005 |
-| CAMPAIGN-001 | SETUP-005 |
 | CAMPAIGN-002 | CAMPAIGN-001 |
 | CAMPAIGN-003 | CAMPAIGN-002, FLOW-001 |
 | NOTIF-001 | CORE-005, CAMPAIGN-001 |
@@ -171,7 +168,7 @@ Avance global: 4 / 29 tickets completados (13.8%)
 
 ### SETUP-005 - Refactorizar persistencia sensible existente
 
-**Estado:** `ready_for_review`
+**Estado:** `done`
 **Labels:** `backend`, `database`, `security`
 **Depende de:** SETUP-002
 **Desbloquea:** CORE-002, CAMPAIGN-001
@@ -201,7 +198,7 @@ Avance global: 4 / 29 tickets completados (13.8%)
 - [x] El ticket queda cerrado antes de cualquier trabajo funcional que toque Flow, campanas, notificaciones, cancelacion, reportes, Supabase o estado de Flow.
 
 **Evidencia:** `lib/db.js`, `lib/flowHandler.js`, `server.js`, `lib/whatsapp.js`, `scripts/check-sensitive-persistence.js`, `package.json`; `npm.cmd test` exitoso; `node --check` exitoso para archivos JS modificados; prueba de cifrado/HMAC con correo ficticio exitosa; `GET /` HTTP 200 con servidor local; busqueda runtime sin referencias a `pacientes_whatsapp`, `citas_agendadas`, `slot_seleccionado` ni funciones antiguas salvo en la prueba estatica; `git diff --check` sin errores.
-**Notas:** Listo para aprobacion. Los datos sensibles de paciente, EPS y slot completo viven solo en memoria del proceso durante el Flow; si el proceso se reinicia, el paciente debe reiniciar el agendamiento. `flow_sesiones_temporales` guarda estado minimo, `slot_token` opaco y correo cifrado/HMAC cuando aplica; al completar o fallar se limpian `slot_token` y columnas de correo.
+**Notas:** Aprobado por el usuario el 2026-07-01. Los datos sensibles de paciente, EPS y slot completo viven solo en memoria del proceso durante el Flow; si el proceso se reinicia, el paciente debe reiniciar el agendamiento. `flow_sesiones_temporales` guarda estado minimo, `slot_token` opaco y correo cifrado/HMAC cuando aplica; al completar o fallar se limpian `slot_token` y columnas de correo.
 
 ---
 
