@@ -1,11 +1,12 @@
 {
   "name": "agendamiento-hun-whatsapp-flow",
   "version": "1.0.0",
-  "description": "Backend mínimo para pruebas de WhatsApp Cloud API + WhatsApp Flows",
+  "description": "Backend minimo para pruebas de WhatsApp Cloud API + WhatsApp Flows",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "test": "node scripts/check-sensitive-persistence.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",

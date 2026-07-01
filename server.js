@@ -9,7 +9,7 @@ const { handleFlow } = require("./lib/flowHandler");
 const app = express();
 app.use(express.json());
 
-// Variables de entorno
+// Variables de entorno.
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
@@ -17,12 +17,22 @@ const FLOW_ID = process.env.FLOW_ID;
 const FLOW_SCREEN_ID = process.env.FLOW_SCREEN_ID;
 const GRAPH_API_VERSION = process.env.GRAPH_API_VERSION || "v23.0";
 
-// 1. Endpoint de salud
+function redactFlowData(data = {}) {
+  const sensitive = new Set(["numero_documento", "documento", "correo", "slot"]);
+  return Object.fromEntries(
+    Object.keys(data).map((key) => [
+      key,
+      sensitive.has(key) ? "[redacted]" : "[present]",
+    ])
+  );
+}
+
+// 1. Endpoint de salud.
 app.get("/", (req, res) => {
   res.send("Backend WhatsApp Flow activo");
 });
 
-// Diagnóstico: ¿Render alcanza la API del HUN?
+// Diagnostico: Render alcanza la API del HUN?
 // Abrir en el navegador: https://agendamiento-hun.onrender.com/test-hun
 app.get("/test-hun", async (req, res) => {
   const inicio = Date.now();
@@ -37,7 +47,7 @@ app.get("/test-hun", async (req, res) => {
     const total = r.data?.data?.length ?? 0;
     res.status(200).json({
       alcanzable: true,
-      mensaje: "✅ Render SÍ alcanza la API del HUN",
+      mensaje: "Render SI alcanza la API del HUN",
       status_hun: r.status,
       especialidades_recibidas: total,
       ejemplo: r.data?.data?.slice(0, 2) ?? null,
@@ -46,7 +56,7 @@ app.get("/test-hun", async (req, res) => {
   } catch (error) {
     res.status(200).json({
       alcanzable: false,
-      mensaje: "❌ Render NO alcanza la API del HUN",
+      mensaje: "Render NO alcanza la API del HUN",
       error: error.message,
       codigo: error.code ?? null,
       tiempo_ms: Date.now() - inicio,
@@ -54,7 +64,7 @@ app.get("/test-hun", async (req, res) => {
   }
 });
 
-// 2. Verificación del webhook (Meta)
+// 2. Verificacion del webhook (Meta).
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
@@ -68,29 +78,29 @@ app.get("/webhook", (req, res) => {
   return res.sendStatus(403);
 });
 
-// 3. Recepción de mensajes
+// 3. Recepcion de mensajes.
 app.post("/webhook", async (req, res) => {
   try {
     const message =
       req.body?.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
 
-    // Ignorar eventos de status/delivery/read o payloads sin mensaje
+    // Ignorar eventos de status/delivery/read o payloads sin mensaje.
     if (message && message.from) {
       const to = message.from;
-      console.log(`Mensaje entrante de ${to}. Enviando Flow...`);
+      console.log("Mensaje entrante recibido. Enviando Flow...");
       await sendFlowMessage(to);
     }
   } catch (error) {
     console.error("Error procesando el webhook:", error.message);
   }
 
-  // Responder siempre rápido para evitar reintentos de Meta
+  // Responder siempre rapido para evitar reintentos de Meta.
   return res.status(200).json({ status: "ok" });
 });
 
-// Endpoint del Flow dinámico (data_exchange).
+// Endpoint dinamico del Flow (data_exchange).
 // Recibe peticiones cifradas de Meta, las descifra, procesa cada pantalla
-// consultando el HUN/Supabase, y devuelve la respuesta cifrada en base64.
+// consultando HUN/Supabase, y devuelve la respuesta cifrada en base64.
 app.post("/flow-endpoint", async (req, res) => {
   let aesKey, iv;
   try {
@@ -100,7 +110,9 @@ app.post("/flow-endpoint", async (req, res) => {
 
     const p = descifrado.payload;
     console.log(
-      `Flow: action=${p.action} screen=${p.screen} data=${JSON.stringify(p.data || {})}`
+      `Flow: action=${p.action} screen=${p.screen} data=${JSON.stringify(
+        redactFlowData(p.data || {})
+      )}`
     );
 
     const respuesta = await handleFlow(descifrado.payload);
@@ -109,18 +121,10 @@ app.post("/flow-endpoint", async (req, res) => {
   } catch (error) {
     console.error("Error en /flow-endpoint:", error.message);
     if (error.response?.data) {
-      console.error(
-        "Detalle del error (HUN/API):",
-        JSON.stringify(error.response.data)
-      );
+      console.error("Detalle HUN/API omitido por privacidad. HTTP:", error.response.status);
     }
     if (error.config?.url) {
-      console.error(
-        "URL llamada:",
-        error.config.url,
-        "params:",
-        JSON.stringify(error.config.params || {})
-      );
+      console.error("Endpoint llamado:", error.config.url);
     }
     // Si falla el descifrado, 421 hace que Meta reintente refrescando la llave.
     if (!aesKey) return res.sendStatus(421);
@@ -128,7 +132,7 @@ app.post("/flow-endpoint", async (req, res) => {
   }
 });
 
-// 4. Enviar el WhatsApp Flow
+// 4. Enviar el WhatsApp Flow.
 async function sendFlowMessage(to) {
   const url = `https://graph.facebook.com/${GRAPH_API_VERSION}/${PHONE_NUMBER_ID}/messages`;
 
@@ -171,20 +175,17 @@ async function sendFlowMessage(to) {
         "Content-Type": "application/json",
       },
     });
-    console.log(`Flow enviado a ${to}. ID:`, response.data?.messages?.[0]?.id);
+    console.log("Flow enviado. ID:", response.data?.messages?.[0]?.id);
   } catch (error) {
-    // 5. Manejo de errores: no romper el servidor si falla el envío
+    // No romper el servidor si falla el envio.
     console.error("Error enviando el Flow:", error.message);
     if (error.response && error.response.data) {
-      console.error(
-        "Detalle del error de la API:",
-        JSON.stringify(error.response.data, null, 2)
-      );
+      console.error("Detalle de API omitido por privacidad. HTTP:", error.response.status);
     }
   }
 }
 
-// Puerto: Render asigna process.env.PORT automáticamente
+// Render asigna process.env.PORT automaticamente.
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
