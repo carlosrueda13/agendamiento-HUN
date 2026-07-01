@@ -23,6 +23,7 @@ const db = read("lib/db.js");
 const flowHandler = read("lib/flowHandler.js");
 const server = read("server.js");
 const whatsapp = read("lib/whatsapp.js");
+const email = read("lib/email.js");
 
 assertMatch("lib/db.js", db, /flow_sesiones_temporales/);
 assertMatch("lib/db.js", db, /contacto_email_enc/);
@@ -69,5 +70,11 @@ assertMatch("lib/db.js", db, /createHmac\("sha256"/);
   /confirmacion enviado a \$\{to\}/,
   /JSON\.stringify\(e\.response\.data/,
 ].forEach((pattern) => assertNoMatch("lib/whatsapp.js", whatsapp, pattern));
+
+[
+  /to_email\}/,
+  /enviado a \$\{to_email\}/,
+  /JSON\.stringify\(.*to_email/s,
+].forEach((pattern) => assertNoMatch("lib/email.js", email, pattern));
 
 console.log("Sensitive persistence checks passed.");

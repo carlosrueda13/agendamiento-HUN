@@ -83,7 +83,7 @@ TODO: agregar scripts `test`, `lint` y `build` cuando los tickets de QA/configur
 
 ## Contexto Adicional
 
-Variables esperadas, sin valores reales: `VERIFY_TOKEN`, `WHATSAPP_TOKEN`, `PHONE_NUMBER_ID`, `GRAPH_API_VERSION`, `FLOW_ID`, `FLOW_SCREEN_ID`, `FLOW_PRIVATE_KEY_B64`, `FLOW_KEY_PASSPHRASE`, `FLOW_SESSION_PII_KEY_B64`, `HUN_API_BASE`, `HUN_API_KEY`, `HUN_DEMANDA_API_BASE`, `HUN_DEMANDA_API_AUTH_TYPE`, `HUN_DEMANDA_API_TOKEN`, `HUN_DEMANDA_API_ENDPOINT`, `HUN_DEMANDA_API_TIMEOUT_MS`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
+Variables esperadas, sin valores reales: `VERIFY_TOKEN`, `WHATSAPP_TOKEN`, `PHONE_NUMBER_ID`, `GRAPH_API_VERSION`, `FLOW_ID`, `FLOW_SCREEN_ID`, `FLOW_PRIVATE_KEY_B64`, `FLOW_KEY_PASSPHRASE`, `FLOW_SESSION_PII_KEY_B64`, `HUN_API_BASE`, `HUN_API_KEY`, `HUN_DEMANDA_API_BASE`, `HUN_DEMANDA_API_AUTH_TYPE`, `HUN_DEMANDA_API_TOKEN`, `HUN_DEMANDA_API_ENDPOINT`, `HUN_DEMANDA_API_TIMEOUT_MS`, `EMAILJS_SERVICE_ID`, `EMAILJS_TEMPLATE_ID`, `EMAILJS_PUBLIC_KEY`, `EMAILJS_PRIVATE_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
 
 Endpoints HUN relevantes: especialidades, citas por documento, cita por numero, agenda por especialidad, asignar cita, cancelar cita y verificar cancelacion. Consultar `PLAN_CONTRATO_AGENDAMIENTO_HUN.md` para el detalle contractual y `PLAN_SPRINTS_AGENDAMIENTO_HUN.md` para el alcance por tickets.
 

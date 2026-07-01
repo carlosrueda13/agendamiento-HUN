@@ -1,0 +1,178 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="es">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Confirmación de cita</title>
+  <style type="text/css">
+    html { -webkit-text-size-adjust: none; -ms-text-size-adjust: none; }
+    body { -webkit-font-smoothing: antialiased; }
+    @media only screen and (max-device-width:620px), only screen and (max-width:620px) {
+      .em-card   { width:100%!important; max-width:600px!important; min-width:320px!important; }
+      .em-pad    { padding-left:24px!important; padding-right:24px!important; }
+      .em-stack  { display:block!important; width:100%!important; padding:0 0 12px 0!important; }
+    }
+  </style>
+</head>
+<body style="margin:0; padding:0; background-color:#f4f6f8;">
+
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+         style="background-color:#f4f6f8;">
+    <tr>
+      <td align="center" style="padding:40px 16px;">
+
+        <!-- ── TARJETA ── -->
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" class="em-card"
+               style="background-color:#ffffff; border:1px solid #e1e5e8; border-radius:8px; overflow:hidden; max-width:600px; min-width:320px; box-shadow:0 4px 12px rgba(0,0,0,0.05);">
+
+          <!-- ── HEADER (logo HUN) ── -->
+          <tr>
+            <td align="center" style="background-color:#ffffff; padding:30px 40px 20px 40px; border-bottom:2px solid #f0f2f5;">
+              <img src="https://www.hun.edu.co/sites/default/files/2024-01/logo_1.png"
+                   alt="Hospital Universitario Nacional de Colombia"
+                   width="auto" style="max-height:60px; height:auto; width:auto; display:inline-block; border:0;">
+            </td>
+          </tr>
+
+          <!-- ── CONTENIDO ── -->
+          <tr>
+            <td class="em-pad" style="padding:40px;">
+
+              <!-- Eyebrow -->
+              <p style="margin:0 0 10px 0; font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:11px; font-weight:700; letter-spacing:2px; color:#2b6cb0; text-transform:uppercase;">
+                Confirmación de cita &middot; Presencial
+              </p>
+
+              <!-- Título -->
+              <h1 style="margin:0 0 20px 0; font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:20px; font-weight:600; color:#1a365d; line-height:1.3;">
+                Tu cita ha sido agendada
+              </h1>
+
+              <!-- Saludo -->
+              <p style="margin:0 0 8px 0; font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:15px; color:#4a5568; line-height:1.6;">
+                Hola <strong style="color:#2d3748;">{{to_name}}</strong>, te esperamos en el hospital. Estos son los detalles de tu cita:
+              </p>
+
+              <!-- Pill especialidad -->
+              <p style="margin:18px 0 0 0;">
+                <span style="display:inline-block; background-color:#ebf4ff; color:#2b6cb0; font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:11px; font-weight:700; letter-spacing:.8px; text-transform:uppercase; padding:7px 16px; border-radius:100px;">
+                  {{especialidad}}
+                </span>
+              </p>
+
+              <!-- ── GRID DE DATOS ── -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:22px;">
+                <tr>
+                  <!-- Médico -->
+                  <td class="em-stack" width="50%" valign="top" style="padding:0 6px 12px 0;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                      <tr><td style="background-color:#f7fafc; border:1px solid #e2e8f0; border-radius:6px; padding:16px 18px;">
+                        <p style="margin:0 0 5px 0; font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#718096;">Médico</p>
+                        <p style="margin:0; font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:15px; font-weight:600; color:#2d3748;">{{medico}}</p>
+                      </td></tr>
+                    </table>
+                  </td>
+                  <!-- Tipo de consulta -->
+                  <td class="em-stack" width="50%" valign="top" style="padding:0 0 12px 6px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                      <tr><td style="background-color:#f7fafc; border:1px solid #e2e8f0; border-radius:6px; padding:16px 18px;">
+                        <p style="margin:0 0 5px 0; font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#718096;">Tipo de consulta</p>
+                        <p style="margin:0; font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:15px; font-weight:600; color:#2d3748;">{{tipo_consulta}}</p>
+                      </td></tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <!-- Fecha -->
+                  <td class="em-stack" width="50%" valign="top" style="padding:0 6px 0 0;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                      <tr><td style="background-color:#f7fafc; border:1px solid #e2e8f0; border-radius:6px; padding:16px 18px;">
+                        <p style="margin:0 0 5px 0; font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#718096;">Fecha</p>
+                        <p style="margin:0; font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:15px; font-weight:600; color:#2d3748;">{{fecha}}</p>
+                      </td></tr>
+                    </table>
+                  </td>
+                  <!-- Hora (destacada) -->
+                  <td class="em-stack" width="50%" valign="top" style="padding:0 0 0 6px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                      <tr><td style="background-color:#f7fafc; border:2px dashed #cbd5e0; border-radius:6px; padding:14px 18px;">
+                        <p style="margin:0 0 3px 0; font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#718096;">Hora</p>
+                        <p style="margin:0; font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:26px; font-weight:700; color:#2b6cb0; letter-spacing:1px;">{{hora}}</p>
+                      </td></tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- ── CONSULTORIO + N° DE CITA ── -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:12px;">
+                <tr>
+                  <!-- Consultorio -->
+                  <td class="em-stack" width="50%" valign="top" style="padding:0 6px 0 0;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                      <tr><td align="center" style="background-color:#f0f7ff; border:1px solid #bee3f8; border-radius:8px; padding:20px 18px;">
+                        <p style="margin:0 0 5px 0; font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#2b6cb0;">Consultorio</p>
+                        <p style="margin:0; font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:28px; font-weight:700; color:#2b6cb0; letter-spacing:1px;">{{consultorio}}</p>
+                      </td></tr>
+                    </table>
+                  </td>
+                  <!-- N° de cita -->
+                  <td class="em-stack" width="50%" valign="top" style="padding:0 0 0 6px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                      <tr><td align="center" style="background-color:#f0fff4; border:1px solid #9ae6b4; border-radius:8px; padding:20px 18px;">
+                        <p style="margin:0 0 5px 0; font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#276749;">N° de cita</p>
+                        <p style="margin:0; font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:28px; font-weight:700; color:#276749; letter-spacing:1px;">{{numero_cita}}</p>
+                      </td></tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- ── INDICACIONES PREVIAS ── -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:12px;">
+                <tr><td style="background-color:#ebf8ff; border-left:4px solid #2b6cb0; border-radius:0 6px 6px 0; padding:15px 20px;">
+                  <p style="margin:0 0 4px 0; font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#2b6cb0;">Indicaciones previas</p>
+                  <p style="margin:0; font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:14px; color:#2c5282; line-height:1.6;">
+                    Llega <strong>10 minutos antes</strong> de tu cita con tu documento de identidad original. Si tienes exámenes o resultados previos relevantes, tráelos contigo.
+                  </p>
+                </td></tr>
+              </table>
+
+              <!-- ── SOPORTE / CANCELACIÓN ── -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:28px;">
+                <tr><td align="center">
+                  <p style="margin:0; font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:13px; color:#718096; line-height:1.7;">
+                    Si necesitas cancelar o reprogramar, contáctanos con al menos <strong style="color:#4a5568;">24 horas de anticipación</strong>.<br>
+                    ¿Necesitas ayuda? Llámanos al
+                    <a href="tel:+576013904888" style="color:#2b6cb0; font-weight:600; text-decoration:none;">(601) 3904888</a>.
+                  </p>
+                </td></tr>
+              </table>
+
+            </td>
+          </tr>
+
+          <!-- ── FOOTER ── -->
+          <tr>
+            <td align="center" style="background-color:#f7fafc; border-top:1px solid #e2e8f0; padding:30px 40px;">
+              <p style="margin:0 0 8px 0; font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:13px; color:#718096; line-height:1.6;">
+                Este correo fue generado automáticamente — por favor no respondas a este mensaje.
+              </p>
+              <p style="margin:0; font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:13px; font-weight:600; color:#4a5568;">
+                Hospital Universitario Nacional de Colombia
+              </p>
+              <p style="margin:8px 0 0 0; font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:12px; color:#a0aec0;">
+                &copy; {{anio}} &middot; Todos los derechos reservados.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+        <!-- /Tarjeta -->
+
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>

@@ -52,7 +52,7 @@
               {
                 "type": "TextInput",
                 "name": "correo",
-                "label": "Correo electronico",
+                "label": "Correo electrónico",
                 "input-type": "email",
                 "required": true
               },
@@ -142,8 +142,8 @@
           "__example__": [
             {
               "id": "9913",
-              "title": "29 jun 07:00 - ALMA PRIETO RAMIREZ",
-              "description": "Consulta de primera vez por especialista en anestesiologia"
+              "title": "29 jun 07:00 · ALMA PRIETO RAMIREZ",
+              "description": "Consulta de primera vez por especialista en anestesiología"
             }
           ]
         }

@@ -36,6 +36,15 @@ Estas variables quedan documentadas aunque el endpoint real aun no este disponib
 - `HUN_DEMANDA_API_ENDPOINT`
 - `HUN_DEMANDA_API_TIMEOUT_MS`
 
+### EmailJS
+
+Estas variables son opcionales hasta que el proveedor de correo quede aprobado y configurado:
+
+- `EMAILJS_SERVICE_ID`
+- `EMAILJS_TEMPLATE_ID`
+- `EMAILJS_PUBLIC_KEY`
+- `EMAILJS_PRIVATE_KEY`
+
 ### Supabase minimo operativo
 
 - `SUPABASE_URL`: URL del proyecto Supabase.
