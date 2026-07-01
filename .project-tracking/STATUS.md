@@ -1,6 +1,6 @@
 ﻿# Project Status - Agendamiento HUN por WhatsApp
 
-Ultima actualizacion: 2026-07-01 15:23
+Ultima actualizacion: 2026-07-01 16:55
 Fase activa: Sprint 0 - Setup
 
 ## Resumen de avance
@@ -8,21 +8,21 @@ Fase activa: Sprint 0 - Setup
 | Fase | Total | Completados | En progreso | Bloqueados | Pendientes |
 |------|-------|-------------|-------------|------------|------------|
 | Sprint 0 - Setup | 5 | 5 | 0 | 0 | 0 |
-| Sprint 1 - Core agendamiento | 5 | 0 | 0 | 0 | 5 |
+| Sprint 1 - Core agendamiento | 5 | 0 | 1 | 0 | 4 |
 | Sprint 2 - Integracion WhatsApp | 3 | 0 | 0 | 0 | 3 |
 | Sprint 3 - Campanas y notificaciones | 5 | 0 | 0 | 0 | 5 |
 | Sprint 4 - Cancelacion y reagendamiento | 3 | 0 | 0 | 0 | 3 |
 | Sprint 5 - Operacion y reportes | 2 | 0 | 0 | 0 | 2 |
 | Sprint 6 - QA y seguridad | 3 | 0 | 0 | 0 | 3 |
 | Sprint 7 - Deploy y cierre contractual | 3 | 0 | 0 | 0 | 3 |
-| **TOTAL** | **29** | **5** | **0** | **0** | **24** |
+| **TOTAL** | **29** | **5** | **1** | **0** | **23** |
 
 Avance global: 5 / 29 tickets completados (17.2%)
 
 ## Estado actual
 
-**Proximo ticket recomendado:** CORE-001 - Fortalecer cliente HUN y normalizacion de datos. Nota: `SETUP-006` no existe todavia en este tracker.
-**Tickets en progreso:** ninguno
+**Proximo ticket recomendado:** CORE-001 - pendiente de aprobacion para marcar `done`
+**Tickets en progreso:** ninguno; CORE-001 esta en `ready_for_review`
 **Tickets bloqueados:** ver lista de dependencias abajo
 
 ### Tickets bloqueados por dependencias no resueltas
@@ -208,27 +208,27 @@ Avance global: 5 / 29 tickets completados (17.2%)
 
 ### CORE-001 - Fortalecer cliente HUN y normalizacion de datos
 
-**Estado:** `pending`
+**Estado:** `ready_for_review`
 **Labels:** `backend`, `api`
 **Depende de:** SETUP-004
 **Desbloquea:** CORE-003, CANCEL-001
 
 **Microsteps:**
-- [ ] Centralizar normalizacion de strings y objetos anidados.
-- [ ] Crear funciones para especialidades, agenda por especialidad, citas por documento y cita por numero.
-- [ ] Agregar funciones para cancelar cita y verificar cancelacion.
-- [ ] Normalizar `agenda_detalle_id`, `id_agenda_detalle` y campos equivalentes.
-- [ ] Estandarizar errores de timeout, 401 y respuestas vacias.
-- [ ] Documentar contratos de entrada/salida de cada funcion.
+- [x] Centralizar normalizacion de strings y objetos anidados.
+- [x] Crear funciones para especialidades, agenda por especialidad, citas por documento y cita por numero.
+- [x] Agregar funciones para cancelar cita y verificar cancelacion.
+- [x] Normalizar `agenda_detalle_id`, `id_agenda_detalle` y campos equivalentes.
+- [x] Estandarizar errores de timeout, 401 y respuestas vacias.
+- [x] Documentar contratos de entrada/salida de cada funcion.
 
 **Criterios de aceptacion:**
-- [ ] Todas las funciones devuelven strings sin espacios de relleno.
-- [ ] Agenda por especialidad devuelve cupos con `agenda_detalle_id` normalizado.
-- [ ] Los errores de API se propagan con mensaje y endpoint.
-- [ ] Existe funcion para cancelacion y verificacion asincrona.
+- [x] Todas las funciones devuelven strings sin espacios de relleno.
+- [x] Agenda por especialidad devuelve cupos con `agenda_detalle_id` normalizado.
+- [x] Los errores de API se propagan con mensaje y endpoint.
+- [x] Existe funcion para cancelacion y verificacion asincrona.
 
-**Evidencia:** 
-**Notas:** 
+**Evidencia:** `lib/hun.js`, `scripts/check-hun-client.js`, `package.json`; `npm.cmd test` exitoso; `node --check lib/hun.js` exitoso; `node --check scripts/check-hun-client.js` exitoso; smoke de solo lectura contra HUN exitoso con `especialidades 180`, `agenda 0` y `cita_numero 1`.
+**Notas:** Listo para aprobacion. `lib/hun.js` conserva los nombres existentes usados por `flowHandler` y agrega `consultarCitaNumero`, `cancelarCita` y `verificarCancelacion`. La respuesta HUN HTTP 200 con `{ codigo: 204, message: "No se encontraron registros..." }` se normaliza como lista vacia para agenda/citas, no como error. Los errores `timeout`, `401`, respuesta vacia y forma inesperada se propagan como `HunApiError` con `method`, `endpoint`, `status`, `code` y `category`; el endpoint de verificacion de cancelacion redacta el numero de cita en errores.
 
 ---
 

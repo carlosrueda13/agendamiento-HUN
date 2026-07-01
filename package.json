@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "test": "node scripts/check-sensitive-persistence.js"
+    "test": "node scripts/check-sensitive-persistence.js && node scripts/check-hun-client.js"
   },
   "dependencies": {
     "@emailjs/nodejs": "^5.0.2",
