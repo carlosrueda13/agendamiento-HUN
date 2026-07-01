@@ -1,6 +1,6 @@
 ﻿# Project Status - Agendamiento HUN por WhatsApp
 
-Ultima actualizacion: 2026-07-01 16:55
+Ultima actualizacion: 2026-07-01 17:03
 Fase activa: Sprint 0 - Setup
 
 ## Resumen de avance
@@ -8,28 +8,28 @@ Fase activa: Sprint 0 - Setup
 | Fase | Total | Completados | En progreso | Bloqueados | Pendientes |
 |------|-------|-------------|-------------|------------|------------|
 | Sprint 0 - Setup | 5 | 5 | 0 | 0 | 0 |
-| Sprint 1 - Core agendamiento | 5 | 0 | 1 | 0 | 4 |
+| Sprint 1 - Core agendamiento | 5 | 1 | 1 | 0 | 3 |
 | Sprint 2 - Integracion WhatsApp | 3 | 0 | 0 | 0 | 3 |
 | Sprint 3 - Campanas y notificaciones | 5 | 0 | 0 | 0 | 5 |
 | Sprint 4 - Cancelacion y reagendamiento | 3 | 0 | 0 | 0 | 3 |
 | Sprint 5 - Operacion y reportes | 2 | 0 | 0 | 0 | 2 |
 | Sprint 6 - QA y seguridad | 3 | 0 | 0 | 0 | 3 |
 | Sprint 7 - Deploy y cierre contractual | 3 | 0 | 0 | 0 | 3 |
-| **TOTAL** | **29** | **5** | **1** | **0** | **23** |
+| **TOTAL** | **29** | **6** | **1** | **0** | **22** |
 
-Avance global: 5 / 29 tickets completados (17.2%)
+Avance global: 6 / 29 tickets completados (20.7%)
 
 ## Estado actual
 
-**Proximo ticket recomendado:** CORE-001 - pendiente de aprobacion para marcar `done`
-**Tickets en progreso:** ninguno; CORE-001 esta en `ready_for_review`
+**Proximo ticket recomendado:** CORE-002 - pendiente de aprobacion para marcar `done`
+**Tickets en progreso:** ninguno; CORE-002 esta en `ready_for_review`
 **Tickets bloqueados:** ver lista de dependencias abajo
 
 ### Tickets bloqueados por dependencias no resueltas
 
 | Ticket | Bloqueado por |
 |--------|---------------|
-| CORE-003 | CORE-001, CORE-002 |
+| CORE-003 | CORE-002 |
 | CORE-004 | CORE-003 |
 | CORE-005 | CORE-004 |
 | FLOW-001 | CORE-003 |
@@ -39,7 +39,7 @@ Avance global: 5 / 29 tickets completados (17.2%)
 | CAMPAIGN-003 | CAMPAIGN-002, FLOW-001 |
 | NOTIF-001 | CORE-005, CAMPAIGN-001 |
 | NOTIF-002 | NOTIF-001 |
-| CANCEL-001 | CORE-002, CORE-001 |
+| CANCEL-001 | CORE-002 |
 | CANCEL-002 | CANCEL-001 |
 | RESCH-001 | CANCEL-002, CORE-005 |
 | ADMIN-001 | CORE-002, CAMPAIGN-001, CANCEL-002 |
@@ -208,7 +208,7 @@ Avance global: 5 / 29 tickets completados (17.2%)
 
 ### CORE-001 - Fortalecer cliente HUN y normalizacion de datos
 
-**Estado:** `ready_for_review`
+**Estado:** `done`
 **Labels:** `backend`, `api`
 **Depende de:** SETUP-004
 **Desbloquea:** CORE-003, CANCEL-001
@@ -228,36 +228,36 @@ Avance global: 5 / 29 tickets completados (17.2%)
 - [x] Existe funcion para cancelacion y verificacion asincrona.
 
 **Evidencia:** `lib/hun.js`, `scripts/check-hun-client.js`, `package.json`; `npm.cmd test` exitoso; `node --check lib/hun.js` exitoso; `node --check scripts/check-hun-client.js` exitoso; smoke de solo lectura contra HUN exitoso con `especialidades 180`, `agenda 0` y `cita_numero 1`.
-**Notas:** Listo para aprobacion. `lib/hun.js` conserva los nombres existentes usados por `flowHandler` y agrega `consultarCitaNumero`, `cancelarCita` y `verificarCancelacion`. La respuesta HUN HTTP 200 con `{ codigo: 204, message: "No se encontraron registros..." }` se normaliza como lista vacia para agenda/citas, no como error. Los errores `timeout`, `401`, respuesta vacia y forma inesperada se propagan como `HunApiError` con `method`, `endpoint`, `status`, `code` y `category`; el endpoint de verificacion de cancelacion redacta el numero de cita en errores.
+**Notas:** Aprobado por el usuario el 2026-07-01. `lib/hun.js` conserva los nombres existentes usados por `flowHandler` y agrega `consultarCitaNumero`, `cancelarCita` y `verificarCancelacion`. La respuesta HUN HTTP 200 con `{ codigo: 204, message: "No se encontraron registros..." }` se normaliza como lista vacia para agenda/citas, no como error. Los errores `timeout`, `401`, respuesta vacia y forma inesperada se propagan como `HunApiError` con `method`, `endpoint`, `status`, `code` y `category`; el endpoint de verificacion de cancelacion redacta el numero de cita en errores.
 
 ---
 
 ### CORE-002 - Implementar trazabilidad de transiciones del Flow
 
-**Estado:** `pending`
+**Estado:** `ready_for_review`
 **Labels:** `backend`, `database`
 **Depende de:** SETUP-005
 **Desbloquea:** CORE-003, CANCEL-001, ADMIN-001, SEC-001
 
 **Microsteps:**
-- [ ] Agregar funcion `guardarEventoOperativo` en `lib/db.js`.
-- [ ] Registrar inicio de Flow, identificacion, seleccion de especialidad, seleccion de slot y confirmacion.
-- [ ] Registrar errores de API HUN, Supabase y WhatsApp.
-- [ ] Guardar metadatos no sensibles para IT: `event_id`, `session_id_hash`, `event_type`, `source`, `http_status`, `error_code`, `error_category`, `duration_ms`, `retry_count`, `environment` y `backend_version`.
-- [ ] Guardar metadatos operativos para medicos: `campaign_id`, `recipient_id`, `especialidad_codigo`, `estado_contacto`, `ultimo_evento`, `resultado_operativo` y `motivo_fallo_simple`.
-- [ ] Asociar cada evento con referencias no sensibles, estado y timestamp.
-- [ ] Agregar manejo no bloqueante si falla el registro de log.
+- [x] Agregar funcion `guardarEventoOperativo` en `lib/db.js`.
+- [x] Registrar inicio de Flow, identificacion, seleccion de especialidad, seleccion de slot y confirmacion.
+- [x] Registrar errores de API HUN, Supabase y WhatsApp.
+- [x] Guardar metadatos no sensibles para IT: `event_id`, `session_id_hash`, `event_type`, `source`, `http_status`, `error_code`, `error_category`, `duration_ms`, `retry_count`, `environment` y `backend_version`.
+- [x] Guardar metadatos operativos para medicos: `campaign_id`, `recipient_id`, `especialidad_codigo`, `estado_contacto`, `ultimo_evento`, `resultado_operativo` y `motivo_fallo_simple`.
+- [x] Asociar cada evento con referencias no sensibles, estado y timestamp.
+- [x] Agregar manejo no bloqueante si falla el registro de log.
 
 **Criterios de aceptacion:**
-- [ ] Cada pantalla del Flow genera al menos un evento operativo registrado.
-- [ ] Los errores se registran con codigo, categoria, fuente y contexto minimo no sensible.
-- [ ] Los eventos permiten alimentar vista medica/operativa y vista IT/auditoria.
-- [ ] No se registran tokens ni service role keys.
-- [ ] No se registra documento plano, numero de cita, EPS, medico, fecha/hora exacta, CUPS ni respuesta HUN completa.
-- [ ] Si Supabase falla, el backend responde sin romper el Flow salvo cuando no pueda validar una sesion temporal requerida.
+- [x] Cada pantalla del Flow genera al menos un evento operativo registrado.
+- [x] Los errores se registran con codigo, categoria, fuente y contexto minimo no sensible.
+- [x] Los eventos permiten alimentar vista medica/operativa y vista IT/auditoria.
+- [x] No se registran tokens ni service role keys.
+- [x] No se registra documento plano, numero de cita, EPS, medico, fecha/hora exacta, CUPS ni respuesta HUN completa.
+- [x] Si Supabase falla, el backend responde sin romper el Flow salvo cuando no pueda validar una sesion temporal requerida.
 
-**Evidencia:** 
-**Notas:** 
+**Evidencia:** `lib/db.js`, `lib/flowHandler.js`, `scripts/check-flow-events.js`, `scripts/check-sensitive-persistence.js`, `package.json`; `npm.cmd test` exitoso; `node --check lib/db.js` exitoso; `node --check lib/flowHandler.js` exitoso; `node -e "require('./lib/flowHandler')"` exitoso.
+**Notas:** Listo para aprobacion. `guardarEventoOperativo` queda como nombre contractual y `registrarEventoOperativo` se conserva por compatibilidad. Los eventos usan `session_id_hash`, fuente, estado, endpoint logico, especialidad y codigos/categorias de error; no guardan documento, EPS, nombre, numero de cita, medico, fecha/hora, CUPS, `agenda_detalle_id` ni payload HUN. El registro de eventos captura errores de Supabase internamente y no interrumpe el Flow.
 
 ---
 
