@@ -1,6 +1,6 @@
 ﻿# Project Status - Agendamiento HUN por WhatsApp
 
-Ultima actualizacion: 2026-07-01 17:03
+Ultima actualizacion: 2026-07-01 17:07
 Fase activa: Sprint 0 - Setup
 
 ## Resumen de avance
@@ -8,28 +8,27 @@ Fase activa: Sprint 0 - Setup
 | Fase | Total | Completados | En progreso | Bloqueados | Pendientes |
 |------|-------|-------------|-------------|------------|------------|
 | Sprint 0 - Setup | 5 | 5 | 0 | 0 | 0 |
-| Sprint 1 - Core agendamiento | 5 | 1 | 1 | 0 | 3 |
+| Sprint 1 - Core agendamiento | 5 | 2 | 0 | 0 | 3 |
 | Sprint 2 - Integracion WhatsApp | 3 | 0 | 0 | 0 | 3 |
 | Sprint 3 - Campanas y notificaciones | 5 | 0 | 0 | 0 | 5 |
 | Sprint 4 - Cancelacion y reagendamiento | 3 | 0 | 0 | 0 | 3 |
 | Sprint 5 - Operacion y reportes | 2 | 0 | 0 | 0 | 2 |
 | Sprint 6 - QA y seguridad | 3 | 0 | 0 | 0 | 3 |
 | Sprint 7 - Deploy y cierre contractual | 3 | 0 | 0 | 0 | 3 |
-| **TOTAL** | **29** | **6** | **1** | **0** | **22** |
+| **TOTAL** | **29** | **7** | **0** | **0** | **22** |
 
-Avance global: 6 / 29 tickets completados (20.7%)
+Avance global: 7 / 29 tickets completados (24.1%)
 
 ## Estado actual
 
-**Proximo ticket recomendado:** CORE-002 - pendiente de aprobacion para marcar `done`
-**Tickets en progreso:** ninguno; CORE-002 esta en `ready_for_review`
+**Proximo ticket recomendado:** CORE-003 - Endurecer Flow de identificacion y seleccion de especialidad. No iniciar hasta nueva aprobacion del usuario.
+**Tickets en progreso:** ninguno
 **Tickets bloqueados:** ver lista de dependencias abajo
 
 ### Tickets bloqueados por dependencias no resueltas
 
 | Ticket | Bloqueado por |
 |--------|---------------|
-| CORE-003 | CORE-002 |
 | CORE-004 | CORE-003 |
 | CORE-005 | CORE-004 |
 | FLOW-001 | CORE-003 |
@@ -39,14 +38,13 @@ Avance global: 6 / 29 tickets completados (20.7%)
 | CAMPAIGN-003 | CAMPAIGN-002, FLOW-001 |
 | NOTIF-001 | CORE-005, CAMPAIGN-001 |
 | NOTIF-002 | NOTIF-001 |
-| CANCEL-001 | CORE-002 |
 | CANCEL-002 | CANCEL-001 |
 | RESCH-001 | CANCEL-002, CORE-005 |
-| ADMIN-001 | CORE-002, CAMPAIGN-001, CANCEL-002 |
+| ADMIN-001 | CAMPAIGN-001, CANCEL-002 |
 | ADMIN-002 | ADMIN-001 |
 | QA-001 | CORE-005, CAMPAIGN-003, CANCEL-002, NOTIF-001 |
 | QA-002 | QA-001 |
-| SEC-001 | CORE-002, ADMIN-001 |
+| SEC-001 | ADMIN-001 |
 | DEPLOY-001 | QA-002, SEC-001 |
 | DOCS-001 | ADMIN-002, QA-001, SEC-001 |
 | DOCS-002 | DOCS-001, DEPLOY-001 |
@@ -234,7 +232,7 @@ Avance global: 6 / 29 tickets completados (20.7%)
 
 ### CORE-002 - Implementar trazabilidad de transiciones del Flow
 
-**Estado:** `ready_for_review`
+**Estado:** `done`
 **Labels:** `backend`, `database`
 **Depende de:** SETUP-005
 **Desbloquea:** CORE-003, CANCEL-001, ADMIN-001, SEC-001
@@ -257,7 +255,7 @@ Avance global: 6 / 29 tickets completados (20.7%)
 - [x] Si Supabase falla, el backend responde sin romper el Flow salvo cuando no pueda validar una sesion temporal requerida.
 
 **Evidencia:** `lib/db.js`, `lib/flowHandler.js`, `scripts/check-flow-events.js`, `scripts/check-sensitive-persistence.js`, `package.json`; `npm.cmd test` exitoso; `node --check lib/db.js` exitoso; `node --check lib/flowHandler.js` exitoso; `node -e "require('./lib/flowHandler')"` exitoso.
-**Notas:** Listo para aprobacion. `guardarEventoOperativo` queda como nombre contractual y `registrarEventoOperativo` se conserva por compatibilidad. Los eventos usan `session_id_hash`, fuente, estado, endpoint logico, especialidad y codigos/categorias de error; no guardan documento, EPS, nombre, numero de cita, medico, fecha/hora, CUPS, `agenda_detalle_id` ni payload HUN. El registro de eventos captura errores de Supabase internamente y no interrumpe el Flow.
+**Notas:** Aprobado por el usuario el 2026-07-01. `guardarEventoOperativo` queda como nombre contractual y `registrarEventoOperativo` se conserva por compatibilidad. Los eventos usan `session_id_hash`, fuente, estado, endpoint logico, especialidad y codigos/categorias de error; no guardan documento, EPS, nombre, numero de cita, medico, fecha/hora, CUPS, `agenda_detalle_id` ni payload HUN. El registro de eventos captura errores de Supabase internamente y no interrumpe el Flow.
 
 ---
 
