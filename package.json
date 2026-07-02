@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "test": "node scripts/check-sensitive-persistence.js && node scripts/check-hun-client.js && node scripts/check-flow-events.js"
+    "test": "node scripts/check-sensitive-persistence.js && node scripts/check-hun-client.js && node scripts/check-flow-events.js && node scripts/check-flow-identification.js && node scripts/check-flow-slots.js && node scripts/check-flow-confirmation.js"
   },
   "dependencies": {
     "@emailjs/nodejs": "^5.0.2",

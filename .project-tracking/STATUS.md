@@ -1,27 +1,27 @@
 ﻿# Project Status - Agendamiento HUN por WhatsApp
 
-Ultima actualizacion: 2026-07-01 17:07
-Fase activa: Sprint 0 - Setup
+Ultima actualizacion: 2026-07-02 12:42
+Fase activa: Sprint 1 - Core agendamiento
 
 ## Resumen de avance
 
 | Fase | Total | Completados | En progreso | Bloqueados | Pendientes |
 |------|-------|-------------|-------------|------------|------------|
 | Sprint 0 - Setup | 5 | 5 | 0 | 0 | 0 |
-| Sprint 1 - Core agendamiento | 5 | 2 | 0 | 0 | 3 |
+| Sprint 1 - Core agendamiento | 5 | 5 | 0 | 0 | 0 |
 | Sprint 2 - Integracion WhatsApp | 3 | 0 | 0 | 0 | 3 |
 | Sprint 3 - Campanas y notificaciones | 5 | 0 | 0 | 0 | 5 |
 | Sprint 4 - Cancelacion y reagendamiento | 3 | 0 | 0 | 0 | 3 |
 | Sprint 5 - Operacion y reportes | 2 | 0 | 0 | 0 | 2 |
 | Sprint 6 - QA y seguridad | 3 | 0 | 0 | 0 | 3 |
 | Sprint 7 - Deploy y cierre contractual | 3 | 0 | 0 | 0 | 3 |
-| **TOTAL** | **29** | **7** | **0** | **0** | **22** |
+| **TOTAL** | **29** | **10** | **0** | **0** | **19** |
 
-Avance global: 7 / 29 tickets completados (24.1%)
+Avance global: 10 / 29 tickets completados (34.5%)
 
 ## Estado actual
 
-**Proximo ticket recomendado:** CORE-003 - Endurecer Flow de identificacion y seleccion de especialidad. No iniciar hasta nueva aprobacion del usuario.
+**Proximo ticket recomendado:** FLOW-001 - Validar cifrado y publicacion de WhatsApp Flow.
 **Tickets en progreso:** ninguno
 **Tickets bloqueados:** ver lista de dependencias abajo
 
@@ -29,9 +29,6 @@ Avance global: 7 / 29 tickets completados (24.1%)
 
 | Ticket | Bloqueado por |
 |--------|---------------|
-| CORE-004 | CORE-003 |
-| CORE-005 | CORE-004 |
-| FLOW-001 | CORE-003 |
 | FLOW-002 | FLOW-001, CORE-005 |
 | FLOW-003 | FLOW-001, CORE-005 |
 | CAMPAIGN-002 | CAMPAIGN-001 |
@@ -261,90 +258,90 @@ Avance global: 7 / 29 tickets completados (24.1%)
 
 ### CORE-003 - Endurecer Flow de identificacion y seleccion de especialidad
 
-**Estado:** `pending`
+**Estado:** `done`
 **Labels:** `feature`, `backend`, `api`
 **Depende de:** CORE-001, CORE-002
 **Desbloquea:** CORE-004, FLOW-001
 
 **Microsteps:**
-- [ ] Validar tipo y numero de documento recibidos desde el Flow.
-- [ ] Consultar historial por documento y extraer nombre y EPS normalizados solo en memoria.
-- [ ] Aplicar fallback de pacientes de prueba cuando aplique.
-- [ ] Guardar solo sesion temporal minima en Supabase, sin nombre, EPS ni documento plano.
-- [ ] Cargar especialidades ordenadas y limitadas para el Dropdown.
-- [ ] Devolver mensaje de error si no se puede identificar informacion minima.
+- [x] Validar tipo y numero de documento recibidos desde el Flow.
+- [x] Consultar historial por documento y extraer nombre y EPS normalizados solo en memoria.
+- [x] Aplicar fallback de pacientes de prueba cuando aplique.
+- [x] Guardar solo sesion temporal minima en Supabase, sin nombre, EPS ni documento plano.
+- [x] Cargar especialidades ordenadas y limitadas para el Dropdown.
+- [x] Devolver mensaje de error si no se puede identificar informacion minima.
 
 **Criterios de aceptacion:**
-- [ ] Documento vacio o invalido devuelve error de validacion al Flow.
-- [ ] Paciente con historial usa nombre y EPS solo en memoria durante la operacion.
-- [ ] Paciente de prueba sin historial usa fallback documentado.
-- [ ] La pantalla de especialidad recibe una lista valida de opciones.
-- [ ] La transicion queda registrada como evento operativo no sensible.
+- [x] Documento vacio o invalido devuelve error de validacion al Flow.
+- [x] Paciente con historial usa nombre y EPS solo en memoria durante la operacion.
+- [x] Paciente de prueba sin historial usa fallback documentado.
+- [x] La pantalla de especialidad recibe una lista valida de opciones.
+- [x] La transicion queda registrada como evento operativo no sensible.
 
-**Evidencia:** 
-**Notas:** 
+**Evidencia:** `lib/flowHandler.js`, `scripts/check-flow-identification.js`, `package.json`; `npm.cmd test` exitoso; `node --check lib/flowHandler.js` exitoso; `node --check scripts/check-flow-identification.js` exitoso; `git diff --check` sin errores.
+**Notas:** Aprobado por el usuario el 2026-07-02. El Flow valida tipo y numero de documento antes de consultar HUN; si no detecta EPS/contrato desde historial o fallback de paciente de prueba, devuelve error recuperable en `IDENTIFICACION`. Nombre, documento y EPS permanecen solo en memoria; Supabase recibe solo sesion temporal minima y eventos operativos no sensibles.
 
 ---
 
 ### CORE-004 - Implementar seleccion robusta de cupos autogestionables
 
-**Estado:** `pending`
+**Estado:** `done`
 **Labels:** `feature`, `backend`, `api`
 **Depende de:** CORE-003
 **Desbloquea:** CORE-005
 
 **Microsteps:**
-- [ ] Consultar agenda por especialidad con `cod_especialidad` y `fecha_final`.
-- [ ] Aplanar `cups[]` en opciones agendables independientes.
-- [ ] Filtrar opciones con `autogestionable = si`.
-- [ ] Generar `slot_token` opaco firmado con HMAC usando secreto del backend.
-- [ ] Retornar al Flow solo datos visibles necesarios para seleccion y el `slot_token`, sin persistir el slot completo en Supabase.
-- [ ] Guardar en `flow_sesiones_temporales` solo `session_id` o `flow_token`, `especialidad_codigo`, `slot_token` seleccionado si aplica, estado y `expires_at`.
-- [ ] Limitar la lista a un numero usable para WhatsApp Flow.
-- [ ] Devolver error recuperable cuando no existan cupos.
+- [x] Consultar agenda por especialidad con `cod_especialidad` y `fecha_final`.
+- [x] Aplanar `cups[]` en opciones agendables independientes.
+- [x] Filtrar opciones con `autogestionable = si`.
+- [x] Generar `slot_token` opaco firmado con HMAC usando secreto del backend.
+- [x] Retornar al Flow solo datos visibles necesarios para seleccion y el `slot_token`, sin persistir el slot completo en Supabase.
+- [x] Guardar en `flow_sesiones_temporales` solo `session_id` o `flow_token`, `especialidad_codigo`, `slot_token` seleccionado si aplica, estado y `expires_at`.
+- [x] Limitar la lista a un numero usable para WhatsApp Flow.
+- [x] Devolver error recuperable cuando no existan cupos.
 
 **Criterios de aceptacion:**
-- [ ] Solo se ofrecen cupos autogestionables.
-- [ ] Cada opcion retorna un `slot_token` opaco y firmado.
-- [ ] Supabase no persiste medico, fecha, hora, CUPS, consultorio, `agenda_detalle_id` ni payload de agenda.
-- [ ] Si no hay cupos, el Flow vuelve a especialidad con `error_message`.
-- [ ] La lista de slots es estable y ordenada por fecha/hora.
+- [x] Solo se ofrecen cupos autogestionables.
+- [x] Cada opcion retorna un `slot_token` opaco y firmado.
+- [x] Supabase no persiste medico, fecha, hora, CUPS, consultorio, `agenda_detalle_id` ni payload de agenda.
+- [x] Si no hay cupos, el Flow vuelve a especialidad con `error_message`.
+- [x] La lista de slots es estable y ordenada por fecha/hora.
 
-**Evidencia:** 
-**Notas:** 
+**Evidencia:** `lib/flowHandler.js`, `scripts/check-flow-slots.js`, `package.json`, `.env.example`, `README.md`, `SETUP_LOCAL_CHECKLIST.md`; `npm.cmd test` exitoso; `node --check lib/flowHandler.js` exitoso; `node --check scripts/check-flow-slots.js` exitoso.
+**Notas:** Aprobado por el usuario el 2026-07-02. Los slots se construyen desde `cups[]`, se filtran por `autogestionable = si`, se ordenan por fecha/hora y se limitan con `FLOW_MAX_SLOTS` o 20 por defecto. El `slot_token` es deterministico y firmado con HMAC para poder regenerarlo por reconsulta HUN en CORE-005; Supabase solo recibe estado minimo y el `slot_token` seleccionado.
 
 ---
 
 ### CORE-005 - Implementar confirmacion asincrona de cita
 
-**Estado:** `pending`
+**Estado:** `done`
 **Labels:** `feature`, `backend`, `api`
 **Depende de:** CORE-004
 **Desbloquea:** FLOW-002, FLOW-003, NOTIF-001, RESCH-001, QA-001
 
 **Microsteps:**
-- [ ] Reconsultar HUN por `cod_especialidad` y `fecha_final` antes de confirmar.
-- [ ] Regenerar tokens para la agenda vigente y validar que el `slot_token` seleccionado exista, no este vencido y siga siendo autogestionable.
-- [ ] Si el token ya no existe o el cupo cambio, devolver error recuperable: "El cupo ya no esta disponible, selecciona otro horario".
-- [ ] Construir resumen de cita con datos frescos de HUN, sin leer candidatos persistidos en Supabase.
-- [ ] Validar que paciente, EPS y slot vigente existan antes de asignar.
-- [ ] Llamar `/webServiceCita/api/asignar_cita` en segundo plano.
-- [ ] Extraer numero de cita desde respuesta SOAP solo en memoria para confirmacion inmediata, sin persistirlo.
-- [ ] Guardar solo evento operativo de resultado y estado no sensible, sin numero de cita ni respuesta HUN completa.
-- [ ] Enviar mensaje WhatsApp de exito o error al paciente.
-- [ ] Registrar estado final no sensible en sesion e interacciones.
+- [x] Reconsultar HUN por `cod_especialidad` y `fecha_final` antes de confirmar.
+- [x] Regenerar tokens para la agenda vigente y validar que el `slot_token` seleccionado exista, no este vencido y siga siendo autogestionable.
+- [x] Si el token ya no existe o el cupo cambio, devolver error recuperable: "El cupo ya no esta disponible, selecciona otro horario".
+- [x] Construir resumen de cita con datos frescos de HUN, sin leer candidatos persistidos en Supabase.
+- [x] Validar que paciente, EPS y slot vigente existan antes de asignar.
+- [x] Llamar `/webServiceCita/api/asignar_cita` en segundo plano.
+- [x] Extraer numero de cita desde respuesta SOAP solo en memoria para confirmacion inmediata, sin persistirlo.
+- [x] Guardar solo evento operativo de resultado y estado no sensible, sin numero de cita ni respuesta HUN completa.
+- [x] Enviar mensaje WhatsApp de exito o error al paciente.
+- [x] Registrar estado final no sensible en sesion e interacciones.
 
 **Criterios de aceptacion:**
-- [ ] El Flow responde inmediatamente con pantalla final de procesamiento.
-- [ ] Asignacion sin EPS se bloquea con mensaje claro.
-- [ ] La asignacion se hace con datos frescos de HUN reconsultados, no con candidatos persistidos.
-- [ ] Un slot vencido o no disponible devuelve error recuperable y permite seleccionar otro horario.
-- [ ] Respuesta exitosa confirma al paciente por WhatsApp sin persistir la cita en Supabase.
-- [ ] El paciente recibe confirmacion por WhatsApp.
-- [ ] Los errores de HUN quedan registrados solo con codigo/estado tecnico y sin payload clinico o administrativo sensible.
+- [x] El Flow responde inmediatamente con pantalla final de procesamiento.
+- [x] Asignacion sin EPS se bloquea con mensaje claro.
+- [x] La asignacion se hace con datos frescos de HUN reconsultados, no con candidatos persistidos.
+- [x] Un slot vencido o no disponible devuelve error recuperable y permite seleccionar otro horario.
+- [x] Respuesta exitosa confirma al paciente por WhatsApp sin persistir la cita en Supabase.
+- [x] El paciente recibe confirmacion por WhatsApp.
+- [x] Los errores de HUN quedan registrados solo con codigo/estado tecnico y sin payload clinico o administrativo sensible.
 
-**Evidencia:** 
-**Notas:** 
+**Evidencia:** `lib/flowHandler.js`, `scripts/check-flow-confirmation.js`, `package.json`; `npm.cmd test` exitoso; `node --check lib/flowHandler.js` exitoso; `node --check scripts/check-flow-confirmation.js` exitoso; busqueda sin mojibake en `lib/flowHandler.js`, `flow-agendamiento.json` y `README.md`.
+**Notas:** Aprobado por el usuario el 2026-07-02. La seleccion y confirmacion reconsultan HUN, regeneran tokens de la agenda vigente y solo usan el slot si sigue disponible/autogestionable. Si el cupo vence, el Flow devuelve error recuperable y no ejecuta asignacion. La asignacion asincrona usa el slot fresco guardado en memoria inmediatamente antes de procesar; Supabase conserva solo estado minimo, `slot_token`, resultado agregado y errores tecnicos no sensibles.
 
 ---
 

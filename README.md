@@ -85,6 +85,7 @@ Copiar `.env.example` a `.env` para pruebas locales y completar valores reales s
 - `FLOW_PRIVATE_KEY_B64`
 - `FLOW_KEY_PASSPHRASE`
 - `FLOW_SESSION_PII_KEY_B64`
+- `FLOW_SLOT_TOKEN_SECRET_B64` opcional; si no se define, el backend deriva la firma de slots desde `FLOW_SESSION_PII_KEY_B64`.
 
 ### HUN
 
