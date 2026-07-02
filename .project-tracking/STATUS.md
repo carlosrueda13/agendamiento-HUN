@@ -1,7 +1,7 @@
 ﻿# Project Status - Agendamiento HUN por WhatsApp
 
-Ultima actualizacion: 2026-07-02 12:42
-Fase activa: Sprint 1 - Core agendamiento
+Ultima actualizacion: 2026-07-02 12:52
+Fase activa: Sprint 2 - Integracion WhatsApp
 
 ## Resumen de avance
 
@@ -9,20 +9,20 @@ Fase activa: Sprint 1 - Core agendamiento
 |------|-------|-------------|-------------|------------|------------|
 | Sprint 0 - Setup | 5 | 5 | 0 | 0 | 0 |
 | Sprint 1 - Core agendamiento | 5 | 5 | 0 | 0 | 0 |
-| Sprint 2 - Integracion WhatsApp | 3 | 0 | 0 | 0 | 3 |
+| Sprint 2 - Integracion WhatsApp | 3 | 1 | 0 | 0 | 2 |
 | Sprint 3 - Campanas y notificaciones | 5 | 0 | 0 | 0 | 5 |
 | Sprint 4 - Cancelacion y reagendamiento | 3 | 0 | 0 | 0 | 3 |
 | Sprint 5 - Operacion y reportes | 2 | 0 | 0 | 0 | 2 |
 | Sprint 6 - QA y seguridad | 3 | 0 | 0 | 0 | 3 |
 | Sprint 7 - Deploy y cierre contractual | 3 | 0 | 0 | 0 | 3 |
-| **TOTAL** | **29** | **10** | **0** | **0** | **19** |
+| **TOTAL** | **29** | **11** | **0** | **0** | **18** |
 
-Avance global: 10 / 29 tickets completados (34.5%)
+Avance global: 11 / 29 tickets completados (37.9%)
 
 ## Estado actual
 
-**Proximo ticket recomendado:** FLOW-001 - Validar cifrado y publicacion de WhatsApp Flow.
-**Tickets en progreso:** ninguno
+**Proximo ticket recomendado:** FLOW-002 - Implementar manejo de errores conversacionales. No iniciar hasta aprobacion de FLOW-001.
+**Tickets en progreso:** -
 **Tickets bloqueados:** ver lista de dependencias abajo
 
 ### Tickets bloqueados por dependencias no resueltas
@@ -351,27 +351,27 @@ Avance global: 10 / 29 tickets completados (34.5%)
 
 ### FLOW-001 - Validar cifrado y publicacion de WhatsApp Flow
 
-**Estado:** `pending`
+**Estado:** `done`
 **Labels:** `feature`, `backend`, `security`
 **Depende de:** CORE-003
 **Desbloquea:** FLOW-002, FLOW-003, CAMPAIGN-003
 
 **Microsteps:**
-- [ ] Confirmar configuracion de `FLOW_PRIVATE_KEY_B64` y passphrase.
-- [ ] Validar respuesta a `ping` de Meta.
-- [ ] Probar descifrado de payload y cifrado de respuesta.
-- [ ] Configurar URL publica del endpoint en WhatsApp Manager.
-- [ ] Publicar o actualizar `flow-agendamiento.json`.
-- [ ] Ejecutar prueba manual de cada pantalla hasta navegacion y seleccion, sin ejecutar asignacion real en este ticket.
+- [x] Confirmar configuracion de `FLOW_PRIVATE_KEY_B64` y passphrase.
+- [x] Validar respuesta a `ping` de Meta.
+- [x] Probar descifrado de payload y cifrado de respuesta.
+- [x] Configurar URL publica del endpoint en WhatsApp Manager.
+- [x] Publicar o actualizar `flow-agendamiento.json`.
+- [x] Ejecutar prueba manual de cada pantalla hasta navegacion y seleccion, sin ejecutar asignacion real en este ticket.
 
 **Criterios de aceptacion:**
-- [ ] Meta acepta el endpoint del Flow.
-- [ ] `ping` responde `status: active`.
-- [ ] Las pantallas avanzan mediante `data_exchange`.
-- [ ] No se imprimen llaves privadas ni tokens en logs.
+- [x] Meta acepta el endpoint del Flow.
+- [x] `ping` responde `status: active`.
+- [x] Las pantallas avanzan mediante `data_exchange`.
+- [x] No se imprimen llaves privadas ni tokens en logs.
 
-**Evidencia:** 
-**Notas:** 
+**Evidencia:** Confirmacion del usuario: URL publica `https://agendamiento-hun.onrender.com/`, Flow JSON publicado y llaves Meta/Render coinciden; smoke test publico `GET /` HTTP 200, `GET /test-hun` HTTP 200 y `POST /flow-endpoint` con payload invalido HTTP 421 esperado; `scripts/check-flow-crypto.js`; `node --check scripts/check-flow-crypto.js` exitoso; `npm.cmd test` exitoso con simulacion cifrada de `ping` y roundtrip de respuesta cifrada.
+**Notas:** Aprobado externamente por el usuario el 2026-07-02. La prueba automatizada genera llaves efimeras, simula RSA-OAEP-SHA256 + AES-GCM, verifica `ping` con `status: active`, valida el IV invertido de respuesta y comprueba que `flow-agendamiento.json` no tenga mojibake real. FLOW-001 no ejecuta asignacion real; esa prueba end-to-end queda en FLOW-003.
 
 ---
 
