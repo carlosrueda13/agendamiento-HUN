@@ -1,6 +1,6 @@
 ﻿# Project Status - Agendamiento HUN por WhatsApp
 
-Ultima actualizacion: 2026-07-03 12:20
+Ultima actualizacion: 2026-07-03 12:35
 Fase activa: Sprint 2 - Integracion WhatsApp
 
 ## Resumen de avance
@@ -9,19 +9,19 @@ Fase activa: Sprint 2 - Integracion WhatsApp
 |------|-------|-------------|-------------|------------|------------|
 | Sprint 0 - Setup | 5 | 5 | 0 | 0 | 0 |
 | Sprint 1 - Core agendamiento | 5 | 5 | 0 | 0 | 0 |
-| Sprint 2 - Integracion WhatsApp | 3 | 2 | 0 | 0 | 1 |
+| Sprint 2 - Integracion WhatsApp | 3 | 2 | 0 | 1 | 0 |
 | Sprint 3 - Campanas y notificaciones | 5 | 0 | 0 | 0 | 5 |
 | Sprint 4 - Cancelacion y reagendamiento | 3 | 0 | 0 | 0 | 3 |
 | Sprint 5 - Operacion y reportes | 2 | 0 | 0 | 0 | 2 |
 | Sprint 6 - QA y seguridad | 3 | 0 | 0 | 0 | 3 |
 | Sprint 7 - Deploy y cierre contractual | 3 | 0 | 0 | 0 | 3 |
-| **TOTAL** | **29** | **12** | **0** | **0** | **17** |
+| **TOTAL** | **29** | **12** | **0** | **1** | **16** |
 
 Avance global: 12 / 29 tickets completados (41.4%)
 
 ## Estado actual
 
-**Proximo ticket recomendado:** FLOW-003 - Ejecutar prueba end-to-end de Flow con asignacion. No iniciar hasta aprobacion de FLOW-002.
+**Proximo ticket recomendado:** Resolver precondicion externa de FLOW-003: HUN debe exponer al menos un cupo autogestionable en pruebas para ejecutar asignacion real.
 **Tickets en progreso:** -
 **Tickets bloqueados:** ver lista de dependencias abajo
 
@@ -29,8 +29,7 @@ Avance global: 12 / 29 tickets completados (41.4%)
 
 | Ticket | Bloqueado por |
 |--------|---------------|
-| FLOW-002 | FLOW-001, CORE-005 |
-| FLOW-003 | FLOW-001, CORE-005 |
+| FLOW-003 | Sin cupos autogestionables disponibles en API HUN de pruebas |
 | CAMPAIGN-002 | CAMPAIGN-001 |
 | CAMPAIGN-003 | CAMPAIGN-002, FLOW-001 |
 | NOTIF-001 | CORE-005, CAMPAIGN-001 |
@@ -402,7 +401,7 @@ Avance global: 12 / 29 tickets completados (41.4%)
 
 ### FLOW-003 - Ejecutar prueba end-to-end de Flow con asignacion
 
-**Estado:** `pending`
+**Estado:** `blocked`
 **Labels:** `testing`, `backend`, `api`
 **Depende de:** FLOW-001, CORE-005
 **Desbloquea:** 
@@ -421,8 +420,8 @@ Avance global: 12 / 29 tickets completados (41.4%)
 - [ ] Los errores recuperables por slot no disponible quedan cubiertos.
 - [ ] La evidencia queda disponible para `QA-001` y `DOCS-002`.
 
-**Evidencia:** 
-**Notas:** 
+**Evidencia:** `FLOW_003_E2E_RUNBOOK.md`; consulta HUN de pruebas del 2026-07-03 con ventana hasta `2027-07-03`: solo `PSIQUIATRIA` (`codigo_especialidad = 590`) devolvio agenda no vacia y sus CUPS tienen `autogestionable = no`; validacion de estructura confirmo `cup_keys` con `agenda_detalle_id`, `autogestionable`, `codigo`, `descripcion`.
+**Notas:** Bloqueado por precondicion externa. El backend no puede ofrecer ni asignar cupos no autogestionables sin romper CORE-004/CORE-005. Para cerrar FLOW-003 se requiere que HUN habilite o informe al menos un cupo con `cups[].autogestionable = si` en el ambiente de pruebas, o una aprobacion formal para cambiar la regla operativa. No enviar numero de cita, documento completo, nombre de paciente, medico, fecha/hora exacta ni capturas con datos sensibles como evidencia.
 
 ---
 
