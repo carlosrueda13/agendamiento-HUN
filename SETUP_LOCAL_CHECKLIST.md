@@ -21,6 +21,9 @@ Dejar documentada la configuracion minima para ejecutar el backend localmente y 
 - `FLOW_KEY_PASSPHRASE`: passphrase de la llave privada, si aplica.
 - `FLOW_SESSION_PII_KEY_B64`: llave backend de 32 bytes en base64 para cifrar correo de contacto transitorio de la sesion del Flow. Se usa desde `SETUP-005`; no debe compartirse con Meta ni guardarse en documentos versionados con valor real.
 - `FLOW_SLOT_TOKEN_SECRET_B64`: llave backend opcional de 32 bytes en base64 para firmar `slot_token`; si no se define, se deriva desde `FLOW_SESSION_PII_KEY_B64`.
+- `FLOW_E2E_ALLOW_NON_AUTOGESTIONABLE`: solo para waiver temporal de `FLOW-003`; debe quedar `false` o vacia fuera de la prueba controlada.
+- `FLOW_E2E_CANCEL_AFTER_ASSIGN`: solo para waiver temporal de `FLOW-003`; si esta activo cancela la cita creada al finalizar la prueba.
+- `FLOW_E2E_TEST_DOCUMENTS`: documentos de prueba autorizados para el waiver temporal, separados por coma. No usar documentos reales.
 
 ### API HUN
 

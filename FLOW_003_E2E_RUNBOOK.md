@@ -12,6 +12,26 @@ Validacion del 2026-07-03:
 - Los CUPS encontrados tienen `autogestionable = no`.
 - El backend no debe ofrecer ni asignar cupos no autogestionables por requisito de CORE-004/CORE-005.
 
+## Waiver temporal aprobado
+
+El usuario aprobo una excepcion temporal solo para continuar `FLOW-003` en el entorno HUN de pruebas mientras no existan cupos autogestionables.
+
+Variables requeridas en Render durante la prueba:
+
+```text
+FLOW_E2E_ALLOW_NON_AUTOGESTIONABLE=true
+FLOW_E2E_CANCEL_AFTER_ASSIGN=true
+FLOW_E2E_TEST_DOCUMENTS=41531776
+```
+
+Condiciones del waiver:
+
+- Solo aplica si `FLOW_E2E_ALLOW_NON_AUTOGESTIONABLE=true`.
+- Solo aplica para documentos incluidos en `FLOW_E2E_TEST_DOCUMENTS`.
+- La cita creada debe cancelarse automaticamente con `FLOW_E2E_CANCEL_AFTER_ASSIGN=true`.
+- Al terminar la prueba, desactivar o eliminar las tres variables temporales.
+- Esta evidencia no reemplaza la validacion contractual normal con cupos `autogestionable = si`.
+
 ## Precondicion externa requerida
 
 Solicitar al responsable del ambiente HUN de pruebas una de estas opciones:
@@ -20,14 +40,14 @@ Solicitar al responsable del ambiente HUN de pruebas una de estas opciones:
 2. Confirmar una especialidad/codigo ya existente que tenga cupos con `cups[].autogestionable = si`.
 3. Si HUN cambia la regla operativa, entregar aprobacion formal para probar con cupos no autogestionables. Esta opcion requiere ajustar el plan y no debe aplicarse sin aprobacion expresa.
 
-## Recorrido manual cuando haya cupo autogestionable
+## Recorrido manual con waiver temporal
 
 1. Desde WhatsApp, enviar un mensaje al numero conectado a la app HUN para iniciar el Flow.
 2. En `IDENTIFICACION`, usar un paciente de prueba permitido:
    - Tipo: `CC`
    - Documento sugerido: `41531776`
    - Correo: un correo de prueba controlado.
-3. Seleccionar la especialidad que HUN confirme con cupos autogestionables.
+3. Seleccionar `PSIQUIATRIA` si sigue siendo la especialidad con agenda disponible en HUN de pruebas.
 4. Seleccionar un horario visible en `SLOTS`.
 5. Confirmar la cita en `CONFIRMAR`.
 6. Esperar el mensaje WhatsApp asincronico de resultado.
@@ -42,8 +62,10 @@ Especialidad usada: <codigo y nombre>
 Documento de prueba usado: <tipo y ultimos 4 digitos, no documento completo>
 Asignacion HUN exitosa: si/no
 Paciente recibio WhatsApp de confirmacion: si/no
+Paciente recibio WhatsApp de cancelacion automatica: si/no
 Mensaje de error recuperable probado si el slot cambio: si/no
 Supabase revisado sin datos sensibles de cita: si/no
+Variables temporales desactivadas despues de la prueba: si/no
 Observaciones:
 ```
 

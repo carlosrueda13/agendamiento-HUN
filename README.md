@@ -86,6 +86,7 @@ Copiar `.env.example` a `.env` para pruebas locales y completar valores reales s
 - `FLOW_KEY_PASSPHRASE`
 - `FLOW_SESSION_PII_KEY_B64`
 - `FLOW_SLOT_TOKEN_SECRET_B64` opcional; si no se define, el backend deriva la firma de slots desde `FLOW_SESSION_PII_KEY_B64`.
+- `FLOW_E2E_ALLOW_NON_AUTOGESTIONABLE`, `FLOW_E2E_CANCEL_AFTER_ASSIGN` y `FLOW_E2E_TEST_DOCUMENTS` son solo para el waiver temporal de `FLOW-003`; deben quedar desactivadas fuera de esa prueba controlada.
 
 ### HUN
 
