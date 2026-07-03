@@ -1,6 +1,6 @@
 ﻿# Project Status - Agendamiento HUN por WhatsApp
 
-Ultima actualizacion: 2026-07-02 12:52
+Ultima actualizacion: 2026-07-03 12:20
 Fase activa: Sprint 2 - Integracion WhatsApp
 
 ## Resumen de avance
@@ -9,19 +9,19 @@ Fase activa: Sprint 2 - Integracion WhatsApp
 |------|-------|-------------|-------------|------------|------------|
 | Sprint 0 - Setup | 5 | 5 | 0 | 0 | 0 |
 | Sprint 1 - Core agendamiento | 5 | 5 | 0 | 0 | 0 |
-| Sprint 2 - Integracion WhatsApp | 3 | 1 | 0 | 0 | 2 |
+| Sprint 2 - Integracion WhatsApp | 3 | 2 | 0 | 0 | 1 |
 | Sprint 3 - Campanas y notificaciones | 5 | 0 | 0 | 0 | 5 |
 | Sprint 4 - Cancelacion y reagendamiento | 3 | 0 | 0 | 0 | 3 |
 | Sprint 5 - Operacion y reportes | 2 | 0 | 0 | 0 | 2 |
 | Sprint 6 - QA y seguridad | 3 | 0 | 0 | 0 | 3 |
 | Sprint 7 - Deploy y cierre contractual | 3 | 0 | 0 | 0 | 3 |
-| **TOTAL** | **29** | **11** | **0** | **0** | **18** |
+| **TOTAL** | **29** | **12** | **0** | **0** | **17** |
 
-Avance global: 11 / 29 tickets completados (37.9%)
+Avance global: 12 / 29 tickets completados (41.4%)
 
 ## Estado actual
 
-**Proximo ticket recomendado:** FLOW-002 - Implementar manejo de errores conversacionales. No iniciar hasta aprobacion de FLOW-001.
+**Proximo ticket recomendado:** FLOW-003 - Ejecutar prueba end-to-end de Flow con asignacion. No iniciar hasta aprobacion de FLOW-002.
 **Tickets en progreso:** -
 **Tickets bloqueados:** ver lista de dependencias abajo
 
@@ -377,26 +377,26 @@ Avance global: 11 / 29 tickets completados (37.9%)
 
 ### FLOW-002 - Implementar manejo de errores conversacionales
 
-**Estado:** `pending`
+**Estado:** `done`
 **Labels:** `feature`, `backend`
 **Depende de:** FLOW-001, CORE-005
 **Desbloquea:** 
 
 **Microsteps:**
-- [ ] Definir mensajes por error: validacion, sin cupos, EPS faltante, API HUN, sesion temporal y WhatsApp.
-- [ ] Agregar respuestas recuperables para volver a especialidad o reiniciar proceso.
-- [ ] Registrar cada error como evento operativo no sensible.
-- [ ] Enviar mensaje de seguimiento cuando falle una asignacion asincrona.
-- [ ] Validar que el paciente reciba una accion sugerida en cada error.
+- [x] Definir mensajes por error: validacion, sin cupos, EPS faltante, API HUN, sesion temporal y WhatsApp.
+- [x] Agregar respuestas recuperables para volver a especialidad o reiniciar proceso.
+- [x] Registrar cada error como evento operativo no sensible.
+- [x] Enviar mensaje de seguimiento cuando falle una asignacion asincrona.
+- [x] Validar que el paciente reciba una accion sugerida en cada error.
 
 **Criterios de aceptacion:**
-- [ ] Cada error conocido produce mensaje visible para el paciente.
-- [ ] Falta de cupos permite elegir otra especialidad.
-- [ ] Error de asignacion asincrona envia WhatsApp de fallo.
-- [ ] Todos los errores quedan registrados con estado y contexto.
+- [x] Cada error conocido produce mensaje visible para el paciente.
+- [x] Falta de cupos permite elegir otra especialidad.
+- [x] Error de asignacion asincrona envia WhatsApp de fallo.
+- [x] Todos los errores quedan registrados con estado y contexto.
 
-**Evidencia:** 
-**Notas:** 
+**Evidencia:** `lib/flowHandler.js`, `scripts/check-flow-errors.js`, `package.json`; `node --check lib/flowHandler.js` exitoso; `node --check scripts/check-flow-errors.js` exitoso; `npm.cmd test` exitoso.
+**Notas:** Listo para aprobacion. Los errores de validacion, falta de cupos, EPS faltante, sesion vencida, HUN no disponible y asignacion asincrona fallida devuelven mensajes accionables al paciente. Los fallos de disponibilidad HUN durante `data_exchange` vuelven a `ESPECIALIDAD` con opciones recuperables cuando se pueden obtener. La asignacion asincrona fallida envia WhatsApp de seguimiento y registra evento operativo no sensible; no se persisten datos de cita ni payloads HUN.
 
 ---
 
