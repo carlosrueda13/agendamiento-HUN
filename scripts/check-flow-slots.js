@@ -45,6 +45,23 @@ hun.getAgendaPorEspecialidad = async (codEspecialidad) => {
 
   return [
     {
+      codigo_medico: " ME000 ",
+      fecha_atencion: "2026-07-01",
+      hora_inicial: "07:00:00",
+      nombre_medico: " MEDICO PASADO ",
+      nombre_especialidad: " ANESTESIOLOGIA ",
+      numero_consultorio: "100",
+      tiempo_intervalo: "20",
+      cups: [
+        {
+          agenda_detalle_id: "A-PAST",
+          autogestionable: "SI",
+          codigo: "890200",
+          descripcion: "No visible por fecha",
+        },
+      ],
+    },
+    {
       codigo_medico: " ME002 ",
       fecha_atencion: "2026-08-02",
       hora_inicial: "09:00:00",
@@ -181,6 +198,7 @@ async function assertAutogestionableSlots() {
   assert(second.title.includes("02 ago 09:00"), "Segundo slot ordenado incorrectamente.");
   assert(first.description === "Consulta A", "Debe aplanar CUPS en opcion independiente.");
   assert(!JSON.stringify(response.data.slots).includes("No visible"), "No debe ofrecer cupos no autogestionables.");
+  assert(!JSON.stringify(response.data.slots).includes("MEDICO PASADO"), "No debe ofrecer cupos vencidos.");
   assert(
     /^slot_v1_[a-z0-9]+_[A-Za-z0-9_-]+$/.test(first.id),
     "slot_token debe tener formato opaco firmado."

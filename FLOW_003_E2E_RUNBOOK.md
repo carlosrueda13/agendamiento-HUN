@@ -10,6 +10,8 @@ Validacion del 2026-07-03:
 - Se amplio la ventana de agenda hasta `2027-07-03`.
 - Solo se encontro agenda no vacia en `PSIQUIATRIA` (`codigo_especialidad = 590`).
 - Los CUPS encontrados tienen `autogestionable = no`.
+- Revalidacion posterior encontro `509` CUPS para `PSIQUIATRIA`: `26` pasados o invalidos y `483` futuros, con rango `2026-07-01` a `2026-08-27`.
+- Se corrigio el backend para no ofrecer slots con fecha/hora pasada y para imprimir un resumen tecnico sanitizado cuando HUN rechaza una asignacion.
 - El backend no debe ofrecer ni asignar cupos no autogestionables por requisito de CORE-004/CORE-005.
 
 ## Waiver temporal aprobado
@@ -48,7 +50,7 @@ Solicitar al responsable del ambiente HUN de pruebas una de estas opciones:
    - Documento sugerido: `41531776`
    - Correo: un correo de prueba controlado.
 3. Seleccionar `PSIQUIATRIA` si sigue siendo la especialidad con agenda disponible en HUN de pruebas.
-4. Seleccionar un horario visible en `SLOTS`.
+4. Seleccionar un horario visible en `SLOTS`; despues del ajuste, no deben aparecer horarios vencidos.
 5. Confirmar la cita en `CONFIRMAR`.
 6. Esperar el mensaje WhatsApp asincronico de resultado.
 

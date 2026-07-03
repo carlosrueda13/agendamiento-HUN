@@ -1,6 +1,6 @@
 ﻿# Project Status - Agendamiento HUN por WhatsApp
 
-Ultima actualizacion: 2026-07-03 16:47
+Ultima actualizacion: 2026-07-03 17:18
 Fase activa: Sprint 2 - Integracion WhatsApp
 
 ## Resumen de avance
@@ -419,8 +419,8 @@ Avance global: 12 / 29 tickets completados (41.4%)
 - [ ] Los errores recuperables por slot no disponible quedan cubiertos.
 - [ ] La evidencia queda disponible para `QA-001` y `DOCS-002`.
 
-**Evidencia:** `FLOW_003_E2E_RUNBOOK.md`; `lib/flowHandler.js`; `scripts/check-flow-e2e-waiver.js`; `node --check lib/flowHandler.js` exitoso; `node --check scripts/check-flow-e2e-waiver.js` exitoso; `npm.cmd test` exitoso. Consulta HUN de pruebas del 2026-07-03 con ventana hasta `2027-07-03`: solo `PSIQUIATRIA` (`codigo_especialidad = 590`) devolvio agenda no vacia y sus CUPS tienen `autogestionable = no`.
-**Notas:** En progreso por waiver temporal aprobado por el usuario el 2026-07-03. El backend permite cupos no autogestionables solo si `FLOW_E2E_ALLOW_NON_AUTOGESTIONABLE=true`, solo para documentos incluidos en `FLOW_E2E_TEST_DOCUMENTS`, y cancela automaticamente la cita creada si `FLOW_E2E_CANCEL_AFTER_ASSIGN=true`. Pendiente ejecutar prueba real desde WhatsApp en Render y luego desactivar variables temporales. Esta evidencia no reemplaza la validacion contractual normal con cupos `autogestionable = si`.
+**Evidencia:** `FLOW_003_E2E_RUNBOOK.md`; `lib/flowHandler.js`; `scripts/check-flow-e2e-waiver.js`; `node --check lib/flowHandler.js` exitoso; `node --check scripts/check-flow-e2e-waiver.js` exitoso; `npm.cmd test` exitoso. Consulta HUN de pruebas del 2026-07-03 con ventana hasta `2027-07-03`: `PSIQUIATRIA` (`codigo_especialidad = 590`) devolvio 509 CUPS, 26 pasados o invalidos y 483 futuros, todos con `autogestionable = no`.
+**Notas:** En progreso por waiver temporal aprobado por el usuario el 2026-07-03. Se corrigio el filtro para no ofrecer slots con fecha/hora pasada y se agrego log tecnico sanitizado de rechazo HUN (`detalle={...}`) sin payload completo ni datos sensibles. El backend permite cupos no autogestionables solo si `FLOW_E2E_ALLOW_NON_AUTOGESTIONABLE=true`, solo para documentos incluidos en `FLOW_E2E_TEST_DOCUMENTS`, y cancela automaticamente la cita creada si `FLOW_E2E_CANCEL_AFTER_ASSIGN=true`. Pendiente ejecutar prueba real desde WhatsApp en Render y luego desactivar variables temporales. Esta evidencia no reemplaza la validacion contractual normal con cupos `autogestionable = si`.
 
 ---
 
