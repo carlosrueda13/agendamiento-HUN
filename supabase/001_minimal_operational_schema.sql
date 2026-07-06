@@ -24,6 +24,7 @@ create table if not exists public.campanas (
   estado text not null default 'borrador'
     check (estado in ('borrador', 'programada', 'enviando', 'activa', 'cerrada', 'cancelada')),
   origen_datos text,
+  responsable text,
   cupos_objetivo integer check (cupos_objetivo is null or cupos_objetivo >= 0),
   total_destinatarios integer not null default 0 check (total_destinatarios >= 0),
   total_enviados integer not null default 0 check (total_enviados >= 0),
@@ -162,6 +163,7 @@ for each row execute function public.set_updated_at();
 
 create index if not exists idx_campanas_estado on public.campanas(estado);
 create index if not exists idx_campanas_especialidad on public.campanas(especialidad_codigo);
+create index if not exists idx_campanas_responsable on public.campanas(responsable);
 
 create index if not exists idx_destinatarios_campaign on public.campana_destinatarios(campaign_id);
 create index if not exists idx_destinatarios_estado on public.campana_destinatarios(estado_contacto);

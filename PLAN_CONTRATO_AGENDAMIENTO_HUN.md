@@ -49,7 +49,8 @@ El repo local fue actualizado con `git pull --rebase --autostash`.
 Componentes actuales:
 
 - `server.js`: webhook Meta, envio de Flow, endpoint cifrado `/flow-endpoint`, health check y prueba HUN.
-- `flow-agendamiento.json`: Flow con pantallas `IDENTIFICACION`, `ESPECIALIDAD`, `SLOTS`, `CONFIRMAR`, `FINAL`.
+- `flow-agendamiento.json`: Flow de autoagendamiento con pantallas `IDENTIFICACION`, `ESPECIALIDAD`, `SLOTS`, `CONFIRMAR`, `FINAL`.
+- `flow-demanda-inducida.json`: Flow separado de campanas; no permite seleccion manual de especialidad y, en v1, pide identificacion minima por limitacion del API orquestador.
 - `lib/hun.js`: cliente de API HUN para especialidades, agenda, citas por documento y asignacion.
 - `lib/flowHandler.js`: orquestacion del Flow, seleccion de cupos, persistencia y confirmacion asincrona.
 - `lib/db.js`: persistencia Supabase pendiente de ajustar a almacenamiento minimo no sensible.
@@ -104,8 +105,8 @@ Responsabilidades:
 - WhatsApp/Meta: entrada del paciente, entrega del Flow y ventana conversacional.
 - Backend: reglas de negocio, cifrado de Flow, integracion HUN, logs, estados y errores.
 - API HUN: fuente de especialidades, cupos, pacientes, EPS, asignacion y cancelacion.
-- API oficial de demanda inducida HUN: fuente oficial de audiencia para pacientes a contactar en campanas.
-- Supabase: estado temporal minimo del Flow, estados de campana, destinatarios minimos sincronizados desde el API oficial y eventos tecnicos no sensibles.
+- API oficial de demanda inducida/orquestador HUN: fuente de referencias de audiencia y resolver transitorio de telefono/contexto para pacientes a contactar en campanas.
+- Supabase: estado temporal minimo del Flow, estados de campana, destinatarios minimos por `audiencia_ref` / `id_anonimo` y eventos tecnicos no sensibles.
 - Correo/notificaciones: soporte a recordatorios y demanda inducida cuando el contrato lo exija.
 
 ## Decision de minimizacion de Supabase
@@ -114,7 +115,7 @@ Supabase no sera fuente de verdad clinica ni repositorio de citas. La fuente de 
 
 Supabase solo se usara para lo estrictamente necesario:
 
-- Guardar destinatarios minimos sincronizados desde el API oficial de demanda inducida del hospital.
+- Guardar destinatarios minimos sincronizados por `audiencia_ref` / `id_anonimo`.
 - Registrar campanas y destinatarios con identificadores minimos.
 - Guardar estado temporal del Flow cuando sea necesario para validar la continuidad de la conversacion.
 - Registrar eventos tecnicos, metricas no sensibles y estados operativos para trazabilidad diferenciada por perfil.
@@ -130,13 +131,15 @@ Supabase no debe almacenar:
 - Procedimiento/CUPS.
 - Historia de citas.
 - Respuestas completas JSON/SOAP de HUN.
+- Respuestas completas del API orquestador de demanda inducida.
+- Telefono, correo, medico, servicio o fecha/hora resueltos por el orquestador.
 - Ordenes, autorizaciones, adjuntos o datos clinicos.
 - Tokens, llaves privadas o service role keys.
 
 Campos minimos permitidos en Supabase:
 
 - Campanas: `id`, `nombre`, `especialidad_codigo`, `mensaje_template_id`, `estado`, conteos agregados, timestamps.
-- Destinatarios: `id`, `campaign_id`, `whatsapp_numero`, `tipo_documento`, `documento_hash`, `especialidad_codigo`, `estado_contacto`, timestamps.
+- Destinatarios: `id`, `campaign_id`, `audiencia_ref` / `id_anonimo`, `especialidad_codigo`, `estado_contacto`, opt-out/exclusion, timestamps. `whatsapp_numero`, `tipo_documento` y `documento_hash` quedan solo como compatibilidad/legacy, no como fuente principal de campanas nuevas.
 - Sesion temporal: `flow_token` o `session_id`, `whatsapp_numero`, `estado`, `especialidad_codigo`, `slot_token` o identificadores tecnicos minimos, `expires_at`, timestamps.
 - Eventos: `event_id`, `campaign_id`, `recipient_id`, `session_id_hash`, `event_type`, `status`, `source`, `http_status`, `error_code`, `error_category`, `duration_ms`, `retry_count`, `environment`, `backend_version`, timestamps.
 
@@ -192,7 +195,7 @@ La frase operativa para documentacion contractual sera: "El sistema ofrece traza
 
 ## Decision de fuente de audiencia para demanda inducida
 
-La fuente oficial para la audiencia de campanas sera un API oficial del hospital. Cuando llegue el ticket correspondiente, se debe configurar este API con lo necesario para consumirlo de forma segura:
+La fuente oficial para la audiencia de campanas sera un API oficial del hospital o una carga operativa de referencias `id_anonimo` / `audiencia_ref` en Supabase. El telefono y contexto del paciente se resolveran en memoria mediante el API orquestador antes de enviar WhatsApp. Cuando llegue el ticket correspondiente, se debe configurar este API con lo necesario para consumirlo de forma segura:
 
 - Base URL.
 - Credencial o mecanismo de autenticacion.
@@ -202,15 +205,14 @@ La fuente oficial para la audiencia de campanas sera un API oficial del hospital
 - Manejo de paginacion, errores y reintentos.
 - Reglas de seguridad para no persistir datos sensibles en Supabase.
 
-Si al momento de implementar el ticket el API aun no esta disponible, el flujo se debe desarrollar con un adaptador/mock contractual asumiendo que el API respondera estos campos:
+Si al momento de implementar el ticket la fuente de audiencia aun no esta disponible, el flujo se debe desarrollar con un adaptador/mock contractual asumiendo que cada destinatario tendra como minimo:
 
-- `nombre_paciente`
-- `tipo_documento`
-- `numero_documento`
+- `id_anonimo` / `audiencia_ref`
 - `cod_especialidad_requerida`
-- `numero_telefonico`
 
-En ese escenario, el backend debe usar esos datos solo para armar la campana y contactar al paciente. Supabase solo podra guardar destinatarios minimos, por ejemplo `whatsapp_numero`, `tipo_documento`, `documento_hash`, `especialidad_codigo`, `estado_contacto` y timestamps. No debe guardar `nombre_paciente` ni `numero_documento` plano.
+El resolver actual por `id_anonimo` puede devolver telefono, nombre, correo, fecha, servicio, medico, EPS y estado. El backend debe usar esos datos solo en memoria para contactar al paciente o presentar contexto operativo, sin persistir telefono, nombre, correo, documento plano, EPS, medico, fecha/hora, servicio ni payload completo en Supabase.
+
+Limitacion aprobada: el API orquestador actual no trae `tipo_documento`, `numero_documento`, `eps_codigo` ni especialidad en codigos HUN suficientes para asignar sin pedir identificacion. Por eso el Flow de campana v1 debe pedir identificacion minima y despues mostrar solo cupos de la especialidad de la campana. La version ideal en la que el paciente solo escoge fecha/hora queda condicionada a ampliar el contrato del API.
 
 ## Decision pendiente sobre correo transaccional
 
@@ -316,17 +318,17 @@ Tareas:
 
 - Definir fuente de pacientes:
   - API oficial del hospital para demanda inducida.
-  - Si no esta disponible, adaptador/mock con `nombre_paciente`, `tipo_documento`, `numero_documento`, `cod_especialidad_requerida` y `numero_telefonico`.
+  - Si no esta disponible, adaptador/mock con `id_anonimo` / `audiencia_ref` y `cod_especialidad_requerida`.
 - Crear modelo de campana:
   - nombre
   - especialidad
   - fecha de corte
   - cupos disponibles
-  - destinatarios
+  - destinatarios por `audiencia_ref` / `id_anonimo`
   - estado por destinatario
 - Construir flujo de contacto:
   - mensaje inicial de oferta
-  - CTA hacia WhatsApp Flow
+  - CTA hacia Flow separado de demanda inducida
   - expiracion del cupo
   - reintentos controlados
   - exclusion por opt-out

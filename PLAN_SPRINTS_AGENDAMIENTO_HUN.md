@@ -4,7 +4,7 @@
 
 ## Resumen ejecutivo
 
-Se construira un MVP operativo para agendar, confirmar, cancelar y ofrecer citas desde WhatsApp usando WhatsApp Flows y API HUN de pruebas como fuente de verdad. La audiencia de demanda inducida vendra de un API oficial del hospital; Supabase se usara solo para guardar estado operativo minimo no sensible. El trabajo se organiza por sprints sin fechas, priorizando primero la base tecnica, despues el flujo central de agendamiento, luego campanas/recordatorios/cancelacion, y finalmente QA, seguridad, despliegue y documentacion contractual.
+Se construira un MVP operativo para agendar, confirmar, cancelar y ofrecer citas desde WhatsApp usando WhatsApp Flows y API HUN de pruebas como fuente de verdad. Habra dos Flows separados: uno para autoagendamiento y otro para campanas de demanda inducida. La audiencia de demanda inducida usara referencias `id_anonimo` / `audiencia_ref`; el telefono y contexto se resuelven en memoria contra el API orquestador antes del envio. Supabase se usara solo para guardar estado operativo minimo no sensible. El trabajo se organiza por sprints sin fechas, priorizando primero la base tecnica, despues el flujo central de agendamiento, luego campanas/recordatorios/cancelacion, y finalmente QA, seguridad, despliegue y documentacion contractual.
 
 ## Supuestos y lagunas
 
@@ -12,8 +12,9 @@ Se construira un MVP operativo para agendar, confirmar, cancelar y ofrecer citas
 - Decision aprobada: la API HUN sera la fuente de verdad para paciente, disponibilidad, cita creada, cita cancelada y estado de cita.
 - Decision aprobada: el canal principal sera WhatsApp Cloud API con WhatsApp Flows `data_exchange` cifrado.
 - Decision parcialmente aprobada: el backend Node/Express actual se mantiene como base, pero debe refactorizarse temprano para eliminar la persistencia actual de datos sensibles en Supabase.
-- Decision aprobada: la fuente oficial de audiencia de demanda inducida sera un API oficial del hospital.
-- Pendiente operativo: falta configurar base URL, autenticacion, endpoint, filtros, paginacion y formato real de respuesta del API oficial de demanda inducida.
+- Decision aprobada: las campanas de demanda inducida usaran un Flow separado del Flow de autoagendamiento.
+- Decision aprobada: la lista inicial de campana vive en Supabase solo como `id_anonimo` / `audiencia_ref` y estado operativo; el telefono se resuelve en memoria mediante el API orquestador antes del envio.
+- Pendiente operativo: el API orquestador actual no trae `tipo_documento`, `numero_documento`, `eps_codigo` ni especialidad en codigos suficientes para asignar sin pedir identificacion. Por eso el Flow de campana v1 pide identificacion minima y la version ideal de solo escoger fecha/hora queda condicionada a ampliar el contrato del API.
 - Pendiente operativo: falta definir proveedor/API de correo. Antes de iniciar la integracion real se debe elevar advertencia y confirmar si HUN entregara SMTP, API institucional o proveedor externo aprobado.
 - Decision aprobada: la API HUN consumida es un entorno de pruebas controlado con copia de base de datos; se permite ejecutar POST de asignacion y cancelacion para validar el flujo completo.
 - Decision aprobada: los reportes administrativos se dividen en vista medica/operativa y vista IT/auditoria, con campos minimos no sensibles.
@@ -43,7 +44,8 @@ Se construira un MVP operativo para agendar, confirmar, cancelar y ofrecer citas
 | FLOW-003 | Ejecutar prueba end-to-end de Flow con asignacion | Sprint 2 - Integracion WhatsApp | `testing`, `backend`, `api` | FLOW-001, CORE-005 |
 | CAMPAIGN-001 | Modelar campanas y destinatarios | Sprint 3 - Campanas y notificaciones | `feature`, `database`, `backend` | SETUP-005 |
 | CAMPAIGN-002 | Implementar adaptador de audiencia de demanda inducida | Sprint 3 - Campanas y notificaciones | `feature`, `backend`, `api` | CAMPAIGN-001 |
-| CAMPAIGN-003 | Implementar envio de ofertas de cita por WhatsApp | Sprint 3 - Campanas y notificaciones | `feature`, `backend`, `api` | CAMPAIGN-002, FLOW-001 |
+| FLOW-004 | Crear Flow separado de demanda inducida | Sprint 3 - Campanas y notificaciones | `feature`, `backend`, `flow` | CAMPAIGN-002, CORE-005, FLOW-001 |
+| CAMPAIGN-003 | Implementar envio de ofertas de cita por WhatsApp | Sprint 3 - Campanas y notificaciones | `feature`, `backend`, `api` | CAMPAIGN-002, FLOW-004 |
 | NOTIF-001 | Implementar confirmaciones inmediatas y recordatorios desde HUN | Sprint 3 - Campanas y notificaciones | `feature`, `backend` | CORE-005, CAMPAIGN-001 |
 | NOTIF-002 | Preparar integracion de correo transaccional | Sprint 3 - Campanas y notificaciones | `feature`, `backend`, `needs-discussion` | NOTIF-001 |
 | CANCEL-001 | Implementar flujo de cancelacion de citas | Sprint 4 - Cancelacion y reagendamiento | `feature`, `backend`, `api` | CORE-002, CORE-001 |
@@ -51,7 +53,7 @@ Se construira un MVP operativo para agendar, confirmar, cancelar y ofrecer citas
 | RESCH-001 | Evaluar estrategia de reagendamiento | Sprint 4 - Cancelacion y reagendamiento | `needs-discussion`, `blocked` | CANCEL-002, CORE-005 |
 | ADMIN-001 | Crear consultas administrativas por perfil | Sprint 5 - Operacion y reportes | `feature`, `backend`, `api` | CORE-002, CAMPAIGN-001, CANCEL-002 |
 | ADMIN-002 | Crear exportes por perfil de trazabilidad | Sprint 5 - Operacion y reportes | `feature`, `backend`, `docs` | ADMIN-001 |
-| QA-001 | Construir matriz de pruebas funcionales | Sprint 6 - QA y seguridad | `testing`, `docs` | CORE-005, CAMPAIGN-003, CANCEL-002, NOTIF-001 |
+| QA-001 | Construir matriz de pruebas funcionales | Sprint 6 - QA y seguridad | `testing`, `docs` | CORE-005, FLOW-004, CAMPAIGN-003, CANCEL-002, NOTIF-001 |
 | QA-002 | Implementar pruebas automatizadas de modulos criticos | Sprint 6 - QA y seguridad | `testing`, `backend` | QA-001 |
 | SEC-001 | Revisar proteccion de datos personales y secretos | Sprint 6 - QA y seguridad | `security`, `backend`, `docs` | CORE-002, ADMIN-001 |
 | DEPLOY-001 | Preparar despliegue y verificacion de estabilidad | Sprint 7 - Deploy y cierre contractual | `infra`, `backend`, `testing` | QA-002, SEC-001 |
@@ -98,7 +100,7 @@ Crear la estructura minima necesaria para operar campanas, destinatarios, sesion
 
 ### Microsteps
 1. Definir tabla `campanas` con nombre, especialidad, template, estado y conteos agregados.
-2. Definir tabla `campana_destinatarios` con WhatsApp, tipo de documento, `documento_hash`, especialidad, estado de contacto y timestamps.
+2. Definir tabla `campana_destinatarios` con `audiencia_ref` / `id_anonimo`, especialidad, estado de contacto y timestamps; `whatsapp_numero` y `documento_hash` quedan solo como campos legacy/compatibilidad y no son obligatorios para campanas nuevas.
 3. Definir tabla `flow_sesiones_temporales` con `session_id` o `flow_token`, estado, especialidad, `slot_token`, correo de contacto cifrado transitorio si aplica, expiracion y timestamps.
 4. Definir tabla `eventos_operativos` con `event_id`, `campaign_id`, `recipient_id`, `session_id_hash`, `event_type`, `status`, `source`, `http_status`, `error_code`, `error_category`, `duration_ms`, `retry_count`, `environment`, `backend_version` y timestamp.
 5. Definir tabla `notificaciones` con canal, tipo, estado, proveedor, error tecnico y timestamp.
@@ -406,20 +408,25 @@ Validar el recorrido completo del WhatsApp Flow con asignacion real contra la AP
 **Blocked by**: -
 
 ### Descripcion
-Definir el modelo operativo para campanas de oferta de citas y demanda inducida. Este modulo permite contactar pacientes, medir respuestas y enlazar el CTA hacia el Flow de agendamiento.
+Definir el modelo operativo para campanas de oferta de citas y demanda inducida. Este modulo permite contactar pacientes, medir respuestas y enlazar el CTA hacia un Flow de campana separado del autoagendamiento. Para demanda inducida, Supabase guarda `audiencia_ref` / `id_anonimo` como referencia operativa principal; el telefono se resuelve en memoria contra el API orquestador antes del envio.
 
 ### Microsteps
 1. Definir estados de campana: borrador, programada, enviando, activa, cerrada y cancelada.
 2. Definir estados de destinatario: pendiente, enviado, entregado, respondido, flow_iniciado, agendado, fallido y excluido.
 3. Agregar campos de especialidad, cupos objetivo, origen de datos y responsable.
-4. Relacionar destinatarios con WhatsApp, `documento_hash`, especialidad y campana.
-5. Definir reglas de opt-out y exclusion.
+4. Relacionar destinatarios con `audiencia_ref` / `id_anonimo`, especialidad y campana.
+5. Dejar `whatsapp_numero`, `tipo_documento` y `documento_hash` como campos legacy/compatibilidad, no obligatorios para campanas nuevas.
+6. Definir reglas de opt-out y exclusion.
+7. Agregar migracion incremental para soportar `audiencia_ref` sin guardar telefono, nombre, correo, documento plano, EPS ni payload del orquestador.
 
 ### Criterios de aceptacion
 - [ ] Las tablas soportan una campana con multiples destinatarios.
 - [ ] Cada destinatario tiene estado independiente.
 - [ ] El modelo permite asociar resultado `agendado` con una campana sin guardar datos de la cita.
 - [ ] Existe campo para excluir destinatarios por opt-out o criterio operativo.
+- [ ] El modelo soporta destinatarios de demanda inducida identificados por `audiencia_ref` / `id_anonimo`.
+- [ ] `whatsapp_numero` y `documento_hash` no son obligatorios para campanas nuevas basadas en resolver orquestador.
+- [ ] Supabase no almacena telefono, nombre, correo, EPS, medico, fecha/hora, servicio ni payload completo del orquestador.
 
 ## [CAMPAIGN-002] Implementar adaptador de audiencia de demanda inducida
 
@@ -428,49 +435,86 @@ Definir el modelo operativo para campanas de oferta de citas y demanda inducida.
 **Blocked by**: -
 
 ### Descripcion
-Construir el mecanismo para obtener destinatarios desde el API oficial de demanda inducida del hospital. Si el API aun no esta disponible cuando se ejecute este ticket, se debe desarrollar contra un adaptador/mock contractual con los campos acordados para no bloquear el flujo de campanas.
+Construir el mecanismo para operar audiencia de demanda inducida separando la fuente de referencias y el resolver de contacto. Supabase contiene solo `id_anonimo` / `audiencia_ref`, campana, especialidad y estado operativo. El API orquestador `GET /api/v1/get-appointment/{id_anonimo}` se consulta en memoria para obtener telefono y contexto antes del envio, sin persistir esos datos.
 
 ### Microsteps
-1. Definir variables de configuracion requeridas para el API: base URL, autenticacion, endpoint, filtros, paginacion y timeout.
-2. Definir contrato real o provisional de respuesta con `nombre_paciente`, `tipo_documento`, `numero_documento`, `cod_especialidad_requerida` y `numero_telefonico`.
-3. Implementar adaptador del API oficial y adaptador/mock con el mismo contrato si el API aun no esta disponible.
-4. Validar campos obligatorios, formato de telefono, especialidad y duplicados.
-5. Crear destinatarios minimos asociados a una campana usando `documento_hash` y `especialidad_codigo`.
-6. Descartar `nombre_paciente` y `numero_documento` plano antes de persistir en Supabase.
-7. Generar resumen de sincronizacion con totales aceptados, rechazados, duplicados y errores del API.
+1. Definir variables de configuracion para la fuente de audiencia y para el resolver orquestador: base URL, endpoint, API key, timeout y formato de `id_anonimo`.
+2. Definir contrato minimo de audiencia con `id_anonimo` / `audiencia_ref` y `cod_especialidad_requerida`.
+3. Implementar o documentar adaptador/mock para cargar referencias de audiencia sin datos sensibles.
+4. Implementar resolver por `id_anonimo` para obtener telefono y contexto solo en memoria antes del envio.
+5. Validar `id_anonimo`, especialidad y duplicados por `campaign_id + audiencia_ref`.
+6. Crear destinatarios minimos asociados a una campana usando `audiencia_ref` y `especialidad_codigo`.
+7. Descartar telefono, nombre, correo, EPS, medico, fecha/hora, servicio y payload completo del orquestador antes de persistir en Supabase.
+8. Generar resumen de sincronizacion/resolucion con totales aceptados, rechazados, duplicados y errores no sensibles.
+9. Documentar que el contrato actual no permite un Flow que solo muestre fecha/hora porque faltan `tipo_documento`, `numero_documento`, `eps_codigo` y especialidad en codigos HUN suficientes.
 
 ### Criterios de aceptacion
 - [ ] El ticket documenta las variables requeridas para configurar el API oficial.
-- [ ] Si el API no esta disponible, el adaptador/mock permite ejecutar el flujo con los cinco campos acordados.
+- [ ] Si la fuente de audiencia no esta disponible, el adaptador/mock permite cargar referencias `id_anonimo` / `audiencia_ref` sin datos sensibles.
 - [ ] Para `CONTRACT_READY`, el API real de demanda inducida queda configurado o existe waiver formal del supervisor.
-- [ ] Una lectura valida del API o mock crea/sincroniza destinatarios minimos en Supabase.
+- [ ] Una lectura valida de audiencia o mock crea/sincroniza destinatarios minimos en Supabase.
+- [ ] Un `id_anonimo` valido se puede resolver en memoria para obtener telefono antes del envio sin persistirlo.
 - [ ] Registros duplicados no se insertan dos veces.
 - [ ] Registros invalidos reportan motivo verificable.
-- [ ] Supabase no guarda `nombre_paciente` ni `numero_documento` plano.
+- [ ] Supabase no guarda telefono, nombre, correo, documento plano, EPS, medico, fecha/hora, servicio ni payload completo del orquestador.
 - [ ] El resumen de sincronizacion muestra aceptados, rechazados, duplicados y errores.
+
+## [FLOW-004] Crear Flow separado de demanda inducida
+
+**Labels**: `feature`, `backend`, `flow`
+**Depends on**: CAMPAIGN-002, CORE-005, FLOW-001
+**Blocked by**: Accion externa en Meta para crear/publicar el Flow de demanda inducida y asociarlo a la plantilla de campana.
+
+### Descripcion
+Crear un WhatsApp Flow independiente para campanas de demanda inducida. No debe reutilizar `flow-agendamiento.json` ni `FLOW_ID`. En v1, por limitacion del API orquestador, el Flow pide identificacion minima y despues muestra solo slots de la especialidad asociada a la campana. No permite seleccionar especialidad manualmente.
+
+### Microsteps
+1. Crear `flow-demanda-inducida.json` con pantallas de identificacion minima, seleccion de slot, confirmacion y final.
+2. Excluir pantalla de seleccion de especialidad; la especialidad viene firmada en el contexto de campana.
+3. Configurar variables `CAMPAIGN_FLOW_ID`, `CAMPAIGN_FLOW_SCREEN_ID`, `CAMPAIGN_TEMPLATE_NAME` y `CAMPAIGN_TEMPLATE_LANGUAGE`.
+4. Implementar en backend la distincion entre Flow de autoagendamiento y Flow de campana mediante `flow_token` firmado o metadata equivalente.
+5. Validar expiracion, `campaign_id`, `recipient_id` / `audiencia_ref`, especialidad y estado sin guardar datos sensibles.
+6. Reutilizar `slot_token` y reconsulta HUN de `CORE-004/CORE-005` para listar y confirmar cupos.
+7. Registrar eventos operativos no sensibles para inicio de Flow de campana, identificacion, slots, confirmacion y errores.
+8. Documentar que la version de solo escoger fecha/hora queda bloqueada hasta que el API orquestador entregue documento, EPS/codigo y especialidad requerida en codigos utilizables por HUN.
+
+### Criterios de aceptacion
+- [ ] Existe JSON separado para demanda inducida y no se modifica el Flow de autoagendamiento para este caso.
+- [ ] El Flow de campana no permite elegir especialidad manualmente.
+- [ ] La plantilla de campana abre `CAMPAIGN_FLOW_ID`, no `FLOW_ID`.
+- [ ] El backend enruta correctamente autoagendamiento vs campana.
+- [ ] El Flow de campana usa `slot_token` + reconsulta HUN y no persiste slots completos.
+- [ ] Supabase no guarda telefono, nombre, correo, documento plano, EPS, medico, fecha/hora, numero de cita ni payload del orquestador.
+- [ ] Si el API orquestador no trae datos suficientes para omitir identificacion, el Flow v1 pide identificacion minima y lo documenta como limitacion operativa.
 
 ## [CAMPAIGN-003] Implementar envio de ofertas de cita por WhatsApp
 
 **Labels**: `feature`, `backend`, `api`
-**Depends on**: CAMPAIGN-002, FLOW-001
+**Depends on**: CAMPAIGN-002, FLOW-004
 **Blocked by**: -
 
 ### Descripcion
-Enviar mensajes de oferta de citas por WhatsApp a destinatarios de campana, enlazando al Flow de agendamiento. El envio debe actualizar estados y respetar exclusiones.
+Enviar mensajes de oferta de citas por WhatsApp a destinatarios de campana, enlazando al Flow de demanda inducida. El envio debe resolver telefono en memoria con `audiencia_ref` / `id_anonimo`, actualizar estados operativos y respetar exclusiones.
 
 ### Microsteps
-1. Definir plantilla de mensaje de oferta y CTA hacia Flow.
-2. Seleccionar destinatarios pendientes y no excluidos.
-3. Enviar mensaje mediante WhatsApp Cloud API.
-4. Guardar resultado de envio en `notificaciones`.
-5. Actualizar estado del destinatario segun exito o error.
-6. Registrar errores de rate limit, token invalido o numero invalido.
+1. Definir plantilla de mensaje de oferta con CTA hacia `CAMPAIGN_FLOW_ID`.
+2. Seleccionar destinatarios pendientes y no excluidos con `audiencia_ref` / `id_anonimo`.
+3. Consultar API orquestador por cada `id_anonimo` antes del envio.
+4. Normalizar telefono solo en memoria.
+5. Construir `flow_token` firmado con campana, destinatario/referencia, especialidad y expiracion.
+6. Enviar mensaje mediante WhatsApp Cloud API.
+7. Guardar resultado de envio en `notificaciones` sin telefono, cuerpo completo ni datos del resolver.
+8. Actualizar estado del destinatario segun exito o error.
+9. Registrar errores de rate limit, token invalido, numero invalido, 403/404/timeout del orquestador o Flow no configurado.
 
 ### Criterios de aceptacion
 - [ ] Solo se envian mensajes a destinatarios pendientes y no excluidos.
+- [ ] Cada envio resuelve el telefono desde `id_anonimo` en memoria y no lo persiste en Supabase.
+- [ ] La plantilla abre el Flow de demanda inducida, no el Flow de autoagendamiento.
+- [ ] Cada mensaje incluye `flow_token` firmado y con expiracion.
 - [ ] Cada envio genera registro en `notificaciones`.
 - [ ] El estado del destinatario cambia a enviado o fallido.
-- [ ] Los errores de WhatsApp quedan disponibles para reporte.
+- [ ] Los errores de WhatsApp y del orquestador quedan disponibles para reporte como motivos no sensibles.
 
 ## [NOTIF-001] Implementar confirmaciones inmediatas y recordatorios desde HUN
 
@@ -665,14 +709,14 @@ Permitir exportar informacion separada para informes medico-operativos y para so
 ## [QA-001] Construir matriz de pruebas funcionales
 
 **Labels**: `testing`, `docs`
-**Depends on**: CORE-005, CAMPAIGN-003, CANCEL-002, NOTIF-001
+**Depends on**: CORE-005, FLOW-004, CAMPAIGN-003, CANCEL-002, NOTIF-001
 **Blocked by**: -
 
 ### Descripcion
 Crear la matriz de pruebas que demuestre cumplimiento funcional del contrato: agendamiento, confirmacion, cancelacion, demanda inducida, notificaciones y estabilidad. La matriz debe incluir pruebas de lectura y pruebas modificadoras contra la API HUN de pruebas controlada.
 
 ### Microsteps
-1. Listar casos de prueba por modulo y endpoint.
+1. Listar casos de prueba por modulo y endpoint, separando autoagendamiento y demanda inducida.
 2. Marcar casos que crean/cancelan citas como permitidos en el entorno HUN de pruebas y revalidables antes de produccion.
 3. Definir datos de prueba autorizados.
 4. Definir resultado esperado y evidencia por caso.
@@ -681,6 +725,8 @@ Crear la matriz de pruebas que demuestre cumplimiento funcional del contrato: ag
 
 ### Criterios de aceptacion
 - [ ] La matriz cubre agendamiento, confirmacion, cancelacion, campanas, recordatorios y logs.
+- [ ] La matriz cubre dos Flows separados: autoagendamiento y demanda inducida.
+- [ ] La matriz valida que campanas no permitan seleccion manual de especialidad.
 - [ ] Los casos destructivos o modificadores estan claramente marcados.
 - [ ] Cada caso tiene resultado esperado verificable.
 - [ ] La matriz incluye columna de evidencia.
@@ -799,19 +845,23 @@ Preparar el cierre contractual con informe final de pruebas y documento de traba
 
 ### Microsteps
 1. Consolidar resultados de matriz de pruebas.
-2. Resumir evidencia de agendamiento, confirmacion, cancelacion, campanas y notificaciones.
+2. Resumir evidencia de agendamiento, confirmacion, cancelacion, campanas, Flow de demanda inducida y notificaciones.
 3. Documentar limitaciones tecnicas y operativas encontradas.
 4. Listar requerimientos funcionales futuros.
 5. Listar requerimientos no funcionales futuros.
-6. Adjuntar evidencia de API real de demanda inducida configurada o waiver formal si queda pendiente.
+6. Adjuntar evidencia de API real de demanda inducida/orquestador configurada o waiver formal si queda pendiente.
 7. Adjuntar evidencia de proveedor/API de correo definido o waiver formal si queda solo interfaz placeholder.
-8. Clasificar el cierre alcanzado como `DEV_READY`, `MVP_TEST_READY` o `CONTRACT_READY`.
-9. Preparar version final para revision del supervisor.
+8. Adjuntar evidencia de dos Flow IDs separados en Meta y de plantilla de campana aprobada.
+9. Documentar que la version de campana sin identificacion queda pendiente hasta ampliacion del API orquestador, si aplica.
+10. Clasificar el cierre alcanzado como `DEV_READY`, `MVP_TEST_READY` o `CONTRACT_READY`.
+11. Preparar version final para revision del supervisor.
 
 ### Criterios de aceptacion
 - [ ] El informe final cubre todos los modulos contractuales.
 - [ ] Las pruebas modificadoras quedan ejecutadas o documentadas contra la API HUN de pruebas controlada.
 - [ ] Las dependencias externas obligatorias tienen evidencia real o waiver formal documentado.
+- [ ] El informe incluye evidencia de `FLOW_ID` de autoagendamiento, `CAMPAIGN_FLOW_ID` de demanda inducida y plantilla de campana aprobada.
+- [ ] Si la campana v1 pide identificacion minima por limitacion del API, queda documentado como restriccion aprobada y trabajo futuro.
 - [ ] El informe no declara `CONTRACT_READY` si quedan mocks/placeholders obligatorios sin aprobacion formal.
 - [ ] El trabajo futuro incluye adjuntos/autorizaciones, portal administrativo, analitica y hardening.
 - [ ] El documento esta listo para entregar al supervisor.
@@ -824,12 +874,12 @@ Preparar el cierre contractual con informe final de pruebas y documento de traba
 4. Ejecutar CORE-001 y CORE-002 en paralelo cuando SETUP-005 y SETUP-004 esten listos.
 5. Ejecutar CORE-003, CORE-004 y CORE-005 en secuencia.
 6. Ejecutar FLOW-001 cuando CORE-003 este listo; FLOW-002 despues de FLOW-001 y CORE-005; ejecutar FLOW-003 solo despues de FLOW-001 y CORE-005 para probar asignacion real.
-7. Ejecutar CAMPAIGN-001 solo despues de SETUP-005; luego CAMPAIGN-002 y CAMPAIGN-003. Si el API oficial de demanda inducida no esta disponible, CAMPAIGN-002 debe avanzar con el adaptador/mock contractual, sin declarar `CONTRACT_READY` salvo waiver formal.
+7. Ejecutar CAMPAIGN-001 solo despues de SETUP-005; luego CAMPAIGN-002, FLOW-004 y CAMPAIGN-003. CAMPAIGN-003 no debe enviar plantillas que abran el Flow de autoagendamiento; debe esperar a que `CAMPAIGN_FLOW_ID` este creado/publicado. Si el API real de demanda inducida/orquestador no esta disponible, CAMPAIGN-002 debe avanzar con el adaptador/mock contractual, sin declarar `CONTRACT_READY` salvo waiver formal.
 8. Ejecutar NOTIF-001 despues de CORE-005 y CAMPAIGN-001; al cerrar NOTIF-001 se debe elevar advertencia si el proveedor/API de correo no esta definido. NOTIF-002 solo puede hacer envio real cuando exista proveedor/API aprobado; si no, se limita a interfaz/adaptador placeholder.
 9. Ejecutar CANCEL-001 y CANCEL-002 despues de estabilizar el cliente HUN y trazabilidad.
 10. Ejecutar RESCH-001 despues de CANCEL-002 y CORE-005, o marcarlo como trabajo futuro si no hay endpoint especifico o regla operativa suficiente.
 11. Ejecutar ADMIN-001 y ADMIN-002 cuando existan datos de eventos operativos, campanas y cancelaciones verificadas contra HUN.
-12. Ejecutar QA-001 cuando los flujos principales y NOTIF-001 esten implementados; QA-002 despues de definir la matriz.
+12. Ejecutar QA-001 cuando los flujos principales, FLOW-004 y NOTIF-001 esten implementados; QA-002 despues de definir la matriz.
 13. Ejecutar SEC-001 antes de cualquier despliegue operativo.
 14. Ejecutar DEPLOY-001 despues de QA-002 y SEC-001.
 15. Ejecutar DOCS-001 y DOCS-002 al cierre, usando evidencia de QA, seguridad, despliegue y operacion.
@@ -837,9 +887,10 @@ Preparar el cierre contractual con informe final de pruebas y documento de traba
 ## Cobertura de requerimientos
 
 - Canal WhatsApp con backend: SETUP-001, FLOW-001, DEPLOY-001.
-- WhatsApp Flow de agendamiento: CORE-003, CORE-004, CORE-005, FLOW-002, FLOW-003.
+- WhatsApp Flow de autoagendamiento: CORE-003, CORE-004, CORE-005, FLOW-002, FLOW-003.
+- WhatsApp Flow de demanda inducida: CAMPAIGN-002, FLOW-004, CAMPAIGN-003.
 - API HUN de especialidades, agenda, historial y asignacion: SETUP-004, CORE-001, CORE-005.
-- Campana de oferta de citas: CAMPAIGN-001, CAMPAIGN-002, CAMPAIGN-003.
+- Campana de oferta de citas: CAMPAIGN-001, CAMPAIGN-002, FLOW-004, CAMPAIGN-003.
 - Recordatorios y confirmaciones: NOTIF-001, NOTIF-002.
 - Cancelacion: CANCEL-001, CANCEL-002.
 - Reagendamiento/trabajo futuro: RESCH-001, DOCS-002.

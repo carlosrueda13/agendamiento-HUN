@@ -5,7 +5,7 @@ Backend Node/Express para pruebas del canal de agendamiento HUN con WhatsApp Clo
 El proyecto permite:
 
 - Recibir mensajes entrantes de WhatsApp por webhook.
-- Enviar un WhatsApp Flow de agendamiento.
+- Enviar Flow de autoagendamiento o Flow separado de demanda inducida, segun el contexto.
 - Procesar pantallas del Flow desde `/flow-endpoint`.
 - Consultar especialidades, agenda e historial contra la API HUN de pruebas.
 - Confirmar citas contra HUN en segundo plano.
@@ -41,6 +41,7 @@ Reglas vigentes:
 |-- explorar-api-hun.js
 |-- lib/
 |   |-- db.js
+|   |-- demandaInducida.js
 |   |-- flowCrypto.js
 |   |-- flowHandler.js
 |   |-- hun.js
@@ -53,6 +54,7 @@ Reglas vigentes:
 |-- AGENTS.md
 |-- SETUP_LOCAL_CHECKLIST.md
 |-- SUPABASE_MINIMO.md
+|-- DEMANDA_INDUCIDA_API.md
 |-- package.json
 `-- .env.example
 ```
@@ -82,6 +84,11 @@ Copiar `.env.example` a `.env` para pruebas locales y completar valores reales s
 
 - `FLOW_ID`
 - `FLOW_SCREEN_ID`
+- `CAMPAIGN_FLOW_ID`
+- `CAMPAIGN_FLOW_SCREEN_ID`
+- `CAMPAIGN_TEMPLATE_NAME`
+- `CAMPAIGN_TEMPLATE_LANGUAGE`
+- `CAMPAIGN_FLOW_TOKEN_SECRET_B64` opcional; si no se define, el backend deriva la firma de tokens de campana desde `FLOW_SLOT_TOKEN_SECRET_B64` o `FLOW_SESSION_PII_KEY_B64`.
 - `FLOW_PRIVATE_KEY_B64`
 - `FLOW_KEY_PASSPHRASE`
 - `FLOW_SESSION_PII_KEY_B64`
@@ -93,6 +100,8 @@ Copiar `.env.example` a `.env` para pruebas locales y completar valores reales s
 - `HUN_API_BASE`
 - `HUN_API_KEY`
 
+`FLOW_ID` corresponde al autoagendamiento. Las campanas de demanda inducida deben usar `CAMPAIGN_FLOW_ID` y un JSON de Flow separado.
+
 ### API oficial de demanda inducida
 
 Estas variables quedan documentadas aunque el endpoint real aun no este disponible:
@@ -102,6 +111,11 @@ Estas variables quedan documentadas aunque el endpoint real aun no este disponib
 - `HUN_DEMANDA_API_TOKEN`
 - `HUN_DEMANDA_API_ENDPOINT`
 - `HUN_DEMANDA_API_TIMEOUT_MS`
+- `HUN_ORQUESTADOR_API_BASE`
+- `HUN_ORQUESTADOR_API_KEY`
+- `HUN_ORQUESTADOR_API_ENDPOINT`
+
+El adaptador de audiencia esta documentado en `DEMANDA_INDUCIDA_API.md`. La campana debe guardar solo `id_anonimo` / `audiencia_ref` en Supabase; el telefono y contexto se consultan en memoria contra el orquestador justo antes de enviar WhatsApp. Si las APIs reales no estan configuradas, el backend puede usar un mock contractual para desarrollo; eso no equivale a `CONTRACT_READY` sin API real o waiver formal.
 
 ### EmailJS
 
@@ -177,6 +191,14 @@ node explorar-api-hun.js --allow-mutations --confirm-hun-test --cancel-cita 1534
 
 No ejecutar esas banderas contra ambientes no controlados.
 
+Envio manual de ofertas de demanda inducida:
+
+```bash
+node scripts/send-campaign-offers.js <campaign_id> [limit]
+```
+
+Este comando usa `CAMPAIGN_FLOW_ID=2195324014654953`, `CAMPAIGN_TEMPLATE_NAME=hun_oferta_cita_flow`, el resolver `HUN_ORQUESTADOR_*` y WhatsApp Cloud API. La salida es un resumen agregado; no imprime telefono, nombre, correo ni payloads del orquestador.
+
 ## API HUN de pruebas
 
 Base URL documentada:
@@ -222,10 +244,12 @@ Vistas esperadas:
 
 Supabase debe usarse solo para trazabilidad operativa, campanas, destinatarios minimos, sesiones temporales y notificaciones no sensibles.
 
+Para campanas de demanda inducida, ejecutar tambien las migraciones incrementales aprobadas, incluida `supabase/004_campaign_audiencia_ref.sql`, antes de usar destinatarios por `id_anonimo` en Supabase real.
+
 ## Flujo WhatsApp
 
-1. `POST /webhook` recibe un mensaje entrante.
-2. El backend envia el WhatsApp Flow configurado en Meta.
+1. `POST /webhook` recibe un mensaje entrante o dispara una campana aprobada.
+2. El backend envia el WhatsApp Flow correspondiente: autoagendamiento con `FLOW_ID` o demanda inducida con `CAMPAIGN_FLOW_ID`.
 3. Meta llama `POST /flow-endpoint` con payload cifrado.
 4. `lib/flowCrypto.js` descifra la solicitud.
 5. `lib/flowHandler.js` procesa cada pantalla y consulta HUN.

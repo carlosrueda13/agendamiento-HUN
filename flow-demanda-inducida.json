@@ -1,0 +1,192 @@
+{
+  "version": "7.3",
+  "data_api_version": "3.0",
+  "routing_model": {
+    "IDENTIFICACION": ["SLOTS"],
+    "SLOTS": ["CONFIRMAR"],
+    "CONFIRMAR": ["FINAL"],
+    "FINAL": []
+  },
+  "screens": [
+    {
+      "id": "IDENTIFICACION",
+      "title": "Identificacion",
+      "data": {},
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextHeading",
+            "text": "Oferta de cita"
+          },
+          {
+            "type": "TextBody",
+            "text": "Valida tu documento para ver los horarios disponibles de la especialidad asignada."
+          },
+          {
+            "type": "Form",
+            "name": "form_identificacion",
+            "children": [
+              {
+                "type": "Dropdown",
+                "name": "tipo_documento",
+                "label": "Tipo de documento",
+                "required": true,
+                "data-source": [
+                  { "id": "CC", "title": "Cedula de ciudadania" },
+                  { "id": "CE", "title": "Cedula de extranjeria" },
+                  { "id": "PT", "title": "Permiso por proteccion temporal" },
+                  { "id": "TI", "title": "Tarjeta de identidad" },
+                  { "id": "RC", "title": "Registro civil" },
+                  { "id": "PA", "title": "Pasaporte" }
+                ]
+              },
+              {
+                "type": "TextInput",
+                "name": "numero_documento",
+                "label": "Numero de documento",
+                "input-type": "number",
+                "required": true
+              },
+              {
+                "type": "Footer",
+                "label": "Ver horarios",
+                "on-click-action": {
+                  "name": "data_exchange",
+                  "payload": {
+                    "tipo_documento": "${form.tipo_documento}",
+                    "numero_documento": "${form.numero_documento}"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "SLOTS",
+      "title": "Disponibilidad",
+      "data": {
+        "slots": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "title": { "type": "string" },
+              "description": { "type": "string" }
+            }
+          },
+          "__example__": [
+            {
+              "id": "slot_token_ejemplo",
+              "title": "29 jun 07:00 - Profesional HUN",
+              "description": "Consulta disponible para la especialidad asignada"
+            }
+          ]
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextBody",
+            "text": "Selecciona el horario que te sirve."
+          },
+          {
+            "type": "Form",
+            "name": "form_slot",
+            "children": [
+              {
+                "type": "RadioButtonsGroup",
+                "name": "slot",
+                "label": "Horarios disponibles",
+                "required": true,
+                "data-source": "${data.slots}"
+              },
+              {
+                "type": "Footer",
+                "label": "Continuar",
+                "on-click-action": {
+                  "name": "data_exchange",
+                  "payload": {
+                    "slot": "${form.slot}"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "CONFIRMAR",
+      "title": "Confirmar cita",
+      "data": {
+        "resumen": {
+          "type": "string",
+          "__example__": "Especialidad asignada: PSIQUIATRIA\nFecha: 2026-06-29 07:00\nLugar: HUN"
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextHeading",
+            "text": "Confirma tu cita"
+          },
+          {
+            "type": "TextBody",
+            "text": "${data.resumen}"
+          },
+          {
+            "type": "Footer",
+            "label": "Confirmar cita",
+            "on-click-action": {
+              "name": "data_exchange",
+              "payload": {}
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "FINAL",
+      "title": "Listo",
+      "terminal": true,
+      "success": true,
+      "data": {
+        "mensaje": {
+          "type": "string",
+          "__example__": "Tu cita quedo agendada."
+        },
+        "detalle": {
+          "type": "string",
+          "__example__": "Recibiras la confirmacion por WhatsApp."
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextHeading",
+            "text": "${data.mensaje}"
+          },
+          {
+            "type": "TextBody",
+            "text": "${data.detalle}"
+          },
+          {
+            "type": "Footer",
+            "label": "Finalizar",
+            "on-click-action": {
+              "name": "complete",
+              "payload": {}
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

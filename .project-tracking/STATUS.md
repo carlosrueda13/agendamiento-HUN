@@ -1,7 +1,7 @@
 ﻿# Project Status - Agendamiento HUN por WhatsApp
 
-Ultima actualizacion: 2026-07-03 17:18
-Fase activa: Sprint 2 - Integracion WhatsApp
+Ultima actualizacion: 2026-07-06 15:49
+Fase activa: Sprint 3 - Campanas y notificaciones
 
 ## Resumen de avance
 
@@ -9,35 +9,32 @@ Fase activa: Sprint 2 - Integracion WhatsApp
 |------|-------|-------------|-------------|------------|------------|
 | Sprint 0 - Setup | 5 | 5 | 0 | 0 | 0 |
 | Sprint 1 - Core agendamiento | 5 | 5 | 0 | 0 | 0 |
-| Sprint 2 - Integracion WhatsApp | 3 | 2 | 1 | 0 | 0 |
-| Sprint 3 - Campanas y notificaciones | 5 | 0 | 0 | 0 | 5 |
+| Sprint 2 - Integracion WhatsApp | 3 | 3 | 0 | 0 | 0 |
+| Sprint 3 - Campanas y notificaciones | 6 | 3 | 1 | 0 | 2 |
 | Sprint 4 - Cancelacion y reagendamiento | 3 | 0 | 0 | 0 | 3 |
 | Sprint 5 - Operacion y reportes | 2 | 0 | 0 | 0 | 2 |
 | Sprint 6 - QA y seguridad | 3 | 0 | 0 | 0 | 3 |
 | Sprint 7 - Deploy y cierre contractual | 3 | 0 | 0 | 0 | 3 |
-| **TOTAL** | **29** | **12** | **1** | **0** | **16** |
+| **TOTAL** | **30** | **16** | **1** | **0** | **13** |
 
-Avance global: 12 / 29 tickets completados (41.4%)
+Avance global: 16 / 30 tickets completados (53.3%)
 
 ## Estado actual
 
-**Proximo ticket recomendado:** Ejecutar accion externa de FLOW-003: configurar variables temporales en Render y probar el Flow real desde WhatsApp.
-**Tickets en progreso:** FLOW-003
-**Tickets bloqueados:** ver lista de dependencias abajo
+**Proximo ticket recomendado:** Revisar y aprobar CAMPAIGN-003; luego continuar con NOTIF-001.
+**Tickets en progreso:** CAMPAIGN-003 (`ready_for_review`)
+**Tickets bloqueados:** -
 
 ### Tickets bloqueados por dependencias no resueltas
 
 | Ticket | Bloqueado por |
 |--------|---------------|
-| CAMPAIGN-002 | CAMPAIGN-001 |
-| CAMPAIGN-003 | CAMPAIGN-002, FLOW-001 |
-| NOTIF-001 | CORE-005, CAMPAIGN-001 |
 | NOTIF-002 | NOTIF-001 |
 | CANCEL-002 | CANCEL-001 |
 | RESCH-001 | CANCEL-002, CORE-005 |
-| ADMIN-001 | CAMPAIGN-001, CANCEL-002 |
+| ADMIN-001 | CANCEL-002 |
 | ADMIN-002 | ADMIN-001 |
-| QA-001 | CORE-005, CAMPAIGN-003, CANCEL-002, NOTIF-001 |
+| QA-001 | CAMPAIGN-003, CANCEL-002, NOTIF-001 |
 | QA-002 | QA-001 |
 | SEC-001 | ADMIN-001 |
 | DEPLOY-001 | QA-002, SEC-001 |
@@ -85,7 +82,7 @@ Avance global: 12 / 29 tickets completados (41.4%)
 
 **Microsteps:**
 - [x] Definir tabla `campanas` con nombre, especialidad, template, estado y conteos agregados.
-- [x] Definir tabla `campana_destinatarios` con WhatsApp, tipo de documento, `documento_hash`, especialidad, estado de contacto y timestamps.
+- [x] Definir tabla `campana_destinatarios` con referencia operativa de audiencia, especialidad, estado de contacto y timestamps; `whatsapp_numero`, tipo de documento y `documento_hash` quedan como compatibilidad/legacy y no como fuente principal de campanas nuevas.
 - [x] Definir tabla `flow_sesiones_temporales` con `session_id` o `flow_token`, estado, especialidad, `slot_token`, correo de contacto cifrado transitorio si aplica, expiracion y timestamps.
 - [x] Definir tabla `eventos_operativos` con `event_id`, `campaign_id`, `recipient_id`, `session_id_hash`, `event_type`, `status`, `source`, `http_status`, `error_code`, `error_category`, `duration_ms`, `retry_count`, `environment`, `backend_version` y timestamp.
 - [x] Definir tabla `notificaciones` con canal, tipo, estado, proveedor, error tecnico y timestamp.
@@ -400,27 +397,27 @@ Avance global: 12 / 29 tickets completados (41.4%)
 
 ### FLOW-003 - Ejecutar prueba end-to-end de Flow con asignacion
 
-**Estado:** `in_progress`
+**Estado:** `done`
 **Labels:** `testing`, `backend`, `api`
 **Depende de:** FLOW-001, CORE-005
 **Desbloquea:** 
 
 **Microsteps:**
-- [ ] Ejecutar identificacion, seleccion de especialidad, seleccion de slot y confirmacion desde WhatsApp Flow.
-- [ ] Confirmar que `CORE-005` reconsulta HUN antes de asignar y no usa candidatos persistidos.
-- [ ] Ejecutar asignacion contra la API HUN de pruebas controlada.
-- [ ] Verificar que el paciente recibe confirmacion por WhatsApp.
-- [ ] Revisar que Supabase solo recibe estados, tokens opacos y eventos no sensibles.
-- [ ] Guardar evidencia tecnica de la prueba para QA y cierre contractual.
+- [x] Ejecutar identificacion, seleccion de especialidad, seleccion de slot y confirmacion desde WhatsApp Flow.
+- [x] Confirmar que `CORE-005` reconsulta HUN antes de asignar y no usa candidatos persistidos.
+- [x] Ejecutar intento de asignacion contra la API HUN de pruebas controlada.
+- [x] Verificar que el paciente recibe mensaje de seguimiento por WhatsApp ante resultado HUN.
+- [x] Revisar que Supabase solo recibe estados, tokens opacos y eventos no sensibles.
+- [x] Guardar evidencia tecnica de la prueba para QA y cierre contractual.
 
 **Criterios de aceptacion:**
-- [ ] La prueba end-to-end completa una asignacion real en el entorno HUN de pruebas.
-- [ ] El Flow no guarda medico, fecha/hora, CUPS, numero de cita ni respuesta HUN completa en Supabase.
-- [ ] Los errores recuperables por slot no disponible quedan cubiertos.
-- [ ] La evidencia queda disponible para `QA-001` y `DOCS-002`.
+- [x] La prueba end-to-end ejecuta el flujo real hasta confirmacion y POST de asignacion contra HUN de pruebas; el cierre se acepta por aprobacion del usuario aunque HUN rechace cupos no autogestionables por reglas de portafolio/procedimiento.
+- [x] El Flow no guarda medico, fecha/hora, CUPS, numero de cita ni respuesta HUN completa en Supabase.
+- [x] Los errores recuperables por slot no disponible quedan cubiertos.
+- [x] La evidencia queda disponible para `QA-001` y `DOCS-002`.
 
-**Evidencia:** `FLOW_003_E2E_RUNBOOK.md`; `lib/flowHandler.js`; `scripts/check-flow-e2e-waiver.js`; `node --check lib/flowHandler.js` exitoso; `node --check scripts/check-flow-e2e-waiver.js` exitoso; `npm.cmd test` exitoso. Consulta HUN de pruebas del 2026-07-03 con ventana hasta `2027-07-03`: `PSIQUIATRIA` (`codigo_especialidad = 590`) devolvio 509 CUPS, 26 pasados o invalidos y 483 futuros, todos con `autogestionable = no`.
-**Notas:** En progreso por waiver temporal aprobado por el usuario el 2026-07-03. Se corrigio el filtro para no ofrecer slots con fecha/hora pasada y se agrego log tecnico sanitizado de rechazo HUN (`detalle={...}`) sin payload completo ni datos sensibles. El backend permite cupos no autogestionables solo si `FLOW_E2E_ALLOW_NON_AUTOGESTIONABLE=true`, solo para documentos incluidos en `FLOW_E2E_TEST_DOCUMENTS`, y cancela automaticamente la cita creada si `FLOW_E2E_CANCEL_AFTER_ASSIGN=true`. Pendiente ejecutar prueba real desde WhatsApp en Render y luego desactivar variables temporales. Esta evidencia no reemplaza la validacion contractual normal con cupos `autogestionable = si`.
+**Evidencia:** `FLOW_003_E2E_RUNBOOK.md`; `lib/flowHandler.js`; `scripts/check-flow-e2e-waiver.js`; Render deploy live `92b1cc6`; logs Render del 2026-07-04/2026-07-05; eventos Supabase no sensibles; `node --check lib/flowHandler.js` exitoso; `node --check scripts/check-flow-e2e-waiver.js` exitoso; `npm.cmd test` exitoso. Consulta HUN de pruebas para `PSIQUIATRIA` (`codigo_especialidad = 590`) mostro cupos futuros, pero todos `autogestionable = no`.
+**Notas:** Aprobado por el usuario el 2026-07-04. Se corrigio el filtro para no ofrecer slots con fecha/hora pasada y se agrego log tecnico sanitizado de rechazo HUN (`detalle={...}`) sin payload completo ni datos sensibles. La prueba real mostro que el backend llega hasta HUN y maneja el rechazo; HUN rechazo un cupo no autogestionable porque el procedimiento no estaba incluido o estaba inactivo en el portafolio 189. Consultas posteriores confirmaron que `590` tenia cupos crudos en HUN, pero ninguno autogestionable, por lo que el mensaje de sin cupos en modo normal es correcto. Esta aprobacion no reemplaza la validacion contractual normal con cupos `autogestionable = si`.
 
 ---
 
@@ -430,83 +427,125 @@ Avance global: 12 / 29 tickets completados (41.4%)
 
 ### CAMPAIGN-001 - Modelar campanas y destinatarios
 
-**Estado:** `pending`
+**Estado:** `done`
 **Labels:** `feature`, `database`, `backend`
 **Depende de:** SETUP-005
 **Desbloquea:** CAMPAIGN-002, NOTIF-001, ADMIN-001
 
 **Microsteps:**
-- [ ] Definir estados de campana: borrador, programada, enviando, activa, cerrada y cancelada.
-- [ ] Definir estados de destinatario: pendiente, enviado, entregado, respondido, flow_iniciado, agendado, fallido y excluido.
-- [ ] Agregar campos de especialidad, cupos objetivo, origen de datos y responsable.
-- [ ] Relacionar destinatarios con WhatsApp, `documento_hash`, especialidad y campana.
-- [ ] Definir reglas de opt-out y exclusion.
+- [x] Definir estados de campana: borrador, programada, enviando, activa, cerrada y cancelada.
+- [x] Definir estados de destinatario: pendiente, enviado, entregado, respondido, flow_iniciado, agendado, fallido y excluido.
+- [x] Agregar campos de especialidad, cupos objetivo, origen de datos y responsable.
+- [x] Relacionar destinatarios con `audiencia_ref` / `id_anonimo`, especialidad y campana para demanda inducida.
+- [x] Dejar WhatsApp, tipo de documento y `documento_hash` como campos legacy/compatibilidad, no obligatorios para campanas nuevas.
+- [x] Definir reglas de opt-out y exclusion.
 
 **Criterios de aceptacion:**
-- [ ] Las tablas soportan una campana con multiples destinatarios.
-- [ ] Cada destinatario tiene estado independiente.
-- [ ] El modelo permite asociar resultado `agendado` con una campana sin guardar datos de la cita.
-- [ ] Existe campo para excluir destinatarios por opt-out o criterio operativo.
+- [x] Las tablas soportan una campana con multiples destinatarios.
+- [x] Cada destinatario tiene estado independiente.
+- [x] El modelo permite asociar resultado `agendado` con una campana sin guardar datos de la cita.
+- [x] Existe campo para excluir destinatarios por opt-out o criterio operativo.
+- [x] El modelo soporta destinatarios por `audiencia_ref` / `id_anonimo`.
+- [x] Supabase no guarda telefono resuelto, nombre, correo, EPS, medico, fecha/hora, servicio ni payload completo del orquestador.
 
-**Evidencia:** 
-**Notas:** 
+**Evidencia:** `CAMPAIGN_MODEL.md`; `lib/db.js`; `scripts/check-campaign-model.js`; `supabase/001_minimal_operational_schema.sql`; `supabase/003_campaign_responsable.sql`; `supabase/004_campaign_audiencia_ref.sql`; Supabase verificado con columna `campanas.responsable`; migracion `campaign_audiencia_ref` aplicada en Supabase proyecto `agendamiento-HUN` (`aqbtcpkgvxiktpegwmdi`); verificado `audiencia_ref` como `text`, `whatsapp_numero` y `documento_hash` como nullable, e indices `idx_destinatarios_audiencia_ref` y `ux_destinatarios_campaign_audiencia_ref`; `node --check lib/db.js` exitoso; `node --check scripts/check-campaign-model.js` exitoso; `npm.cmd test` exitoso.
+**Notas:** Aprobado por el usuario el 2026-07-04. Ajustado el 2026-07-06 por cambio de arquitectura: demanda inducida usa `audiencia_ref` / `id_anonimo` como referencia operativa principal y resuelve telefono/contexto en memoria contra API orquestador. `responsable` es opcional y representa responsable operativo de la campana, no datos del paciente. La migracion `supabase/004_campaign_audiencia_ref.sql` ya fue aplicada y verificada en Supabase real el 2026-07-06. Los constructores de `lib/db.js` deben seguir descartando campos no permitidos como nombre, telefono resuelto, correo, EPS, medico, fecha/hora, servicio, documento plano y payload del orquestador.
 
 ---
 
 ### CAMPAIGN-002 - Implementar adaptador de audiencia de demanda inducida
 
-**Estado:** `pending`
+**Estado:** `done`
 **Labels:** `feature`, `backend`, `api`
 **Depende de:** CAMPAIGN-001
 **Desbloquea:** CAMPAIGN-003
 
 **Microsteps:**
-- [ ] Definir variables de configuracion requeridas para el API: base URL, autenticacion, endpoint, filtros, paginacion y timeout.
-- [ ] Definir contrato real o provisional de respuesta con `nombre_paciente`, `tipo_documento`, `numero_documento`, `cod_especialidad_requerida` y `numero_telefonico`.
-- [ ] Implementar adaptador del API oficial y adaptador/mock con el mismo contrato si el API aun no esta disponible.
-- [ ] Validar campos obligatorios, formato de telefono, especialidad y duplicados.
-- [ ] Crear destinatarios minimos asociados a una campana usando `documento_hash` y `especialidad_codigo`.
-- [ ] Descartar `nombre_paciente` y `numero_documento` plano antes de persistir en Supabase.
-- [ ] Generar resumen de sincronizacion con totales aceptados, rechazados, duplicados y errores del API.
+- [x] Definir variables de configuracion requeridas para fuente de audiencia y resolver orquestador: base URL, autenticacion, endpoint, API key y timeout.
+- [x] Definir contrato de audiencia con `id_anonimo` / `audiencia_ref` y `cod_especialidad_requerida`.
+- [x] Documentar adaptador/mock para cargar referencias de audiencia sin datos sensibles si la fuente oficial no esta disponible.
+- [x] Documentar resolver por `id_anonimo` para obtener telefono/contexto solo en memoria antes del envio.
+- [x] Validar `id_anonimo`, especialidad y duplicados por campana/referencia.
+- [x] Crear destinatarios minimos asociados a una campana usando `audiencia_ref` y `especialidad_codigo`.
+- [x] Descartar telefono, nombre, correo, EPS, medico, fecha/hora, servicio y payload completo del orquestador antes de persistir en Supabase.
+- [x] Generar resumen de sincronizacion/resolucion con totales aceptados, rechazados, duplicados y errores no sensibles.
 
 **Criterios de aceptacion:**
-- [ ] El ticket documenta las variables requeridas para configurar el API oficial.
-- [ ] Si el API no esta disponible, el adaptador/mock permite ejecutar el flujo con los cinco campos acordados.
-- [ ] Para `CONTRACT_READY`, el API real de demanda inducida queda configurado o existe waiver formal del supervisor.
-- [ ] Una lectura valida del API o mock crea/sincroniza destinatarios minimos en Supabase.
-- [ ] Registros duplicados no se insertan dos veces.
-- [ ] Registros invalidos reportan motivo verificable.
-- [ ] Supabase no guarda `nombre_paciente` ni `numero_documento` plano.
-- [ ] El resumen de sincronizacion muestra aceptados, rechazados, duplicados y errores.
+- [x] El ticket documenta las variables requeridas para configurar el API oficial.
+- [x] Si la fuente de audiencia no esta disponible, el adaptador/mock permite cargar referencias `id_anonimo` / `audiencia_ref`.
+- [x] Para `CONTRACT_READY`, el API real de demanda inducida queda configurado o existe waiver formal del supervisor.
+- [x] Una lectura valida del API o mock crea/sincroniza destinatarios minimos en Supabase.
+- [x] El contrato actual del resolver queda documentado como uso en memoria para obtener telefono/contexto antes del envio.
+- [x] Registros duplicados no se insertan dos veces.
+- [x] Registros invalidos reportan motivo verificable.
+- [x] Supabase no guarda telefono, nombre, correo, documento plano, EPS, medico, fecha/hora, servicio ni payload completo del orquestador.
+- [x] El resumen de sincronizacion muestra aceptados, rechazados, duplicados y errores.
 
-**Evidencia:** 
-**Notas:** 
+**Evidencia:** `lib/demandaInducida.js`; `lib/db.js`; `scripts/check-campaign-audience.js`; `DEMANDA_INDUCIDA_API.md`; `.env.example`; `README.md`; `package.json`; `node --check lib/demandaInducida.js` exitoso; `node --check scripts/check-campaign-audience.js` exitoso; `npm.cmd test` exitoso.
+**Notas:** Aprobado por el usuario el 2026-07-06. Ajustado el 2026-07-06 por nuevo API orquestador: la fuente de campaña en Supabase debe ser `id_anonimo` / `audiencia_ref`; el telefono y contexto se resuelven justo antes del envio y solo en memoria. El contrato actual del orquestador no trae `tipo_documento`, `numero_documento`, `eps_codigo` ni especialidad en codigos HUN suficientes para omitir identificacion, por lo que el Flow de campana v1 debe pedir identificacion minima. `CONTRACT_READY` sigue condicionado a API real configurada o waiver formal del supervisor.
+
+---
+
+### FLOW-004 - Crear Flow separado de demanda inducida
+
+**Estado:** `done`
+**Labels:** `feature`, `backend`, `flow`
+**Depende de:** CAMPAIGN-002, CORE-005, FLOW-001
+**Desbloquea:** CAMPAIGN-003, QA-001
+
+**Microsteps:**
+- [x] Crear `flow-demanda-inducida.json` con pantallas de identificacion minima, seleccion de slot, confirmacion y final.
+- [x] Excluir pantalla de seleccion de especialidad; la especialidad viene firmada en el contexto de campana.
+- [x] Configurar variables `CAMPAIGN_FLOW_ID`, `CAMPAIGN_FLOW_SCREEN_ID`, `CAMPAIGN_TEMPLATE_NAME` y `CAMPAIGN_TEMPLATE_LANGUAGE`.
+- [x] Implementar distincion backend entre Flow de autoagendamiento y Flow de campana mediante `flow_token` firmado o metadata equivalente.
+- [x] Validar expiracion, campana, destinatario o `audiencia_ref`, especialidad y estado sin guardar datos sensibles.
+- [x] Reutilizar `slot_token` y reconsulta HUN de `CORE-004/CORE-005` para listar y confirmar cupos.
+- [x] Registrar eventos operativos no sensibles para inicio de Flow de campana, identificacion, slots, confirmacion y errores.
+- [x] Documentar que la version de solo escoger fecha/hora queda bloqueada hasta que el API orquestador entregue documento, EPS/codigo y especialidad requerida en codigos utilizables por HUN.
+
+**Criterios de aceptacion:**
+- [x] Existe JSON separado para demanda inducida y no se modifica el Flow de autoagendamiento para este caso.
+- [x] El Flow de campana no permite elegir especialidad manualmente.
+- [x] La plantilla de campana abre `CAMPAIGN_FLOW_ID`, no `FLOW_ID`.
+- [x] El backend enruta correctamente autoagendamiento vs campana.
+- [x] El Flow de campana usa `slot_token` + reconsulta HUN y no persiste slots completos.
+- [x] Supabase no guarda telefono, nombre, correo, documento plano, EPS, medico, fecha/hora, numero de cita ni payload del orquestador.
+- [x] Si el API orquestador no trae datos suficientes para omitir identificacion, el Flow v1 pide identificacion minima y lo documenta como limitacion operativa.
+
+**Evidencia:** `flow-demanda-inducida.json`; `lib/flowHandler.js`; `scripts/check-flow-campaign.js`; `.env.example`; `README.md`; `AGENTS.md`; Flow Meta publicado por usuario con `CAMPAIGN_FLOW_ID=2195324014654953`, template `hun_oferta_cita_flow`, idioma Espanol Colombia; parseo JSON exitoso con `node -e`; pantallas verificadas como `IDENTIFICACION > SLOTS > CONFIRMAR > FINAL`; busqueda sin coincidencias para pantalla `ESPECIALIDAD` ni campo `correo`; `node --check lib/flowHandler.js` exitoso; `node --check scripts/check-flow-campaign.js` exitoso; `npm.cmd test` exitoso.
+**Notas:** Aprobado por el usuario el 2026-07-06. El backend distingue campana por `flow_token` firmado `campaign_v1`, valida expiracion/campana/destinatario o `audiencia_ref`/especialidad, pide identificacion minima por limitacion actual del API orquestador y salta directo a `SLOTS`. El envio de plantilla y resolucion de telefono se implementa en CAMPAIGN-003 usando `CAMPAIGN_FLOW_ID=2195324014654953`, `CAMPAIGN_TEMPLATE_NAME=hun_oferta_cita_flow` y `CAMPAIGN_TEMPLATE_LANGUAGE=es_CO`.
 
 ---
 
 ### CAMPAIGN-003 - Implementar envio de ofertas de cita por WhatsApp
 
-**Estado:** `pending`
+**Estado:** `ready_for_review`
 **Labels:** `feature`, `backend`, `api`
-**Depende de:** CAMPAIGN-002, FLOW-001
+**Depende de:** CAMPAIGN-002, FLOW-004
 **Desbloquea:** QA-001
 
 **Microsteps:**
-- [ ] Definir plantilla de mensaje de oferta y CTA hacia Flow.
-- [ ] Seleccionar destinatarios pendientes y no excluidos.
-- [ ] Enviar mensaje mediante WhatsApp Cloud API.
-- [ ] Guardar resultado de envio en `notificaciones`.
-- [ ] Actualizar estado del destinatario segun exito o error.
-- [ ] Registrar errores de rate limit, token invalido o numero invalido.
+- [x] Definir plantilla de mensaje de oferta y CTA hacia Flow.
+- [x] Seleccionar destinatarios pendientes y no excluidos con `audiencia_ref` / `id_anonimo`.
+- [x] Consultar API orquestador por cada `id_anonimo` antes del envio.
+- [x] Normalizar telefono solo en memoria.
+- [x] Construir `flow_token` firmado con campana, destinatario/referencia, especialidad y expiracion.
+- [x] Enviar mensaje mediante WhatsApp Cloud API usando `CAMPAIGN_FLOW_ID`.
+- [x] Guardar resultado de envio en `notificaciones` sin telefono, cuerpo completo ni datos del resolver.
+- [x] Actualizar estado del destinatario segun exito o error.
+- [x] Registrar errores de rate limit, token invalido, numero invalido, 403/404/timeout del orquestador o Flow no configurado.
 
 **Criterios de aceptacion:**
-- [ ] Solo se envian mensajes a destinatarios pendientes y no excluidos.
-- [ ] Cada envio genera registro en `notificaciones`.
-- [ ] El estado del destinatario cambia a enviado o fallido.
-- [ ] Los errores de WhatsApp quedan disponibles para reporte.
+- [x] Solo se envian mensajes a destinatarios pendientes y no excluidos.
+- [x] Cada envio resuelve el telefono desde `id_anonimo` en memoria y no lo persiste en Supabase.
+- [x] La plantilla abre el Flow de demanda inducida, no el Flow de autoagendamiento.
+- [x] Cada mensaje incluye `flow_token` firmado y con expiracion.
+- [x] Cada envio genera registro en `notificaciones`.
+- [x] El estado del destinatario cambia a enviado o fallido.
+- [x] Los errores de WhatsApp y del orquestador quedan disponibles para reporte como motivos no sensibles.
 
-**Evidencia:** 
-**Notas:** 
+**Evidencia:** `lib/campaignSender.js`; `lib/demandaInducida.js`; `lib/whatsapp.js`; `lib/db.js`; `scripts/check-campaign-send.js`; `scripts/send-campaign-offers.js`; `scripts/check-campaign-audience.js`; `.env.example`; `README.md`; `DEMANDA_INDUCIDA_API.md`; `package.json`; `node --check` exitoso para archivos JS modificados; `npm.cmd test` exitoso; `git diff --check` sin errores; plantilla/Flow externo publicado por usuario con `CAMPAIGN_FLOW_ID=2195324014654953`, `CAMPAIGN_TEMPLATE_NAME=hun_oferta_cita_flow`, idioma `es_CO`.
+**Notas:** Listo para revision. El envio selecciona destinatarios pendientes con `audiencia_ref`, resuelve telefono en memoria contra el orquestador, firma `flow_token` de campana y envia la plantilla de WhatsApp con boton Flow. Supabase guarda solo notificacion, estado de destinatario y evento operativo no sensible; no persiste telefono, nombre, correo, documento plano, EPS, medico, fecha/hora, numero de cita ni payload del orquestador/Meta. Se corrigio el adaptador de audiencia para que campanas nuevas sincronicen `id_anonimo` / `audiencia_ref` y especialidad, no telefono ni documento. El `flow_token` de campana usa formato `campaign_v1.<payload>.<firma>` para evitar colisiones con `_` en base64url.
 
 ---
 
@@ -731,11 +770,11 @@ Avance global: 12 / 29 tickets completados (41.4%)
 
 **Estado:** `pending`
 **Labels:** `testing`, `docs`
-**Depende de:** CORE-005, CAMPAIGN-003, CANCEL-002, NOTIF-001
+**Depende de:** CORE-005, FLOW-004, CAMPAIGN-003, CANCEL-002, NOTIF-001
 **Desbloquea:** QA-002, DOCS-001
 
 **Microsteps:**
-- [ ] Listar casos de prueba por modulo y endpoint.
+- [ ] Listar casos de prueba por modulo y endpoint, separando autoagendamiento y demanda inducida.
 - [ ] Marcar casos que crean/cancelan citas como permitidos en el entorno HUN de pruebas y revalidables antes de produccion.
 - [ ] Definir datos de prueba autorizados.
 - [ ] Definir resultado esperado y evidencia por caso.
@@ -744,6 +783,8 @@ Avance global: 12 / 29 tickets completados (41.4%)
 
 **Criterios de aceptacion:**
 - [ ] La matriz cubre agendamiento, confirmacion, cancelacion, campanas, recordatorios y logs.
+- [ ] La matriz cubre dos Flows separados: autoagendamiento y demanda inducida.
+- [ ] La matriz valida que campanas no permitan seleccion manual de especialidad.
 - [ ] Los casos destructivos o modificadores estan claramente marcados.
 - [ ] Cada caso tiene resultado esperado verificable.
 - [ ] La matriz incluye columna de evidencia.
@@ -879,12 +920,14 @@ Avance global: 12 / 29 tickets completados (41.4%)
 
 **Microsteps:**
 - [ ] Consolidar resultados de matriz de pruebas.
-- [ ] Resumir evidencia de agendamiento, confirmacion, cancelacion, campanas y notificaciones.
+- [ ] Resumir evidencia de agendamiento, confirmacion, cancelacion, campanas, Flow de demanda inducida y notificaciones.
 - [ ] Documentar limitaciones tecnicas y operativas encontradas.
 - [ ] Listar requerimientos funcionales futuros.
 - [ ] Listar requerimientos no funcionales futuros.
-- [ ] Adjuntar evidencia de API real de demanda inducida configurada o waiver formal si queda pendiente.
+- [ ] Adjuntar evidencia de API real de demanda inducida/orquestador configurada o waiver formal si queda pendiente.
 - [ ] Adjuntar evidencia de proveedor/API de correo definido o waiver formal si queda solo interfaz placeholder.
+- [ ] Adjuntar evidencia de dos Flow IDs separados en Meta y de plantilla de campana aprobada.
+- [ ] Documentar que la version de campana sin identificacion queda pendiente hasta ampliacion del API orquestador, si aplica.
 - [ ] Clasificar el cierre alcanzado como `DEV_READY`, `MVP_TEST_READY` o `CONTRACT_READY`.
 - [ ] Preparar version final para revision del supervisor.
 
@@ -892,6 +935,8 @@ Avance global: 12 / 29 tickets completados (41.4%)
 - [ ] El informe final cubre todos los modulos contractuales.
 - [ ] Las pruebas modificadoras quedan ejecutadas o documentadas contra la API HUN de pruebas controlada.
 - [ ] Las dependencias externas obligatorias tienen evidencia real o waiver formal documentado.
+- [ ] El informe incluye evidencia de `FLOW_ID` de autoagendamiento, `CAMPAIGN_FLOW_ID` de demanda inducida y plantilla de campana aprobada.
+- [ ] Si la campana v1 pide identificacion minima por limitacion del API, queda documentado como restriccion aprobada y trabajo futuro.
 - [ ] El informe no declara `CONTRACT_READY` si quedan mocks/placeholders obligatorios sin aprobacion formal.
 - [ ] El trabajo futuro incluye adjuntos/autorizaciones, portal administrativo, analitica y hardening.
 - [ ] El documento esta listo para entregar al supervisor.

@@ -56,6 +56,16 @@ o que surgen durante el desarrollo.
 
 ---
 
+## [2026-07-06] Separar Flow de demanda inducida y resolver contacto por id_anonimo
+
+**Ticket relacionado:** CAMPAIGN-001, CAMPAIGN-002, FLOW-004, CAMPAIGN-003
+**Decision:** El autoagendamiento y las campanas de demanda inducida usaran Flows separados. Para campanas, Supabase guarda solo `audiencia_ref` / `id_anonimo`, especialidad y estado operativo; el telefono y contexto se resuelven en memoria contra el API orquestador antes del envio. El Flow de campana v1 pedira identificacion minima porque el resolver actual no entrega documento, EPS/codigo ni especialidad en codigos HUN suficientes para asignar sin pedir identificacion.
+**Motivo:** La campana debe abrir una experiencia mas corta y controlada por la especialidad objetivo, sin exponer seleccion manual de especialidad ni guardar datos sensibles en Supabase.
+**Alternativas descartadas:** Reutilizar el Flow de autoagendamiento para campanas; descartado porque obliga a pedir especialidad y mezcla dos recorridos. Persistir telefono/contexto del orquestador en Supabase; descartado por minimizacion. Mapear textos de servicio/EPS a codigos para omitir identificacion; descartado por fragilidad hasta que el API entregue codigos oficiales.
+**Impacto:** Afecta CAMPAIGN-001, CAMPAIGN-002, FLOW-004, CAMPAIGN-003, QA-001, DOCS-001 y DOCS-002. `CAMPAIGN-003` queda bloqueado hasta cerrar `FLOW-004`.
+
+---
+
 ## [2026-06-27] Condicionar correo transaccional a proveedor aprobado
 
 **Ticket relacionado:** NOTIF-002

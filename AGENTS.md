@@ -4,6 +4,8 @@
 
 Backend Node/Express para agendar, confirmar, cancelar y ofrecer citas HUN desde WhatsApp Cloud API usando WhatsApp Flows `data_exchange` cifrado. La API HUN de pruebas es la fuente de verdad para pacientes, disponibilidad, asignacion, cancelacion y estado de cita. Supabase solo puede guardar estado operativo minimo no sensible para campanas, destinatarios, sesiones temporales, notificaciones y eventos tecnicos.
 
+Hay dos Flows separados: autoagendamiento usa `flow-agendamiento.json` y `FLOW_ID`; campanas de demanda inducida usan un JSON separado, por ejemplo `flow-demanda-inducida.json`, y `CAMPAIGN_FLOW_ID`. No reutilizar el Flow de autoagendamiento para campanas.
+
 Antes de implementar cualquier cambio, leer `.project-tracking/STATUS.md` y trabajar solo el proximo ticket recomendado o el ticket que el usuario indique. No iniciar el siguiente ticket hasta que el usuario apruebe el actual como `done`.
 
 ## Arquitectura y Estructura
@@ -14,6 +16,7 @@ Archivos principales:
 
 - `server.js`: health check `/`, `GET/POST /webhook`, `POST /flow-endpoint`, envio inicial del Flow.
 - `flow-agendamiento.json`: pantallas `IDENTIFICACION`, `ESPECIALIDAD`, `SLOTS`, `CONFIRMAR`, `FINAL`.
+- `flow-demanda-inducida.json`: Flow separado de campana; debe pedir identificacion minima en v1 y no permitir seleccion manual de especialidad.
 - `lib/hun.js`: cliente HUN para especialidades, agenda, citas por documento y asignacion.
 - `lib/flowHandler.js`: orquestacion del Flow y confirmacion asincrona.
 - `lib/flowCrypto.js`: descifrado/cifrado requerido por WhatsApp Flows.
@@ -30,6 +33,8 @@ Decisiones vigentes que no se deben romper:
 - Los slots se manejan con `slot_token` opaco firmado y reconsulta HUN, no con candidatos completos persistidos.
 - La cancelacion usa `cancel_token`, contexto temporal con TTL e idempotencia, no numero de cita persistido.
 - Recordatorios reales deben derivarse de consultas HUN por ventana; si HUN no expone endpoint suficiente, dejar `ReminderCandidateProvider` y bloqueo operativo.
+- Campanas de demanda inducida guardan solo `audiencia_ref` / `id_anonimo`, especialidad y estado operativo; telefono y contexto se resuelven en memoria contra el API orquestador antes de enviar WhatsApp.
+- El Flow de campana v1 pide identificacion minima porque el API orquestador actual no entrega documento, EPS/codigo ni especialidad en codigos HUN suficientes para asignar sin identificar al paciente.
 - `RESCH-001` es condicional/bloqueado hasta endpoint HUN de reagendamiento o regla operativa aprobada.
 - `DEV_READY`, `MVP_TEST_READY` y `CONTRACT_READY` son gates distintos; mocks/placeholders no equivalen a cierre contractual sin waiver formal.
 
@@ -83,10 +88,10 @@ TODO: agregar scripts `test`, `lint` y `build` cuando los tickets de QA/configur
 
 ## Contexto Adicional
 
-Variables esperadas, sin valores reales: `VERIFY_TOKEN`, `WHATSAPP_TOKEN`, `PHONE_NUMBER_ID`, `GRAPH_API_VERSION`, `FLOW_ID`, `FLOW_SCREEN_ID`, `FLOW_PRIVATE_KEY_B64`, `FLOW_KEY_PASSPHRASE`, `FLOW_SESSION_PII_KEY_B64`, `HUN_API_BASE`, `HUN_API_KEY`, `HUN_DEMANDA_API_BASE`, `HUN_DEMANDA_API_AUTH_TYPE`, `HUN_DEMANDA_API_TOKEN`, `HUN_DEMANDA_API_ENDPOINT`, `HUN_DEMANDA_API_TIMEOUT_MS`, `EMAILJS_SERVICE_ID`, `EMAILJS_TEMPLATE_ID`, `EMAILJS_PUBLIC_KEY`, `EMAILJS_PRIVATE_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
+Variables esperadas, sin valores reales: `VERIFY_TOKEN`, `WHATSAPP_TOKEN`, `PHONE_NUMBER_ID`, `GRAPH_API_VERSION`, `FLOW_ID`, `FLOW_SCREEN_ID`, `CAMPAIGN_FLOW_ID`, `CAMPAIGN_FLOW_SCREEN_ID`, `CAMPAIGN_TEMPLATE_NAME`, `CAMPAIGN_TEMPLATE_LANGUAGE`, `CAMPAIGN_FLOW_TOKEN_SECRET_B64`, `FLOW_PRIVATE_KEY_B64`, `FLOW_KEY_PASSPHRASE`, `FLOW_SESSION_PII_KEY_B64`, `FLOW_SLOT_TOKEN_SECRET_B64`, `HUN_API_BASE`, `HUN_API_KEY`, `HUN_DEMANDA_API_BASE`, `HUN_DEMANDA_API_AUTH_TYPE`, `HUN_DEMANDA_API_TOKEN`, `HUN_DEMANDA_API_ENDPOINT`, `HUN_DEMANDA_API_TIMEOUT_MS`, `HUN_ORQUESTADOR_API_BASE`, `HUN_ORQUESTADOR_API_KEY`, `HUN_ORQUESTADOR_API_ENDPOINT`, `EMAILJS_SERVICE_ID`, `EMAILJS_TEMPLATE_ID`, `EMAILJS_PUBLIC_KEY`, `EMAILJS_PRIVATE_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
 
 Endpoints HUN relevantes: especialidades, citas por documento, cita por numero, agenda por especialidad, asignar cita, cancelar cita y verificar cancelacion. Consultar `PLAN_CONTRATO_AGENDAMIENTO_HUN.md` para el detalle contractual y `PLAN_SPRINTS_AGENDAMIENTO_HUN.md` para el alcance por tickets.
 
 El README actual puede estar desactualizado frente al plan, especialmente sobre Supabase y HUN. Cuando haya conflicto, seguir `.project-tracking/STATUS.md`, `.project-tracking/DECISIONS.md` y los planes aprobados; corregir README en `SETUP-003`.
 
-Informacion pendiente que requiere confirmacion antes de implementacion real: API oficial de demanda inducida, proveedor/API de correo, reglas de opt-out/consentimiento, criterio final de produccion para POST HUN y estrategia final de reagendamiento.
+Informacion pendiente que requiere confirmacion antes de implementacion real: configuracion final de variables de campana en Render cuando se implemente CAMPAIGN-003, posible ampliacion del API orquestador para omitir identificacion en campanas, proveedor/API de correo, reglas de opt-out/consentimiento, criterio final de produccion para POST HUN y estrategia final de reagendamiento.
