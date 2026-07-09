@@ -61,6 +61,16 @@ hun.asignarCita = async (payload) => {
   };
 };
 
+hun.consultarCitaNumero = async () => [
+  {
+    Especialidad: "ANESTESIOLOGIA",
+    Medico: "MEDICO CONFIRMADO",
+    Procedimiento: "CONSULTA DE PRIMERA VEZ POR ANESTESIOLOGIA",
+    Cita_Fecha: "Wed, 05 Aug 2026 00:00:00 GMT",
+    Hora_Cita: "08:00",
+  },
+];
+
 wa.sendText = async (to, message) => {
   sentMessages.push({ to, message });
 };
@@ -160,6 +170,10 @@ async function assertConfirmRequeriesAndAssignsFreshSlot() {
   assert(assignedPayloads[0].agenda_detalle_id === "AG-777", "Debe asignar con agenda fresca.");
   assert(assignedPayloads[0].eps === "HUN22", "Debe validar EPS antes de asignar.");
   assert(sentMessages[0].message.includes("Tu cita quedo agendada."), "Debe confirmar por WhatsApp.");
+  assert(
+    sentMessages[0].message.includes("CONSULTA DE PRIMERA VEZ POR ANESTESIOLOGIA"),
+    "Debe incluir procedimiento real consultado por numero de cita."
+  );
   assert(sentMessages[0].message.includes("1534700"), "Numero de cita solo debe enviarse al paciente.");
   assertNoSensitiveEventPayloads();
 }

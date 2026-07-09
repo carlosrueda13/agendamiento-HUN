@@ -49,6 +49,16 @@ hun.asignarCita = async () => ({
   },
 });
 
+hun.consultarCitaNumero = async () => [
+  {
+    Especialidad: "ESPECIALIDAD 590",
+    Medico: "MEDICO CAMPANIA CONFIRMADO",
+    Procedimiento: "CONSULTA DE PRIMERA VEZ POR MEDICINA GENERAL",
+    Cita_Fecha: "Fri, 17 Jul 2026 00:00:00 GMT",
+    Hora_Cita: "07:00",
+  },
+];
+
 wa.sendText = async (to, message) => {
   sentMessages.push({ to, message });
 };
@@ -164,6 +174,10 @@ async function assertCampaignIdentificationSkipsSpecialty() {
   assert(
     sentMessages[0].to === "573001112233",
     "Confirmacion de campania debe enviarse al telefono cifrado en el token, no al flow_token."
+  );
+  assert(
+    sentMessages[0].message.includes("CONSULTA DE PRIMERA VEZ POR MEDICINA GENERAL"),
+    "Confirmacion de campania debe usar Procedimiento real de la cita creada."
   );
 }
 
