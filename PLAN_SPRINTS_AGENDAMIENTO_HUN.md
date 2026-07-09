@@ -11,6 +11,7 @@ Se construira un MVP operativo para agendar, confirmar, cancelar y ofrecer citas
 - Decision aprobada: Supabase no guardara citas, datos clinicos ni datos sensibles; solo se usara para campanas, destinatarios minimos sincronizados, sesiones temporales y eventos tecnicos no sensibles.
 - Decision aprobada: la API HUN sera la fuente de verdad para paciente, disponibilidad, cita creada, cita cancelada y estado de cita.
 - Decision aprobada: el canal principal sera WhatsApp Cloud API con WhatsApp Flows `data_exchange` cifrado.
+- Decision aprobada: todo mensaje entrante debe pasar primero por menu inicial y consentimiento de tratamiento de datos antes de abrir un Flow o consultar HUN.
 - Decision parcialmente aprobada: el backend Node/Express actual se mantiene como base, pero debe refactorizarse temprano para eliminar la persistencia actual de datos sensibles en Supabase.
 - Decision aprobada: las campanas de demanda inducida usaran un Flow separado del Flow de autoagendamiento.
 - Decision aprobada: la lista inicial de campana vive en Supabase solo como `id_anonimo` / `audiencia_ref` y estado operativo; el telefono se resuelve en memoria mediante el API orquestador antes del envio.
@@ -42,13 +43,14 @@ Se construira un MVP operativo para agendar, confirmar, cancelar y ofrecer citas
 | FLOW-001 | Validar cifrado y publicacion de WhatsApp Flow | Sprint 2 - Integracion WhatsApp | `feature`, `backend`, `security` | CORE-003 |
 | FLOW-002 | Implementar manejo de errores conversacionales | Sprint 2 - Integracion WhatsApp | `feature`, `backend` | FLOW-001, CORE-005 |
 | FLOW-003 | Ejecutar prueba end-to-end de Flow con asignacion | Sprint 2 - Integracion WhatsApp | `testing`, `backend`, `api` | FLOW-001, CORE-005 |
+| INTAKE-001 | Implementar menu inicial y consentimiento WhatsApp | Sprint 2 - Integracion WhatsApp | `feature`, `backend`, `whatsapp`, `privacy` | FLOW-001, CORE-001 |
 | CAMPAIGN-001 | Modelar campanas y destinatarios | Sprint 3 - Campanas y notificaciones | `feature`, `database`, `backend` | SETUP-005 |
 | CAMPAIGN-002 | Implementar adaptador de audiencia de demanda inducida | Sprint 3 - Campanas y notificaciones | `feature`, `backend`, `api` | CAMPAIGN-001 |
 | FLOW-004 | Crear Flow separado de demanda inducida | Sprint 3 - Campanas y notificaciones | `feature`, `backend`, `flow` | CAMPAIGN-002, CORE-005, FLOW-001 |
 | CAMPAIGN-003 | Implementar envio de ofertas de cita por WhatsApp | Sprint 3 - Campanas y notificaciones | `feature`, `backend`, `api` | CAMPAIGN-002, FLOW-004 |
 | NOTIF-001 | Implementar confirmaciones inmediatas y recordatorios desde HUN | Sprint 3 - Campanas y notificaciones | `feature`, `backend` | CORE-005, CAMPAIGN-001 |
 | NOTIF-002 | Preparar integracion de correo transaccional | Sprint 3 - Campanas y notificaciones | `feature`, `backend`, `needs-discussion` | NOTIF-001 |
-| CANCEL-001 | Implementar flujo de cancelacion de citas | Sprint 4 - Cancelacion y reagendamiento | `feature`, `backend`, `api` | CORE-002, CORE-001 |
+| CANCEL-001 | Implementar flujo de cancelacion de citas | Sprint 4 - Cancelacion y reagendamiento | `feature`, `backend`, `api` | CORE-002, CORE-001, INTAKE-001 |
 | CANCEL-002 | Implementar verificacion asincrona de cancelacion | Sprint 4 - Cancelacion y reagendamiento | `feature`, `backend`, `api` | CANCEL-001 |
 | RESCH-001 | Evaluar estrategia de reagendamiento | Sprint 4 - Cancelacion y reagendamiento | `needs-discussion`, `blocked` | CANCEL-002, CORE-005 |
 | ADMIN-001 | Crear consultas administrativas por perfil | Sprint 5 - Operacion y reportes | `feature`, `backend`, `api` | CORE-002, CAMPAIGN-001, CANCEL-002 |
@@ -399,6 +401,33 @@ Validar el recorrido completo del WhatsApp Flow con asignacion real contra la AP
 - [ ] Los errores recuperables por slot no disponible quedan cubiertos.
 - [ ] La evidencia queda disponible para `QA-001` y `DOCS-002`.
 
+## [INTAKE-001] Implementar menu inicial y consentimiento WhatsApp
+
+**Labels**: `feature`, `backend`, `whatsapp`, `privacy`
+**Depends on**: FLOW-001, CORE-001
+**Blocked by**: -
+
+### Descripcion
+Cambiar el punto de entrada del webhook para que los mensajes entrantes no abran directamente el Flow de agendamiento. El paciente primero debe escoger intencion, aceptar o rechazar el consentimiento de tratamiento de datos y solo despues continuar con agendamiento, consulta de citas o modificacion/cancelacion.
+
+### Microsteps
+1. Enviar menu inicial con opciones: agendar cita, consultar citas proximas y modificar/cancelar cita.
+2. Enviar consentimiento aprobado de tratamiento de datos antes de cualquier consulta HUN o Flow de gestion.
+3. Si acepta y eligio agendar, abrir el Flow de autoagendamiento `FLOW_ID`.
+4. Si acepta y eligio consultar, pedir identificacion minima por chat y consultar HUN en memoria.
+5. Si acepta y eligio modificar/cancelar, consultar citas en memoria y conectar la continuidad con `CANCEL-001`.
+6. Si rechaza, enviar mensaje aprobado con linea telefonica `(601) 3904888 atencion al usuario`.
+7. Mantener estado de intencion y consentimiento solo en memoria con TTL; no persistirlo en Supabase.
+8. Agregar pruebas automatizadas del router de entrada sin llamar WhatsApp ni HUN reales.
+
+### Criterios de aceptacion
+- [ ] Un mensaje entrante abre menu inicial, no el Flow directamente.
+- [ ] Ninguna accion sensible avanza sin consentimiento aceptado.
+- [ ] El rechazo detiene el flujo y dirige a la linea telefonica del hospital.
+- [ ] La consulta de citas usa HUN como fuente de verdad y no persiste documento, telefono ni citas.
+- [ ] La opcion modificar/cancelar queda como entrada de `CANCEL-001`, sin ejecutar cancelaciones antes de confirmacion.
+- [ ] No se registran documentos, telefonos, citas ni payloads HUN completos en logs o Supabase.
+
 ### Sprint 3 - Campanas y notificaciones
 
 ## [CAMPAIGN-001] Modelar campanas y destinatarios
@@ -578,14 +607,14 @@ Preparar la capa de correo para cumplir el alcance de notificaciones complementa
 ## [CANCEL-001] Implementar flujo de cancelacion de citas
 
 **Labels**: `feature`, `backend`, `api`
-**Depends on**: CORE-002, CORE-001
+**Depends on**: CORE-002, CORE-001, INTAKE-001
 **Blocked by**: -
 
 ### Descripcion
 Agregar capacidad de cancelar citas usando una rama/Flow separado iniciado por intencion `CANCELAR` desde WhatsApp. La seleccion de cita se hace consultando HUN en tiempo real por documento, mostrando opciones con `cancel_token` opaco y sin persistir numero de cita en Supabase. La cancelacion puede ejecutarse en el entorno controlado actual para validar el flujo completo.
 
 ### Microsteps
-1. Configurar rama/Flow de cancelacion para intencion `CANCELAR`.
+1. Conectar la opcion `Modificar/cancelar` del menu inicial con la rama/Flow de cancelacion.
 2. Consultar citas del paciente por tipo y documento en tiempo real contra HUN.
 3. Filtrar citas cancelables segun estado permitido.
 4. Presentar opciones de cita con `cancel_token` opaco; el numero de cita solo vive en memoria del proceso o se recupera por reconsulta HUN.

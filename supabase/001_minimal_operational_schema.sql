@@ -19,7 +19,7 @@ $$;
 create table if not exists public.campanas (
   id uuid primary key default gen_random_uuid(),
   nombre text not null,
-  especialidad_codigo text not null,
+  especialidad_codigo text,
   mensaje_template_id text,
   estado text not null default 'borrador'
     check (estado in ('borrador', 'programada', 'enviando', 'activa', 'cerrada', 'cancelada')),
@@ -169,6 +169,8 @@ create index if not exists idx_destinatarios_campaign on public.campana_destinat
 create index if not exists idx_destinatarios_estado on public.campana_destinatarios(estado_contacto);
 create index if not exists idx_destinatarios_documento_hash on public.campana_destinatarios(documento_hash);
 create index if not exists idx_destinatarios_especialidad on public.campana_destinatarios(especialidad_codigo);
+create index if not exists idx_destinatarios_campaign_especialidad_estado
+  on public.campana_destinatarios(campaign_id, especialidad_codigo, estado_contacto);
 
 create index if not exists idx_flow_sesiones_flow_token on public.flow_sesiones_temporales(flow_token);
 create index if not exists idx_flow_sesiones_estado on public.flow_sesiones_temporales(estado);

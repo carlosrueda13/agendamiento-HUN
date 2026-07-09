@@ -66,6 +66,26 @@ o que surgen durante el desarrollo.
 
 ---
 
+## [2026-07-08] Permitir campanas multi-especialidad por destinatario
+
+**Ticket relacionado:** CAMPAIGN-001, CAMPAIGN-002, CAMPAIGN-003, ADMIN-001
+**Decision:** `campanas.especialidad_codigo` deja de ser obligatorio. Una campana puede representar una cohorte operativa amplia, como PQRS de una EPS, y cada destinatario debe traer su propia `especialidad_codigo` en `campana_destinatarios`.
+**Motivo:** Las campanas reales pueden agrupar pacientes de muchas especialidades. Obligar una especialidad global en la campana impide operar cohortes como "PQRS Sanitas" y distorsiona la trazabilidad.
+**Alternativas descartadas:** Crear una campana separada por especialidad; descartado porque fragmenta una misma cohorte operativa y dificulta medir conversion global. Permitir que el paciente elija especialidad en el Flow de campana; descartado porque la campana debe dirigir a la especialidad requerida por el caso.
+**Impacto:** El envio de campana debe firmar el `flow_token` con la especialidad del destinatario. Los reportes deben calcular conversion global por campana y desglose por `campana_destinatarios.especialidad_codigo`.
+
+---
+
+## [2026-07-08] Exigir menu inicial y consentimiento antes de acciones sensibles
+
+**Ticket relacionado:** INTAKE-001, CANCEL-001, QA-001
+**Decision:** Todo mensaje entrante por WhatsApp abre primero un menu con opciones de agendar, consultar citas proximas o modificar/cancelar. Antes de consultar HUN o abrir un Flow de gestion de citas, el paciente debe aceptar el consentimiento aprobado de tratamiento de datos. Si rechaza, el bot no continua y lo dirige a la linea `(601) 3904888 atencion al usuario`.
+**Motivo:** El canal debe separar intencion, consentimiento y ejecucion para no consultar ni gestionar datos de salud sin autorizacion explicita dentro de la conversacion.
+**Alternativas descartadas:** Enviar el Flow de agendamiento ante cualquier mensaje entrante; descartado porque no diferencia la intencion del paciente ni pide consentimiento previo. Persistir el consentimiento en Supabase; descartado por minimizacion mientras no exista requerimiento formal de auditoria legal.
+**Impacto:** Afecta `server.js`, `lib/inboundRouter.js`, `lib/whatsapp.js`, `CANCEL-001`, `QA-001` y las pruebas de webhook. El estado de menu/consentimiento es efimero en memoria con TTL y no guarda telefono, documento ni citas en Supabase.
+
+---
+
 ## [2026-06-27] Condicionar correo transaccional a proveedor aprobado
 
 **Ticket relacionado:** NOTIF-002

@@ -59,9 +59,21 @@ const campana = db._private.buildCampanaRecord({
 });
 
 assert.strictEqual(campana.estado, "programada");
+assert.strictEqual(campana.especialidad_codigo, "590");
 assert.strictEqual(campana.responsable, "Consulta Externa");
 assert.strictEqual(campana.cupos_objetivo, 50);
 assertNoForbiddenFields(campana);
+
+const campanaMultiespecialidad = db._private.buildCampanaRecord({
+  nombre: "PQRS Sanitas julio",
+  mensaje_template_id: "hun_oferta_cita_flow",
+  estado: "programada",
+  origen_datos: "api_hun_demanda_inducida",
+});
+
+assert.strictEqual(campanaMultiespecialidad.especialidad_codigo, null);
+assert.strictEqual(campanaMultiespecialidad.nombre, "PQRS Sanitas julio");
+assertNoForbiddenFields(campanaMultiespecialidad);
 
 const destinatario = db._private.buildDestinatarioRecord({
   campaign_id: "00000000-0000-0000-0000-000000000001",
@@ -104,7 +116,7 @@ assert.strictEqual(destinatarioAudiencia.estado_contacto, "pendiente");
 assertNoForbiddenFields(destinatarioAudiencia);
 
 assert.throws(
-  () => db._private.buildCampanaRecord({ nombre: "X", especialidad_codigo: "590", estado: "lista" }),
+  () => db._private.buildCampanaRecord({ nombre: "X", estado: "lista" }),
   /estado no permitido/
 );
 

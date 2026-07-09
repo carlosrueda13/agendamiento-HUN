@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "test": "node scripts/check-sensitive-persistence.js && node scripts/check-campaign-model.js && node scripts/check-campaign-audience.js && node scripts/check-campaign-send.js && node scripts/check-hun-client.js && node scripts/check-flow-events.js && node scripts/check-flow-identification.js && node scripts/check-flow-slots.js && node scripts/check-flow-confirmation.js && node scripts/check-flow-campaign.js && node scripts/check-flow-crypto.js && node scripts/check-flow-errors.js && node scripts/check-flow-e2e-waiver.js"
+    "test": "node scripts/check-sensitive-persistence.js && node scripts/check-campaign-model.js && node scripts/check-campaign-audience.js && node scripts/check-campaign-send.js && node scripts/check-notifications.js && node scripts/check-inbound-router.js && node scripts/check-hun-client.js && node scripts/check-flow-events.js && node scripts/check-flow-identification.js && node scripts/check-flow-slots.js && node scripts/check-flow-confirmation.js && node scripts/check-flow-campaign.js && node scripts/check-flow-crypto.js && node scripts/check-flow-errors.js && node scripts/check-flow-e2e-waiver.js"
   },
   "dependencies": {
     "@emailjs/nodejs": "^5.0.2",

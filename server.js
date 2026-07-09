@@ -5,6 +5,9 @@ const axios = require("axios");
 
 const { decryptRequest, encryptResponse } = require("./lib/flowCrypto");
 const { handleFlow } = require("./lib/flowHandler");
+const { handleIncomingMessage, DEFAULT_PHONE_LINE } = require("./lib/inboundRouter");
+const hun = require("./lib/hun");
+const whatsapp = require("./lib/whatsapp");
 
 const app = express();
 app.use(express.json());
@@ -86,9 +89,13 @@ app.post("/webhook", async (req, res) => {
 
     // Ignorar eventos de status/delivery/read o payloads sin mensaje.
     if (message && message.from) {
-      const to = message.from;
-      console.log("Mensaje entrante recibido. Enviando Flow...");
-      await sendFlowMessage(to);
+      console.log("Mensaje entrante recibido. Enrutando menu inicial.");
+      await handleIncomingMessage(message, {
+        whatsapp,
+        hun,
+        sendFlowMessage,
+        phoneLine: DEFAULT_PHONE_LINE,
+      });
     }
   } catch (error) {
     console.error("Error procesando el webhook:", error.message);

@@ -6,6 +6,8 @@
 
 Actualizacion aprobada: las campanas de demanda inducida usan un Flow separado del autoagendamiento. Para estas campanas, Supabase guarda `audiencia_ref` / `id_anonimo` como referencia operativa principal. El telefono y el contexto del paciente se resuelven en memoria contra el API orquestador justo antes del envio, sin persistir esos datos.
 
+Actualizacion multi-especialidad: una campana puede representar una cohorte operativa amplia, por ejemplo `PQRS Sanitas julio`, con destinatarios de muchas especialidades. En ese caso `campanas.especialidad_codigo` queda vacio y la especialidad obligatoria vive en cada fila de `campana_destinatarios.especialidad_codigo`.
+
 ## Campanas
 
 Tabla: `campanas`
@@ -13,7 +15,7 @@ Tabla: `campanas`
 Campos operativos:
 
 - `nombre`: identificador visible de la campana.
-- `especialidad_codigo`: especialidad objetivo.
+- `especialidad_codigo`: especialidad objetivo opcional. Se usa solo para campanas de una especialidad; en campanas multi-especialidad queda `null`.
 - `mensaje_template_id`: plantilla de WhatsApp asociada.
 - `campaign_flow_id`: Flow de demanda inducida asociado, distinto del Flow de autoagendamiento.
 - `estado`: ciclo operativo de la campana.
@@ -85,6 +87,7 @@ El resultado `agendado` se guarda solo como estado operativo del destinatario o 
 - Autoagendamiento usa `flow-agendamiento.json` y `FLOW_ID`.
 - Demanda inducida usa un JSON separado, por ejemplo `flow-demanda-inducida.json`, y `CAMPAIGN_FLOW_ID`.
 - El Flow de demanda inducida no permite seleccionar especialidad manualmente; la especialidad viene de la campana.
+- En campanas multi-especialidad, el Flow recibe la especialidad desde el destinatario especifico, no desde la campana global.
 - Mientras el API orquestador no entregue documento, EPS/codigo y especialidad en codigos HUN suficientes para asignar, el Flow de campana v1 debe pedir identificacion minima y despues mostrar solo fecha/hora disponible.
 
 ## Opt-out y exclusion

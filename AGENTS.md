@@ -14,7 +14,8 @@ Stack actual: Node.js CommonJS, Express, Axios, dotenv y `@supabase/supabase-js`
 
 Archivos principales:
 
-- `server.js`: health check `/`, `GET/POST /webhook`, `POST /flow-endpoint`, envio inicial del Flow.
+- `server.js`: health check `/`, `GET/POST /webhook`, `POST /flow-endpoint`, enrutamiento de mensajes entrantes.
+- `lib/inboundRouter.js`: menu inicial, consentimiento, ruteo a agendamiento, consulta de citas y entrada futura a cancelacion.
 - `flow-agendamiento.json`: pantallas `IDENTIFICACION`, `ESPECIALIDAD`, `SLOTS`, `CONFIRMAR`, `FINAL`.
 - `flow-demanda-inducida.json`: Flow separado de campana; debe pedir identificacion minima en v1 y no permitir seleccion manual de especialidad.
 - `lib/hun.js`: cliente HUN para especialidades, agenda, citas por documento y asignacion.

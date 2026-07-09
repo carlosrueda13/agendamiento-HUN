@@ -66,7 +66,7 @@ Reglas vigentes:
 | GET | `/` | Health check. Responde `Backend WhatsApp Flow activo`. |
 | GET | `/test-hun` | Smoke test de conectividad con especialidades HUN. |
 | GET | `/webhook` | Verificacion de webhook de Meta con `hub.challenge`. |
-| POST | `/webhook` | Recibe mensajes entrantes y envia el Flow al usuario. |
+| POST | `/webhook` | Recibe mensajes entrantes, muestra menu inicial, solicita consentimiento y enruta a Flow o consulta HUN. |
 | POST | `/flow-endpoint` | Endpoint cifrado de WhatsApp Flow `data_exchange`. |
 
 ## Variables de entorno
@@ -249,12 +249,13 @@ Para campanas de demanda inducida, ejecutar tambien las migraciones incrementale
 ## Flujo WhatsApp
 
 1. `POST /webhook` recibe un mensaje entrante o dispara una campana aprobada.
-2. El backend envia el WhatsApp Flow correspondiente: autoagendamiento con `FLOW_ID` o demanda inducida con `CAMPAIGN_FLOW_ID`.
-3. Meta llama `POST /flow-endpoint` con payload cifrado.
-4. `lib/flowCrypto.js` descifra la solicitud.
-5. `lib/flowHandler.js` procesa cada pantalla y consulta HUN.
-6. El backend responde a Meta con respuesta cifrada.
-7. La confirmacion final se envia por WhatsApp cuando HUN responde.
+2. Para mensajes entrantes, el backend envia menu inicial y consentimiento de tratamiento de datos.
+3. Si el paciente acepta y elige agendar, el backend envia el Flow de autoagendamiento con `FLOW_ID`.
+4. Si el paciente acepta y elige consultar, el backend pide identificacion minima y consulta citas HUN solo en memoria.
+5. Si el paciente acepta modificar/cancelar, la conversacion queda preparada para la rama de `CANCEL-001`; no se ejecuta cancelacion sin confirmacion posterior.
+6. En Flows, Meta llama `POST /flow-endpoint` con payload cifrado.
+7. `lib/flowCrypto.js` descifra la solicitud y `lib/flowHandler.js` procesa cada pantalla consultando HUN.
+8. El backend responde a Meta con respuesta cifrada y la confirmacion final se envia por WhatsApp cuando HUN responde.
 
 ## Documentacion de trabajo
 

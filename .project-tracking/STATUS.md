@@ -1,6 +1,6 @@
 ﻿# Project Status - Agendamiento HUN por WhatsApp
 
-Ultima actualizacion: 2026-07-06 15:49
+Ultima actualizacion: 2026-07-08 18:14
 Fase activa: Sprint 3 - Campanas y notificaciones
 
 ## Resumen de avance
@@ -9,32 +9,31 @@ Fase activa: Sprint 3 - Campanas y notificaciones
 |------|-------|-------------|-------------|------------|------------|
 | Sprint 0 - Setup | 5 | 5 | 0 | 0 | 0 |
 | Sprint 1 - Core agendamiento | 5 | 5 | 0 | 0 | 0 |
-| Sprint 2 - Integracion WhatsApp | 3 | 3 | 0 | 0 | 0 |
-| Sprint 3 - Campanas y notificaciones | 6 | 3 | 1 | 0 | 2 |
+| Sprint 2 - Integracion WhatsApp | 4 | 4 | 0 | 0 | 0 |
+| Sprint 3 - Campanas y notificaciones | 6 | 5 | 0 | 0 | 1 |
 | Sprint 4 - Cancelacion y reagendamiento | 3 | 0 | 0 | 0 | 3 |
 | Sprint 5 - Operacion y reportes | 2 | 0 | 0 | 0 | 2 |
 | Sprint 6 - QA y seguridad | 3 | 0 | 0 | 0 | 3 |
 | Sprint 7 - Deploy y cierre contractual | 3 | 0 | 0 | 0 | 3 |
-| **TOTAL** | **30** | **16** | **1** | **0** | **13** |
+| **TOTAL** | **31** | **19** | **0** | **0** | **12** |
 
-Avance global: 16 / 30 tickets completados (53.3%)
+Avance global: 19 / 31 tickets completados (61.3%)
 
 ## Estado actual
 
-**Proximo ticket recomendado:** Revisar y aprobar CAMPAIGN-003; luego continuar con NOTIF-001.
-**Tickets en progreso:** CAMPAIGN-003 (`ready_for_review`)
+**Proximo ticket recomendado:** Definir si se continua con NOTIF-002 o CANCEL-001.
+**Tickets en progreso:** -
 **Tickets bloqueados:** -
 
 ### Tickets bloqueados por dependencias no resueltas
 
 | Ticket | Bloqueado por |
 |--------|---------------|
-| NOTIF-002 | NOTIF-001 |
 | CANCEL-002 | CANCEL-001 |
 | RESCH-001 | CANCEL-002, CORE-005 |
 | ADMIN-001 | CANCEL-002 |
 | ADMIN-002 | ADMIN-001 |
-| QA-001 | CAMPAIGN-003, CANCEL-002, NOTIF-001 |
+| QA-001 | CANCEL-002 |
 | QA-002 | QA-001 |
 | SEC-001 | ADMIN-001 |
 | DEPLOY-001 | QA-002, SEC-001 |
@@ -421,6 +420,38 @@ Avance global: 16 / 30 tickets completados (53.3%)
 
 ---
 
+### INTAKE-001 - Implementar menu inicial y consentimiento WhatsApp
+
+**Estado:** `done`
+**Labels:** `feature`, `backend`, `whatsapp`, `privacy`
+**Depende de:** FLOW-001, CORE-001
+**Desbloquea:** CANCEL-001, QA-001
+
+**Microsteps:**
+- [x] Cambiar `POST /webhook` para que no envie el Flow de agendamiento en cualquier mensaje entrante.
+- [x] Enviar menu inicial con opciones: agendar cita, consultar citas proximas y modificar/cancelar cita.
+- [x] Enviar consentimiento de tratamiento de datos aprobado antes de ejecutar acciones que consulten o gestionen citas.
+- [x] Soportar botones `Acepto` y `Rechazo`, y texto escrito `acepto` / `rechazo` como respaldo.
+- [x] Si el paciente acepta y eligio agendar, enviar el Flow de autoagendamiento `FLOW_ID`.
+- [x] Si el paciente acepta y eligio consultar, pedir identificacion minima por chat y consultar HUN en memoria.
+- [x] Si el paciente acepta modificar/cancelar, consultar citas en memoria y avisar que la confirmacion de modificacion/cancelacion queda para `CANCEL-001`.
+- [x] Si el paciente rechaza, enviar mensaje aprobado con linea telefonica `(601) 3904888 atencion al usuario`.
+- [x] Mantener estado de menu, accion y consentimiento solo en memoria con TTL, sin Supabase.
+- [x] Agregar prueba automatizada del router de entrada sin llamar WhatsApp ni HUN reales.
+
+**Criterios de aceptacion:**
+- [x] Un mensaje entrante abre menu inicial, no el Flow directamente.
+- [x] Ninguna accion sensible avanza sin consentimiento aceptado.
+- [x] El rechazo detiene el flujo y dirige a la linea telefonica del hospital.
+- [x] La consulta de citas usa HUN como fuente de verdad y no persiste documento, telefono ni citas.
+- [x] La opcion modificar/cancelar queda enrutada como entrada conversacional para `CANCEL-001`, sin ejecutar cancelaciones todavia.
+- [x] No se registran documentos, telefonos, citas ni payloads HUN completos en logs o Supabase.
+
+**Evidencia:** `lib/inboundRouter.js`, `lib/whatsapp.js`, `server.js`, `scripts/check-inbound-router.js`, `package.json`; `node --check server.js` exitoso; `node --check lib/whatsapp.js` exitoso; `node --check lib/inboundRouter.js` exitoso; `node --check scripts/check-inbound-router.js` exitoso; `node scripts/check-inbound-router.js` exitoso; `npm.cmd test` exitoso.
+**Notas:** Aprobado por el usuario el 2026-07-08. Texto de consentimiento aprobado por el usuario y linea telefonica configurada en codigo como `(601) 3904888 atencion al usuario`. El consentimiento no se persiste; solo se usa para la sesion efimera de WhatsApp. Para produccion, HUN debe confirmar que el texto aprobado corresponde a su politica institucional vigente.
+
+---
+
 ## Sprint 3 - Campanas y notificaciones
 
 ---
@@ -439,6 +470,7 @@ Avance global: 16 / 30 tickets completados (53.3%)
 - [x] Relacionar destinatarios con `audiencia_ref` / `id_anonimo`, especialidad y campana para demanda inducida.
 - [x] Dejar WhatsApp, tipo de documento y `documento_hash` como campos legacy/compatibilidad, no obligatorios para campanas nuevas.
 - [x] Definir reglas de opt-out y exclusion.
+- [x] Ajustar el modelo para campanas multi-especialidad: `campanas.especialidad_codigo` es opcional y la especialidad obligatoria vive en `campana_destinatarios.especialidad_codigo`.
 
 **Criterios de aceptacion:**
 - [x] Las tablas soportan una campana con multiples destinatarios.
@@ -446,10 +478,11 @@ Avance global: 16 / 30 tickets completados (53.3%)
 - [x] El modelo permite asociar resultado `agendado` con una campana sin guardar datos de la cita.
 - [x] Existe campo para excluir destinatarios por opt-out o criterio operativo.
 - [x] El modelo soporta destinatarios por `audiencia_ref` / `id_anonimo`.
+- [x] Una misma campana puede contener destinatarios de multiples especialidades y reportarse por `campaign_id + especialidad_codigo + estado_contacto`.
 - [x] Supabase no guarda telefono resuelto, nombre, correo, EPS, medico, fecha/hora, servicio ni payload completo del orquestador.
 
-**Evidencia:** `CAMPAIGN_MODEL.md`; `lib/db.js`; `scripts/check-campaign-model.js`; `supabase/001_minimal_operational_schema.sql`; `supabase/003_campaign_responsable.sql`; `supabase/004_campaign_audiencia_ref.sql`; Supabase verificado con columna `campanas.responsable`; migracion `campaign_audiencia_ref` aplicada en Supabase proyecto `agendamiento-HUN` (`aqbtcpkgvxiktpegwmdi`); verificado `audiencia_ref` como `text`, `whatsapp_numero` y `documento_hash` como nullable, e indices `idx_destinatarios_audiencia_ref` y `ux_destinatarios_campaign_audiencia_ref`; `node --check lib/db.js` exitoso; `node --check scripts/check-campaign-model.js` exitoso; `npm.cmd test` exitoso.
-**Notas:** Aprobado por el usuario el 2026-07-04. Ajustado el 2026-07-06 por cambio de arquitectura: demanda inducida usa `audiencia_ref` / `id_anonimo` como referencia operativa principal y resuelve telefono/contexto en memoria contra API orquestador. `responsable` es opcional y representa responsable operativo de la campana, no datos del paciente. La migracion `supabase/004_campaign_audiencia_ref.sql` ya fue aplicada y verificada en Supabase real el 2026-07-06. Los constructores de `lib/db.js` deben seguir descartando campos no permitidos como nombre, telefono resuelto, correo, EPS, medico, fecha/hora, servicio, documento plano y payload del orquestador.
+**Evidencia:** `CAMPAIGN_MODEL.md`; `lib/db.js`; `scripts/check-campaign-model.js`; `supabase/001_minimal_operational_schema.sql`; `supabase/003_campaign_responsable.sql`; `supabase/004_campaign_audiencia_ref.sql`; `supabase/005_campaign_multispecialty.sql`; Supabase verificado con columna `campanas.responsable`; migracion `campaign_audiencia_ref` aplicada en Supabase proyecto `agendamiento-HUN` (`aqbtcpkgvxiktpegwmdi`); verificado `audiencia_ref` como `text`, `whatsapp_numero` y `documento_hash` como nullable, e indices `idx_destinatarios_audiencia_ref` y `ux_destinatarios_campaign_audiencia_ref`; usuario confirmo aplicacion de `supabase/005_campaign_multispecialty.sql` en Supabase real el 2026-07-08; `node --check lib/db.js` exitoso; `node --check scripts/check-campaign-model.js` exitoso; `npm.cmd test` exitoso.
+**Notas:** Aprobado por el usuario el 2026-07-04. Ajustado el 2026-07-06 por cambio de arquitectura: demanda inducida usa `audiencia_ref` / `id_anonimo` como referencia operativa principal y resuelve telefono/contexto en memoria contra API orquestador. `responsable` es opcional y representa responsable operativo de la campana, no datos del paciente. Ajustado el 2026-07-08 por decision multi-especialidad: una campana puede agrupar cohortes como PQRS de una EPS y cada destinatario define su propia especialidad; `campanas.especialidad_codigo` queda como campo opcional/legacy de campanas de una sola especialidad. La migracion `supabase/004_campaign_audiencia_ref.sql` ya fue aplicada y verificada en Supabase real el 2026-07-06. La migracion `supabase/005_campaign_multispecialty.sql` fue aplicada por el usuario en Supabase real el 2026-07-08. Los constructores de `lib/db.js` deben seguir descartando campos no permitidos como nombre, telefono resuelto, correo, EPS, medico, fecha/hora, servicio, documento plano y payload del orquestador.
 
 ---
 
@@ -519,7 +552,7 @@ Avance global: 16 / 30 tickets completados (53.3%)
 
 ### CAMPAIGN-003 - Implementar envio de ofertas de cita por WhatsApp
 
-**Estado:** `ready_for_review`
+**Estado:** `done`
 **Labels:** `feature`, `backend`, `api`
 **Depende de:** CAMPAIGN-002, FLOW-004
 **Desbloquea:** QA-001
@@ -545,40 +578,40 @@ Avance global: 16 / 30 tickets completados (53.3%)
 - [x] Los errores de WhatsApp y del orquestador quedan disponibles para reporte como motivos no sensibles.
 
 **Evidencia:** `lib/campaignSender.js`; `lib/demandaInducida.js`; `lib/whatsapp.js`; `lib/db.js`; `scripts/check-campaign-send.js`; `scripts/send-campaign-offers.js`; `scripts/check-campaign-audience.js`; `.env.example`; `README.md`; `DEMANDA_INDUCIDA_API.md`; `package.json`; `node --check` exitoso para archivos JS modificados; `npm.cmd test` exitoso; `git diff --check` sin errores; plantilla/Flow externo publicado por usuario con `CAMPAIGN_FLOW_ID=2195324014654953`, `CAMPAIGN_TEMPLATE_NAME=hun_oferta_cita_flow`, idioma `es_CO`.
-**Notas:** Listo para revision. El envio selecciona destinatarios pendientes con `audiencia_ref`, resuelve telefono en memoria contra el orquestador, firma `flow_token` de campana y envia la plantilla de WhatsApp con boton Flow. Supabase guarda solo notificacion, estado de destinatario y evento operativo no sensible; no persiste telefono, nombre, correo, documento plano, EPS, medico, fecha/hora, numero de cita ni payload del orquestador/Meta. Se corrigio el adaptador de audiencia para que campanas nuevas sincronicen `id_anonimo` / `audiencia_ref` y especialidad, no telefono ni documento. El `flow_token` de campana usa formato `campaign_v1.<payload>.<firma>` para evitar colisiones con `_` en base64url.
+**Notas:** Aprobado por el usuario el 2026-07-06. El envio selecciona destinatarios pendientes con `audiencia_ref`, resuelve telefono en memoria contra el orquestador, firma `flow_token` de campana y envia la plantilla de WhatsApp con boton Flow. Supabase guarda solo notificacion, estado de destinatario y evento operativo no sensible; no persiste telefono, nombre, correo, documento plano, EPS, medico, fecha/hora, numero de cita ni payload del orquestador/Meta. Se corrigio el adaptador de audiencia para que campanas nuevas sincronicen `id_anonimo` / `audiencia_ref` y especialidad, no telefono ni documento. El `flow_token` de campana usa formato `campaign_v1.<payload>.<firma>` para evitar colisiones con `_` en base64url. La prueba real queda condicionada a que el orquestador HUN este en linea.
 
 ---
 
 ### NOTIF-001 - Implementar confirmaciones inmediatas y recordatorios desde HUN
 
-**Estado:** `pending`
+**Estado:** `done`
 **Labels:** `feature`, `backend`
 **Depende de:** CORE-005, CAMPAIGN-001
 **Desbloquea:** NOTIF-002, QA-001
 
 **Microsteps:**
-- [ ] Definir tipos de notificacion: confirmacion, recordatorio, error y cancelacion.
-- [ ] Crear funcion reusable para registrar y enviar notificaciones.
-- [ ] Enviar confirmacion inmediata despues de asignacion exitosa de `CORE-005`, usando datos frescos disponibles en memoria y el correo transitorio cifrado de la sesion solo si existe proveedor/API de correo aprobado.
-- [ ] Definir `ReminderCandidateProvider` para obtener candidatos de recordatorio desde HUN por ventana de fechas.
-- [ ] Definir reglas de ventana de envio, deduplicacion y numero maximo de intentos.
-- [ ] Asociar notificaciones con campana, destinatario o sesion temporal, sin asociar datos de cita.
-- [ ] Guardar solo eventos de intento de notificacion, canal, tipo, estado, proveedor, error tecnico y timestamp; nunca guardar direccion de correo plano ni cuerpo completo.
-- [ ] Si HUN no expone datos suficientes para recordatorios por ventana, dejar advertencia operativa y bloquear recordatorios reales hasta contar con endpoint suficiente.
-- [ ] Revisar si ya existe definicion formal de proveedor/API de correo antes de habilitar `NOTIF-002`.
-- [ ] Si el proveedor/API de correo sigue indefinido, elevar advertencia y dejar `NOTIF-002` condicionado a definicion operativa.
+- [x] Definir tipos de notificacion: confirmacion, recordatorio, error y cancelacion.
+- [x] Crear funcion reusable para registrar y enviar notificaciones.
+- [x] Enviar confirmacion inmediata despues de asignacion exitosa de `CORE-005`, usando datos frescos disponibles en memoria y el correo transitorio cifrado de la sesion solo si existe proveedor/API de correo aprobado.
+- [x] Definir `ReminderCandidateProvider` para obtener candidatos de recordatorio desde HUN por ventana de fechas.
+- [x] Definir reglas de ventana de envio, deduplicacion y numero maximo de intentos.
+- [x] Asociar notificaciones con campana, destinatario o sesion temporal, sin asociar datos de cita.
+- [x] Guardar solo eventos de intento de notificacion, canal, tipo, estado, proveedor, error tecnico y timestamp; nunca guardar direccion de correo plano ni cuerpo completo.
+- [x] Si HUN no expone datos suficientes para recordatorios por ventana, dejar advertencia operativa y bloquear recordatorios reales hasta contar con endpoint suficiente.
+- [x] Revisar si ya existe definicion formal de proveedor/API de correo antes de habilitar `NOTIF-002`.
+- [x] Si el proveedor/API de correo sigue indefinido, elevar advertencia y dejar `NOTIF-002` condicionado a definicion operativa.
 
 **Criterios de aceptacion:**
-- [ ] Una cita agendada genera notificacion de confirmacion.
-- [ ] Los recordatorios no dependen de citas almacenadas en Supabase.
-- [ ] El modelo soporta recordatorios programables mediante consulta HUN por ventana de fechas.
-- [ ] Si HUN no tiene endpoint suficiente, queda implementada la interfaz `ReminderCandidateProvider` y los recordatorios reales quedan bloqueados con advertencia operativa.
-- [ ] Cada intento queda registrado con estado.
-- [ ] Un fallo de WhatsApp no rompe el proceso principal.
-- [ ] Antes de pasar a `NOTIF-002`, queda documentado si el proveedor/API de correo esta definido o si debe elevarse advertencia.
+- [x] Una cita agendada genera notificacion de confirmacion.
+- [x] Los recordatorios no dependen de citas almacenadas en Supabase.
+- [x] El modelo soporta recordatorios programables mediante consulta HUN por ventana de fechas.
+- [x] Si HUN no tiene endpoint suficiente, queda implementada la interfaz `ReminderCandidateProvider` y los recordatorios reales quedan bloqueados con advertencia operativa.
+- [x] Cada intento queda registrado con estado.
+- [x] Un fallo de WhatsApp no rompe el proceso principal.
+- [x] Antes de pasar a `NOTIF-002`, queda documentado si el proveedor/API de correo esta definido o si debe elevarse advertencia.
 
-**Evidencia:** 
-**Notas:** 
+**Evidencia:** `lib/notifications.js`; `lib/reminders.js`; `lib/flowHandler.js`; `scripts/check-notifications.js`; `NOTIFICACIONES_HUN.md`; `package.json`; `node --check` exitoso para archivos JS modificados; `npm.cmd test` exitoso; `git diff --check` sin errores.
+**Notas:** Aprobado por el usuario el 2026-07-07. La confirmacion de cita exitosa se envia por WhatsApp y ahora tambien registra intento en `notificaciones` con `session_id_hash`, canal, tipo, estado y proveedor, sin cuerpo del mensaje ni datos de cita. Los recordatorios reales quedan bloqueados operativamente hasta que HUN entregue un endpoint suficiente para consultar candidatos por ventana; mientras tanto queda implementada la interfaz `HunReminderCandidateProvider` y reglas de ventana/reintentos. EmailJS existe como adaptador condicionado por variables, pero el alcance completo de correo queda en `NOTIF-002`.
 
 ---
 
@@ -620,11 +653,11 @@ Avance global: 16 / 30 tickets completados (53.3%)
 
 **Estado:** `pending`
 **Labels:** `feature`, `backend`, `api`
-**Depende de:** CORE-002, CORE-001
+**Depende de:** CORE-002, CORE-001, INTAKE-001
 **Desbloquea:** CANCEL-002
 
 **Microsteps:**
-- [ ] Configurar rama/Flow de cancelacion para intencion `CANCELAR`.
+- [ ] Conectar la opcion `Modificar/cancelar` del menu inicial con la rama/Flow de cancelacion.
 - [ ] Consultar citas del paciente por tipo y documento en tiempo real contra HUN.
 - [ ] Filtrar citas cancelables segun estado permitido.
 - [ ] Presentar opciones de cita con `cancel_token` opaco; el numero de cita solo vive en memoria del proceso o se recupera por reconsulta HUN.
