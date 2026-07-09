@@ -562,7 +562,7 @@ Avance global: 20 / 31 tickets completados (64.5%)
 - [x] Seleccionar destinatarios pendientes y no excluidos con `audiencia_ref` / `id_anonimo`.
 - [x] Consultar API orquestador por cada `id_anonimo` antes del envio.
 - [x] Normalizar telefono solo en memoria.
-- [x] Construir `flow_token` firmado con campana, destinatario/referencia, especialidad y expiracion.
+- [x] Construir `flow_token` firmado con campana, destinatario/referencia, especialidad y expiracion; la especialidad del orquestador prima sobre la de Supabase.
 - [x] Enviar mensaje mediante WhatsApp Cloud API usando `CAMPAIGN_FLOW_ID`.
 - [x] Guardar resultado de envio en `notificaciones` sin telefono, cuerpo completo ni datos del resolver.
 - [x] Actualizar estado del destinatario segun exito o error.
@@ -578,7 +578,7 @@ Avance global: 20 / 31 tickets completados (64.5%)
 - [x] Los errores de WhatsApp y del orquestador quedan disponibles para reporte como motivos no sensibles.
 
 **Evidencia:** `lib/campaignSender.js`; `lib/demandaInducida.js`; `lib/whatsapp.js`; `lib/db.js`; `scripts/check-campaign-send.js`; `scripts/send-campaign-offers.js`; `scripts/check-campaign-audience.js`; `.env.example`; `README.md`; `DEMANDA_INDUCIDA_API.md`; `package.json`; `node --check` exitoso para archivos JS modificados; `npm.cmd test` exitoso; `git diff --check` sin errores; plantilla/Flow externo publicado por usuario con `CAMPAIGN_FLOW_ID=2195324014654953`, `CAMPAIGN_TEMPLATE_NAME=hun_oferta_cita_flow`, idioma `es_CO`.
-**Notas:** Aprobado por el usuario el 2026-07-06. El envio selecciona destinatarios pendientes con `audiencia_ref`, resuelve telefono en memoria contra el orquestador, firma `flow_token` de campana y envia la plantilla de WhatsApp con boton Flow. Supabase guarda solo notificacion, estado de destinatario y evento operativo no sensible; no persiste telefono, nombre, correo, documento plano, EPS, medico, fecha/hora, numero de cita ni payload del orquestador/Meta. Se corrigio el adaptador de audiencia para que campanas nuevas sincronicen `id_anonimo` / `audiencia_ref` y especialidad, no telefono ni documento. El `flow_token` de campana usa formato `campaign_v1.<payload>.<firma>` para evitar colisiones con `_` en base64url. La prueba real queda condicionada a que el orquestador HUN este en linea.
+**Notas:** Aprobado por el usuario el 2026-07-06. El envio selecciona destinatarios pendientes con `audiencia_ref`, resuelve telefono en memoria contra el orquestador, firma `flow_token` de campana y envia la plantilla de WhatsApp con boton Flow. Supabase guarda solo notificacion, estado de destinatario y evento operativo no sensible; no persiste telefono, nombre, correo, documento plano, EPS, medico, fecha/hora, numero de cita ni payload del orquestador/Meta. Se corrigio el adaptador de audiencia para que campanas nuevas sincronicen `id_anonimo` / `audiencia_ref` y especialidad, no telefono ni documento. Ajuste 2026-07-09: si el orquestador devuelve especialidad, esta prima sobre `campana_destinatarios.especialidad_codigo`; la especialidad de Supabase queda como respaldo operativo. El `flow_token` de campana usa formato `campaign_v1.<payload>.<firma>` para evitar colisiones con `_` en base64url. La prueba real queda condicionada a que el orquestador HUN este en linea.
 
 ---
 

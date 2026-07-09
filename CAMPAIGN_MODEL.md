@@ -6,7 +6,7 @@
 
 Actualizacion aprobada: las campanas de demanda inducida usan un Flow separado del autoagendamiento. Para estas campanas, Supabase guarda `audiencia_ref` / `id_anonimo` como referencia operativa principal. El telefono y el contexto del paciente se resuelven en memoria contra el API orquestador justo antes del envio, sin persistir esos datos.
 
-Actualizacion multi-especialidad: una campana puede representar una cohorte operativa amplia, por ejemplo `PQRS Sanitas julio`, con destinatarios de muchas especialidades. En ese caso `campanas.especialidad_codigo` queda vacio y la especialidad obligatoria vive en cada fila de `campana_destinatarios.especialidad_codigo`.
+Actualizacion multi-especialidad: una campana puede representar una cohorte operativa amplia, por ejemplo `PQRS Sanitas julio`, con destinatarios de muchas especialidades. En ese caso `campanas.especialidad_codigo` queda vacio. La especialidad principal viene del orquestador por paciente (`cod_especialidad_requerida`); `campana_destinatarios.especialidad_codigo` queda como respaldo operativo cuando el orquestador no la entregue.
 
 ## Campanas
 
@@ -41,7 +41,7 @@ Campos minimos:
 
 - `campaign_id`
 - `audiencia_ref` / `id_anonimo`
-- `especialidad_codigo`
+- `especialidad_codigo` como respaldo operativo si el orquestador no entrega especialidad
 - `estado_contacto`
 - `opt_out`
 - `motivo_exclusion`

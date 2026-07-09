@@ -63,7 +63,7 @@ Para Supabase se deriva y guarda solo:
 
 - `campaign_id`
 - `audiencia_ref` / `id_anonimo`
-- `especialidad_codigo`
+- `especialidad_codigo` como respaldo operativo si el orquestador no entrega `cod_especialidad_requerida`
 - `estado_contacto`
 
 No se guarda telefono, nombre, correo, documento plano, EPS, medico, fecha/hora, servicio, numero de cita ni payload completo del resolver.
@@ -72,10 +72,10 @@ No se guarda telefono, nombre, correo, documento plano, EPS, medico, fecha/hora,
 
 `CAMPAIGN-003` envia la plantilla `hun_oferta_cita_flow` con boton al Flow de demanda inducida (`CAMPAIGN_FLOW_ID=2195324014654953`). Por cada destinatario:
 
-1. Lee `audiencia_ref` y `especialidad_codigo` desde Supabase.
-2. Consulta el resolver por `id_anonimo` y usa el telefono solo en memoria.
+1. Lee `audiencia_ref` y, si existe, `especialidad_codigo` de respaldo desde Supabase.
+2. Consulta el resolver por `id_anonimo` y usa el telefono y `cod_especialidad_requerida` solo en memoria.
 3. Si el resolver entrega correo valido, lo cifra dentro del `flow_token` para confirmacion posterior.
-4. Firma un `flow_token` de campana con campana, destinatario/referencia y especialidad.
+4. Firma un `flow_token` de campana con campana, destinatario/referencia y especialidad. Si el orquestador entrega especialidad, esa prima sobre la de Supabase.
 5. Envia la plantilla de WhatsApp.
 6. Registra notificacion, estado y evento operativo sin telefono ni payload sensible.
 
@@ -88,7 +88,7 @@ node scripts/send-campaign-offers.js <campaign_id> [limit]
 ## Validaciones
 
 - Rechaza destinatarios sin `id_anonimo` / `audiencia_ref`.
-- Rechaza destinatarios sin `especialidad_codigo` o `cod_especialidad_requerida`.
+- Rechaza destinatarios solo si no hay `cod_especialidad_requerida` en el orquestador ni `especialidad_codigo` de respaldo en Supabase.
 - Normaliza telefonos colombianos de 10 digitos a formato `57XXXXXXXXXX` solo en memoria antes del envio.
 - Deduplica por `campaign_id + audiencia_ref`.
 - Reporta resumen con `aceptados`, `guardados`, `rechazados`, `duplicados`, `errores` y motivos no sensibles.

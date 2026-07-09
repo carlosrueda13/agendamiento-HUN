@@ -116,6 +116,16 @@ o que surgen durante el desarrollo.
 
 ---
 
+## [2026-07-09] Priorizar especialidad del orquestador en campanas
+
+**Ticket relacionado:** CAMPAIGN-003, FLOW-004
+**Decision:** Para enviar campanas, si el orquestador devuelve `cod_especialidad_requerida` / `especialidad_codigo`, esa especialidad prima sobre `campana_destinatarios.especialidad_codigo`. La especialidad en Supabase queda como respaldo operativo cuando el orquestador no la entrega.
+**Motivo:** La especialidad pertenece al paciente/destinatario resuelto por el orquestador, no a la campana global. Evita duplicar o desactualizar la especialidad en Supabase.
+**Alternativas descartadas:** Usar siempre la especialidad guardada en Supabase; descartado porque puede contradecir el dato fresco del orquestador. Obligar especialidad global en `campanas`; descartado por campanas multi-especialidad.
+**Impacto:** Afecta `lib/campaignSender.js`, pruebas de envio de campana y la operacion de carga de destinatarios. Si no hay especialidad ni en orquestador ni en Supabase, el destinatario falla con `especialidad_faltante`.
+
+---
+
 ## [2026-06-27] Separar reportes por perfil medico operativo e IT auditoria
 
 **Ticket relacionado:** ADMIN-001

@@ -10,6 +10,7 @@ const notificaciones = [];
 const eventos = [];
 const estados = [];
 const whatsappPayloads = [];
+const tokenContexts = [];
 
 const recipient = {
   id: "10000000-0000-0000-0000-000000000001",
@@ -55,7 +56,7 @@ const sender = createCampaignSender({
       ok: true,
       telefono: "573001112233",
       correo: "Paciente.Campania@Example.COM",
-      especialidad_codigo: "590",
+      especialidad_codigo: "200",
     };
   },
   whatsappClient: {
@@ -63,6 +64,10 @@ const sender = createCampaignSender({
       whatsappPayloads.push(params);
       return { messages: [{ id: "wamid.test-message" }] };
     },
+  },
+  createCampaignFlowToken(context) {
+    tokenContexts.push(context);
+    return "campaign_v1.test-token";
   },
   now: (() => {
     let tick = 1000;
@@ -93,6 +98,13 @@ const sender = createCampaignSender({
   assert.strictEqual(whatsappPayloads[0].templateName, "hun_oferta_cita_flow");
   assert.strictEqual(whatsappPayloads[0].languageCode, "es_CO");
   assert.match(whatsappPayloads[0].flowToken, /^campaign_v1\./);
+  assert.strictEqual(tokenContexts.length, 1);
+  assert.strictEqual(
+    tokenContexts[0].especialidad_codigo,
+    "200",
+    "Debe primar la especialidad devuelta por el orquestador sobre la de Supabase."
+  );
+  assert.strictEqual(tokenContexts[0].contacto_email, "Paciente.Campania@Example.COM");
   assert(
     !whatsappPayloads[0].flowToken.includes("Paciente.Campania") &&
       !whatsappPayloads[0].flowToken.includes("paciente.campania"),
