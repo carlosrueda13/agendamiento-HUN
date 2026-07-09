@@ -17,7 +17,7 @@ Cuando HUN acepta la asignacion:
    - `proveedor = whatsapp_cloud_api`
 3. No guarda cuerpo del mensaje, telefono, correo, nombre, documento, EPS, medico, fecha/hora, numero de cita ni payload HUN.
 
-El correo de confirmacion sigue condicionado a proveedor configurado y se maneja con correo transitorio cifrado de la sesion. El alcance completo de correo queda para `NOTIF-002`.
+El correo de confirmacion queda condicionado a proveedor configurado. En autoagendamiento se toma del campo `correo` del Flow y en campanas se toma del `correo` entregado por el orquestador. En ambos casos se maneja como contacto transitorio cifrado de la sesion y no se guarda correo plano en Supabase.
 
 ## Recordatorios
 

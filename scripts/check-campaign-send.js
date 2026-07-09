@@ -51,7 +51,12 @@ const sender = createCampaignSender({
   dbClient: fakeDb,
   resolver: async ({ idAnonimo }) => {
     assert.strictEqual(idAnonimo, "anon-123");
-    return { ok: true, telefono: "573001112233", especialidad_codigo: "590" };
+    return {
+      ok: true,
+      telefono: "573001112233",
+      correo: "Paciente.Campania@Example.COM",
+      especialidad_codigo: "590",
+    };
   },
   whatsappClient: {
     async sendCampaignFlowTemplate(params) {
@@ -88,6 +93,11 @@ const sender = createCampaignSender({
   assert.strictEqual(whatsappPayloads[0].templateName, "hun_oferta_cita_flow");
   assert.strictEqual(whatsappPayloads[0].languageCode, "es_CO");
   assert.match(whatsappPayloads[0].flowToken, /^campaign_v1\./);
+  assert(
+    !whatsappPayloads[0].flowToken.includes("Paciente.Campania") &&
+      !whatsappPayloads[0].flowToken.includes("paciente.campania"),
+    "El correo del orquestador no debe viajar en claro dentro del token."
+  );
   assert.strictEqual(estados.at(-1).estado, "enviado");
   assert.strictEqual(notificaciones.some((item) => item.estado === "enviado"), true);
   assert.strictEqual(eventos.some((item) => item.status === "success"), true);

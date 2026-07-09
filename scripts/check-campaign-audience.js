@@ -18,6 +18,8 @@ assert.deepStrictEqual(demanda.REQUIRED_FIELDS, [
 assert.strictEqual(demanda.normalizeTelefono("+57 300 123 4567"), "573001234567");
 assert.strictEqual(demanda.normalizeTelefono("3001234567"), "573001234567");
 assert.strictEqual(demanda.normalizeTelefono("123"), null);
+assert.strictEqual(demanda.normalizeEmail(" PACIENTE@Example.COM "), "paciente@example.com");
+assert.strictEqual(demanda.normalizeEmail("correo-invalido"), null);
 
 assert.strictEqual(demanda.isOfficialApiConfigured({}), false);
 assert.strictEqual(
@@ -46,6 +48,20 @@ assert.deepStrictEqual(
     ok: true,
     id_anonimo: "anon-123",
     telefono: "573001234567",
+    correo: null,
+    especialidad_codigo: null,
+  }
+);
+assert.deepStrictEqual(
+  demanda.normalizeOrchestratorResponse(
+    { telefono: "3001234567", correo: "PACIENTE@Example.COM" },
+    "anon-123"
+  ),
+  {
+    ok: true,
+    id_anonimo: "anon-123",
+    telefono: "573001234567",
+    correo: "paciente@example.com",
     especialidad_codigo: null,
   }
 );

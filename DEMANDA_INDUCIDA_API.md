@@ -53,6 +53,8 @@ El resolver actual por `id_anonimo` devuelve telefono y contexto en tiempo real.
 }
 ```
 
+Si el resolver entrega `correo`, el backend lo usa solo para la confirmacion transaccional de la cita creada desde el Flow de campana. El correo se cifra dentro del `flow_token` firmado de campana y luego se guarda, si aplica, solo como contacto transitorio cifrado en `flow_sesiones_temporales`; no se persiste en `campana_destinatarios`, `notificaciones` ni eventos operativos.
+
 Limitacion vigente: este contrato no trae `tipo_documento`, `numero_documento`, `eps_codigo` ni `cod_especialidad_requerida` en forma suficiente para asignar sin pedir identificacion. Por eso el Flow de campana v1 pide identificacion minima y luego muestra solo slots de la especialidad de la campana. La version ideal de solo escoger fecha/hora queda condicionada a ampliar este contrato.
 
 ## Persistencia permitida
@@ -72,9 +74,10 @@ No se guarda telefono, nombre, correo, documento plano, EPS, medico, fecha/hora,
 
 1. Lee `audiencia_ref` y `especialidad_codigo` desde Supabase.
 2. Consulta el resolver por `id_anonimo` y usa el telefono solo en memoria.
-3. Firma un `flow_token` de campana con campana, destinatario/referencia y especialidad.
-4. Envia la plantilla de WhatsApp.
-5. Registra notificacion, estado y evento operativo sin telefono ni payload sensible.
+3. Si el resolver entrega correo valido, lo cifra dentro del `flow_token` para confirmacion posterior.
+4. Firma un `flow_token` de campana con campana, destinatario/referencia y especialidad.
+5. Envia la plantilla de WhatsApp.
+6. Registra notificacion, estado y evento operativo sin telefono ni payload sensible.
 
 Ejecucion manual controlada:
 

@@ -1,6 +1,6 @@
 ﻿# Project Status - Agendamiento HUN por WhatsApp
 
-Ultima actualizacion: 2026-07-08 18:14
+Ultima actualizacion: 2026-07-09 13:47
 Fase activa: Sprint 3 - Campanas y notificaciones
 
 ## Resumen de avance
@@ -10,18 +10,18 @@ Fase activa: Sprint 3 - Campanas y notificaciones
 | Sprint 0 - Setup | 5 | 5 | 0 | 0 | 0 |
 | Sprint 1 - Core agendamiento | 5 | 5 | 0 | 0 | 0 |
 | Sprint 2 - Integracion WhatsApp | 4 | 4 | 0 | 0 | 0 |
-| Sprint 3 - Campanas y notificaciones | 6 | 5 | 0 | 0 | 1 |
+| Sprint 3 - Campanas y notificaciones | 6 | 6 | 0 | 0 | 0 |
 | Sprint 4 - Cancelacion y reagendamiento | 3 | 0 | 0 | 0 | 3 |
 | Sprint 5 - Operacion y reportes | 2 | 0 | 0 | 0 | 2 |
 | Sprint 6 - QA y seguridad | 3 | 0 | 0 | 0 | 3 |
 | Sprint 7 - Deploy y cierre contractual | 3 | 0 | 0 | 0 | 3 |
-| **TOTAL** | **31** | **19** | **0** | **0** | **12** |
+| **TOTAL** | **31** | **20** | **0** | **0** | **11** |
 
-Avance global: 19 / 31 tickets completados (61.3%)
+Avance global: 20 / 31 tickets completados (64.5%)
 
 ## Estado actual
 
-**Proximo ticket recomendado:** Definir si se continua con NOTIF-002 o CANCEL-001.
+**Proximo ticket recomendado:** Continuar con CANCEL-001.
 **Tickets en progreso:** -
 **Tickets bloqueados:** -
 
@@ -617,31 +617,32 @@ Avance global: 19 / 31 tickets completados (61.3%)
 
 ### NOTIF-002 - Preparar integracion de correo transaccional
 
-**Estado:** `pending`
-**Labels:** `feature`, `backend`, `needs-discussion`
+**Estado:** `done`
+**Labels:** `feature`, `backend`
 **Depende de:** NOTIF-001
 **Desbloquea:** 
 
 **Microsteps:**
-- [ ] Definir interfaz de envio de correo con destinatario, asunto, cuerpo y metadata.
-- [ ] Crear adaptador placeholder que registre notificaciones sin enviar.
-- [ ] Documentar variables esperadas para SMTP/API futura.
-- [ ] Asociar correo a `notificaciones` con canal `email` sin almacenar direccion de correo ni cuerpo completo.
-- [ ] Definir mensajes base para oferta, recordatorio y confirmacion.
-- [ ] Bloquear envio real hasta contar con proveedor/API aprobado y credenciales oficiales.
-- [ ] Leer el correo desde `flow_sesiones_temporales.contacto_email_enc`, descifrarlo solo en memoria para el envio y limpiar el dato transitorio al finalizar.
+- [x] Definir interfaz de envio de correo con destinatario, asunto/cuerpo via template y metadata minima.
+- [x] Mantener adaptador EmailJS condicionado por variables; sin variables configuradas no envia ni rompe el flujo.
+- [x] Documentar variables esperadas para EmailJS.
+- [x] Asociar confirmaciones con `notificaciones` por WhatsApp y mantener correo fuera de `notificaciones` para no guardar direccion ni cuerpo.
+- [x] Usar template de confirmacion existente para cita agendada.
+- [x] Bloquear envio real cuando faltan variables EmailJS.
+- [x] Leer el correo desde `flow_sesiones_temporales.contacto_email_enc` en autoagendamiento o desde el orquestador en campanas, descifrarlo/usarlo solo en memoria y limpiar el dato transitorio al finalizar.
+- [x] Cifrar el correo del orquestador dentro del `flow_token` firmado de campana para que no viaje en claro.
 
 **Criterios de aceptacion:**
-- [ ] Existe interfaz backend para enviar correo.
-- [ ] Sin proveedor configurado, el sistema registra pendiente sin fallar.
-- [ ] Las variables requeridas del proveedor estan documentadas.
-- [ ] Las notificaciones por correo quedan trazables aunque no se envien.
-- [ ] `notificaciones` no almacena direccion de correo plano ni contenido sensible del mensaje.
-- [ ] No existe envio real de correo sin proveedor/API aprobado.
-- [ ] Para `CONTRACT_READY`, el proveedor/API de correo queda definido o existe waiver formal del supervisor para mantener solo placeholder.
+- [x] Existe interfaz backend para enviar correo.
+- [x] Sin proveedor configurado, el sistema omite el envio sin fallar.
+- [x] Las variables requeridas del proveedor estan documentadas.
+- [x] La confirmacion por correo puede enviarse para autoagendamiento y campanas si hay correo valido y EmailJS configurado.
+- [x] `notificaciones` no almacena direccion de correo plano ni contenido sensible del mensaje.
+- [x] No existe envio real de correo sin proveedor/API aprobado/configurado.
+- [x] Para `CONTRACT_READY`, el proveedor/API de correo queda definido o existe waiver formal del supervisor para mantener solo confirmacion por WhatsApp.
 
-**Evidencia:** 
-**Notas:** 
+**Evidencia:** `lib/email.js`; `lib/demandaInducida.js`; `lib/campaignSender.js`; `lib/flowHandler.js`; `scripts/check-campaign-send.js`; `scripts/check-flow-campaign.js`; `NOTIFICACIONES_HUN.md`; `DEMANDA_INDUCIDA_API.md`; `node --check` exitoso para archivos JS modificados; `node scripts/check-campaign-send.js` exitoso; `node scripts/check-flow-campaign.js` exitoso; `npm.cmd test` exitoso.
+**Notas:** Aprobado por el usuario el 2026-07-09 para campanas: el correo puede leerse desde el orquestador junto con el telefono. El backend normaliza el correo del resolver, lo cifra dentro del `flow_token` de campana y lo recupera al iniciar el Flow para usarlo como contacto transitorio de confirmacion. El correo no queda en `campana_destinatarios`, `notificaciones` ni eventos operativos. Los recordatorios reales por correo siguen condicionados a contar con candidatos HUN por ventana y reglas operativas finales.
 
 ---
 

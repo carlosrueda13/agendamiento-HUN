@@ -74,8 +74,13 @@ async function assertCampaignIdentificationSkipsSpecialty() {
     recipient_id: "recipient-test",
     audiencia_ref: "HUN-3040",
     especialidad_codigo: "590",
+    contacto_email: "PACIENTE.CAMPANIA@example.com",
     expires_at: new Date(Date.now() + 30 * 60000).toISOString(),
   });
+  assert(
+    !flowToken.includes("PACIENTE.CAMPANIA") && !flowToken.includes("paciente.campania"),
+    "El correo de campania no debe viajar en claro en el flow_token."
+  );
 
   const response = await handleFlow(
     flowPayload(flowToken, "IDENTIFICACION", {
@@ -100,6 +105,10 @@ async function assertCampaignIdentificationSkipsSpecialty() {
   assert(session, "Debe guardar sesion temporal minima.");
   assert(session.especialidad_codigo === "590", "Debe persistir solo especialidad de campania.");
   assert(session.slot_token === null, "No debe persistir slot completo.");
+  assert(
+    session.contacto_email === "paciente.campania@example.com",
+    "Debe recuperar correo de campania cifrado en token para guardarlo como contacto transitorio."
+  );
 
   assert(
     savedEvents.some(

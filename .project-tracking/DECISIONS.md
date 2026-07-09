@@ -106,6 +106,16 @@ o que surgen durante el desarrollo.
 
 ---
 
+## [2026-07-09] Usar correo del orquestador para confirmacion de campanas
+
+**Ticket relacionado:** NOTIF-002, CAMPAIGN-003, FLOW-004
+**Decision:** Si el API orquestador devuelve `correo`, el backend lo usara para confirmacion transaccional de citas creadas desde Flow de campana. El correo se normaliza, se cifra dentro del `flow_token` firmado de campana y se recupera solo al iniciar la sesion para enviarlo por el proveedor configurado.
+**Motivo:** Las campanas no piden correo en el Flow, pero el orquestador ya resuelve contacto junto con telefono. Usar ese correo evita pedir un dato adicional al paciente y mantiene la minimizacion aprobada.
+**Alternativas descartadas:** Guardar correo en `campana_destinatarios`, `notificaciones` o eventos; descartado porque ampliaria persistencia personal. Enviar correo plano dentro del `flow_token`; descartado porque el token no debe exponer datos personales legibles.
+**Impacto:** Afecta `lib/demandaInducida.js`, `lib/campaignSender.js`, `lib/flowHandler.js`, `NOTIF-002` y pruebas de campana. El correo no queda en Supabase salvo cifrado transitorio de sesion cuando aplica.
+
+---
+
 ## [2026-06-27] Separar reportes por perfil medico operativo e IT auditoria
 
 **Ticket relacionado:** ADMIN-001
