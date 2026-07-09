@@ -105,10 +105,12 @@ const sender = createCampaignSender({
     "Debe primar la especialidad devuelta por el orquestador sobre la de Supabase."
   );
   assert.strictEqual(tokenContexts[0].contacto_email, "Paciente.Campania@Example.COM");
+  assert.strictEqual(tokenContexts[0].contacto_telefono, "573001112233");
   assert(
     !whatsappPayloads[0].flowToken.includes("Paciente.Campania") &&
-      !whatsappPayloads[0].flowToken.includes("paciente.campania"),
-    "El correo del orquestador no debe viajar en claro dentro del token."
+      !whatsappPayloads[0].flowToken.includes("paciente.campania") &&
+      !whatsappPayloads[0].flowToken.includes("573001112233"),
+    "El correo y telefono del orquestador no deben viajar en claro dentro del token."
   );
   assert.strictEqual(estados.at(-1).estado, "enviado");
   assert.strictEqual(notificaciones.some((item) => item.estado === "enviado"), true);

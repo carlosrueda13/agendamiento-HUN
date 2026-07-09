@@ -5,9 +5,11 @@ process.env.FLOW_MAX_SLOTS = "3";
 
 const hun = require("../lib/hun");
 const db = require("../lib/db");
+const wa = require("../lib/whatsapp");
 
 const savedSessions = [];
 const savedEvents = [];
+const sentMessages = [];
 
 hun.consultarCitasDocumento = async () => [
   {
@@ -40,6 +42,17 @@ hun.getAgendaPorEspecialidad = async (codEspecialidad) => [
   },
 ];
 
+hun.asignarCita = async () => ({
+  success: true,
+  soap: {
+    descripcion: "Cita 1534701 asignada correctamente",
+  },
+});
+
+wa.sendText = async (to, message) => {
+  sentMessages.push({ to, message });
+};
+
 db.guardarSesionTemporal = async (session) => {
   savedSessions.push(session);
 };
@@ -49,6 +62,7 @@ db.guardarEventoOperativo = async (event) => {
 };
 
 db.finalizarSesionTemporal = async () => {};
+db.getContactoEmailSesion = async () => null;
 
 const { createCampaignFlowToken, handleFlow } = require("../lib/flowHandler");
 
@@ -68,6 +82,15 @@ function flowPayload(flowToken, screen, data = {}) {
   };
 }
 
+async function waitFor(predicate, message) {
+  const started = Date.now();
+  while (Date.now() - started < 1000) {
+    if (predicate()) return;
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+  throw new Error(message);
+}
+
 async function assertCampaignIdentificationSkipsSpecialty() {
   const flowToken = createCampaignFlowToken({
     campaign_id: "campaign-test",
@@ -75,11 +98,14 @@ async function assertCampaignIdentificationSkipsSpecialty() {
     audiencia_ref: "HUN-3040",
     especialidad_codigo: "590",
     contacto_email: "PACIENTE.CAMPANIA@example.com",
+    contacto_telefono: "573001112233",
     expires_at: new Date(Date.now() + 30 * 60000).toISOString(),
   });
   assert(
-    !flowToken.includes("PACIENTE.CAMPANIA") && !flowToken.includes("paciente.campania"),
-    "El correo de campania no debe viajar en claro en el flow_token."
+    !flowToken.includes("PACIENTE.CAMPANIA") &&
+      !flowToken.includes("paciente.campania") &&
+      !flowToken.includes("573001112233"),
+    "El correo y telefono de campania no deben viajar en claro en el flow_token."
   );
 
   const response = await handleFlow(
@@ -109,6 +135,10 @@ async function assertCampaignIdentificationSkipsSpecialty() {
     session.contacto_email === "paciente.campania@example.com",
     "Debe recuperar correo de campania cifrado en token para guardarlo como contacto transitorio."
   );
+  assert(
+    session.whatsapp_numero === undefined,
+    "No debe persistir telefono de campania en Supabase."
+  );
 
   assert(
     savedEvents.some(
@@ -119,6 +149,21 @@ async function assertCampaignIdentificationSkipsSpecialty() {
         event.especialidad_codigo === "590"
     ),
     "Debe registrar evento operativo no sensible con contexto de campania."
+  );
+
+  const summary = await handleFlow(
+    flowPayload(flowToken, "SLOTS", { slot: response.data.slots[0].id })
+  );
+  assert(summary.screen === "CONFIRMAR", "Debe permitir seleccionar slot de campania.");
+  const final = await handleFlow(flowPayload(flowToken, "CONFIRMAR"));
+  assert(final.screen === "FINAL", "Debe confirmar Flow de campania.");
+  await waitFor(
+    () => sentMessages.length === 1,
+    "Debe enviar confirmacion WhatsApp de campania."
+  );
+  assert(
+    sentMessages[0].to === "573001112233",
+    "Confirmacion de campania debe enviarse al telefono cifrado en el token, no al flow_token."
   );
 }
 

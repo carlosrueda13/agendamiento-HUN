@@ -30,6 +30,10 @@ function redactFlowData(data = {}) {
   );
 }
 
+function isFlowCompletionMessage(message = {}) {
+  return message.type === "interactive" && message.interactive?.type === "nfm_reply";
+}
+
 // 1. Endpoint de salud.
 app.get("/", (req, res) => {
   res.send("Backend WhatsApp Flow activo");
@@ -88,7 +92,9 @@ app.post("/webhook", async (req, res) => {
       req.body?.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
 
     // Ignorar eventos de status/delivery/read o payloads sin mensaje.
-    if (message && message.from) {
+    if (message && message.from && isFlowCompletionMessage(message)) {
+      console.log("Mensaje de cierre de Flow ignorado por webhook general.");
+    } else if (message && message.from) {
       console.log("Mensaje entrante recibido. Enrutando menu inicial.");
       await handleIncomingMessage(message, {
         whatsapp,
