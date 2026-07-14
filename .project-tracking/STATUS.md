@@ -1,7 +1,7 @@
 ﻿# Project Status - Agendamiento HUN por WhatsApp
 
-Ultima actualizacion: 2026-07-09 13:47
-Fase activa: Sprint 3 - Campanas y notificaciones
+Ultima actualizacion: 2026-07-14 09:30
+Fase activa: Sprint 4 - Cancelacion y reagendamiento
 
 ## Resumen de avance
 
@@ -11,18 +11,18 @@ Fase activa: Sprint 3 - Campanas y notificaciones
 | Sprint 1 - Core agendamiento | 5 | 5 | 0 | 0 | 0 |
 | Sprint 2 - Integracion WhatsApp | 4 | 4 | 0 | 0 | 0 |
 | Sprint 3 - Campanas y notificaciones | 6 | 6 | 0 | 0 | 0 |
-| Sprint 4 - Cancelacion y reagendamiento | 3 | 0 | 0 | 0 | 3 |
+| Sprint 4 - Cancelacion y reagendamiento | 3 | 0 | 1 | 0 | 2 |
 | Sprint 5 - Operacion y reportes | 2 | 0 | 0 | 0 | 2 |
 | Sprint 6 - QA y seguridad | 3 | 0 | 0 | 0 | 3 |
 | Sprint 7 - Deploy y cierre contractual | 3 | 0 | 0 | 0 | 3 |
-| **TOTAL** | **31** | **20** | **0** | **0** | **11** |
+| **TOTAL** | **31** | **20** | **1** | **0** | **10** |
 
 Avance global: 20 / 31 tickets completados (64.5%)
 
 ## Estado actual
 
-**Proximo ticket recomendado:** Continuar con CANCEL-001.
-**Tickets en progreso:** -
+**Proximo ticket recomendado:** Revisar y aprobar CANCEL-001; luego continuar con CANCEL-002.
+**Tickets en progreso:** CANCEL-001
 **Tickets bloqueados:** -
 
 ### Tickets bloqueados por dependencias no resueltas
@@ -448,7 +448,7 @@ Avance global: 20 / 31 tickets completados (64.5%)
 - [x] No se registran documentos, telefonos, citas ni payloads HUN completos en logs o Supabase.
 
 **Evidencia:** `lib/inboundRouter.js`, `lib/whatsapp.js`, `server.js`, `scripts/check-inbound-router.js`, `package.json`; `node --check server.js` exitoso; `node --check lib/whatsapp.js` exitoso; `node --check lib/inboundRouter.js` exitoso; `node --check scripts/check-inbound-router.js` exitoso; `node scripts/check-inbound-router.js` exitoso; `npm.cmd test` exitoso.
-**Notas:** Aprobado por el usuario el 2026-07-08. Texto de consentimiento aprobado por el usuario y linea telefonica configurada en codigo como `(601) 3904888 atencion al usuario`. El consentimiento no se persiste; solo se usa para la sesion efimera de WhatsApp. Para produccion, HUN debe confirmar que el texto aprobado corresponde a su politica institucional vigente.
+**Notas:** Aprobado por el usuario el 2026-07-08. Texto de consentimiento aprobado por el usuario y linea telefonica configurada en codigo como `(601) 3904888 atencion al usuario`. El consentimiento no se persiste; solo se usa para la sesion efimera de WhatsApp. Para produccion, HUN debe confirmar que el texto aprobado corresponde a su politica institucional vigente. Ajuste 2026-07-12: el saludo del menu inicial quedo actualizado a "Hola. Soy *Natalia*, asistente de citas..." y fue versionado en `main` con el commit `be4ce3c`.
 
 ---
 
@@ -545,8 +545,8 @@ Avance global: 20 / 31 tickets completados (64.5%)
 - [x] Supabase no guarda telefono, nombre, correo, documento plano, EPS, medico, fecha/hora, numero de cita ni payload del orquestador.
 - [x] Si el API orquestador no trae datos suficientes para omitir identificacion, el Flow v1 pide identificacion minima y lo documenta como limitacion operativa.
 
-**Evidencia:** `flow-demanda-inducida.json`; `lib/flowHandler.js`; `scripts/check-flow-campaign.js`; `.env.example`; `README.md`; `AGENTS.md`; Flow Meta publicado por usuario con `CAMPAIGN_FLOW_ID=2195324014654953`, template `hun_oferta_cita_flow`, idioma Espanol Colombia; parseo JSON exitoso con `node -e`; pantallas verificadas como `IDENTIFICACION > SLOTS > CONFIRMAR > FINAL`; busqueda sin coincidencias para pantalla `ESPECIALIDAD` ni campo `correo`; `node --check lib/flowHandler.js` exitoso; `node --check scripts/check-flow-campaign.js` exitoso; `npm.cmd test` exitoso.
-**Notas:** Aprobado por el usuario el 2026-07-06. El backend distingue campana por `flow_token` firmado `campaign_v1`, valida expiracion/campana/destinatario o `audiencia_ref`/especialidad, pide identificacion minima por limitacion actual del API orquestador y salta directo a `SLOTS`. El envio de plantilla y resolucion de telefono se implementa en CAMPAIGN-003 usando `CAMPAIGN_FLOW_ID=2195324014654953`, `CAMPAIGN_TEMPLATE_NAME=hun_oferta_cita_flow` y `CAMPAIGN_TEMPLATE_LANGUAGE=es_CO`.
+**Evidencia:** `flow-demanda-inducida.json`; `lib/flowHandler.js`; `scripts/check-flow-campaign.js`; `.env.example`; `README.md`; `AGENTS.md`; Flow Meta publicado por usuario con `CAMPAIGN_FLOW_ID=2195324014654953`, template `hun_oferta_cita_flow`, idioma Espanol Colombia; parseo JSON exitoso con `node -e`; pantallas verificadas como `IDENTIFICACION > SLOTS > CONFIRMAR > FINAL`; busqueda sin coincidencias para pantalla `ESPECIALIDAD` ni campo `correo`; `node --check lib/flowHandler.js` exitoso; `node --check scripts/check-flow-campaign.js` exitoso; `npm.cmd test` exitoso; prueba real de campana en Render confirmo intercambio `IDENTIFICACION > SLOTS > CONFIRMAR`, cierre de Flow ignorado por webhook general y asignacion HUN exitosa.
+**Notas:** Aprobado por el usuario el 2026-07-06. El backend distingue campana por `flow_token` firmado `campaign_v1`, valida expiracion/campana/destinatario o `audiencia_ref`/especialidad, pide identificacion minima por limitacion actual del API orquestador y salta directo a `SLOTS`. El envio de plantilla y resolucion de telefono se implementa en CAMPAIGN-003 usando `CAMPAIGN_FLOW_ID=2195324014654953`, `CAMPAIGN_TEMPLATE_NAME=hun_oferta_cita_flow` y `CAMPAIGN_TEMPLATE_LANGUAGE=es_CO`. Ajuste 2026-07-12: el webhook general ignora respuestas `nfm_reply` de cierre de Flow para evitar reiniciar el menu despues de una asignacion por campana.
 
 ---
 
@@ -577,8 +577,8 @@ Avance global: 20 / 31 tickets completados (64.5%)
 - [x] El estado del destinatario cambia a enviado o fallido.
 - [x] Los errores de WhatsApp y del orquestador quedan disponibles para reporte como motivos no sensibles.
 
-**Evidencia:** `lib/campaignSender.js`; `lib/demandaInducida.js`; `lib/whatsapp.js`; `lib/db.js`; `scripts/check-campaign-send.js`; `scripts/send-campaign-offers.js`; `scripts/check-campaign-audience.js`; `.env.example`; `README.md`; `DEMANDA_INDUCIDA_API.md`; `package.json`; `node --check` exitoso para archivos JS modificados; `npm.cmd test` exitoso; `git diff --check` sin errores; plantilla/Flow externo publicado por usuario con `CAMPAIGN_FLOW_ID=2195324014654953`, `CAMPAIGN_TEMPLATE_NAME=hun_oferta_cita_flow`, idioma `es_CO`.
-**Notas:** Aprobado por el usuario el 2026-07-06. El envio selecciona destinatarios pendientes con `audiencia_ref`, resuelve telefono en memoria contra el orquestador, firma `flow_token` de campana y envia la plantilla de WhatsApp con boton Flow. Supabase guarda solo notificacion, estado de destinatario y evento operativo no sensible; no persiste telefono, nombre, correo, documento plano, EPS, medico, fecha/hora, numero de cita ni payload del orquestador/Meta. Se corrigio el adaptador de audiencia para que campanas nuevas sincronicen `id_anonimo` / `audiencia_ref` y especialidad, no telefono ni documento. Ajuste 2026-07-09: si el orquestador devuelve especialidad, esta prima sobre `campana_destinatarios.especialidad_codigo`; la especialidad de Supabase queda como respaldo operativo. El `flow_token` de campana usa formato `campaign_v1.<payload>.<firma>` para evitar colisiones con `_` en base64url. La prueba real queda condicionada a que el orquestador HUN este en linea.
+**Evidencia:** `lib/campaignSender.js`; `lib/demandaInducida.js`; `lib/whatsapp.js`; `lib/db.js`; `scripts/check-campaign-send.js`; `scripts/send-campaign-offers.js`; `scripts/check-campaign-audience.js`; `.env.example`; `README.md`; `DEMANDA_INDUCIDA_API.md`; `package.json`; `node --check` exitoso para archivos JS modificados; `npm.cmd test` exitoso; `git diff --check` sin errores; plantilla/Flow externo publicado por usuario con `CAMPAIGN_FLOW_ID=2195324014654953`, `CAMPAIGN_TEMPLATE_NAME=hun_oferta_cita_flow`, idioma `es_CO`; commits en `main`: `fa9b4aa`, `5ade3b5`, `db9841e`.
+**Notas:** Aprobado por el usuario el 2026-07-06. El envio selecciona destinatarios pendientes con `audiencia_ref`, resuelve telefono en memoria contra el orquestador, firma `flow_token` de campana y envia la plantilla de WhatsApp con boton Flow. Supabase guarda solo notificacion, estado de destinatario y evento operativo no sensible; no persiste telefono, nombre, correo, documento plano, EPS, medico, fecha/hora, numero de cita ni payload del orquestador/Meta. Se corrigio el adaptador de audiencia para que campanas nuevas sincronicen `id_anonimo` / `audiencia_ref` y especialidad, no telefono ni documento. Ajustes 2026-07-09/2026-07-12: si el orquestador devuelve especialidad, esta prima sobre `campana_destinatarios.especialidad_codigo`; la especialidad de Supabase queda como respaldo operativo. La confirmacion WhatsApp de campana se envia al telefono resuelto desde el orquestador mediante el token cifrado del Flow, no al telefono de sesion del webhook. El `flow_token` de campana usa formato `campaign_v1.<payload>.<firma>` para evitar colisiones con `_` en base64url.
 
 ---
 
@@ -610,8 +610,8 @@ Avance global: 20 / 31 tickets completados (64.5%)
 - [x] Un fallo de WhatsApp no rompe el proceso principal.
 - [x] Antes de pasar a `NOTIF-002`, queda documentado si el proveedor/API de correo esta definido o si debe elevarse advertencia.
 
-**Evidencia:** `lib/notifications.js`; `lib/reminders.js`; `lib/flowHandler.js`; `scripts/check-notifications.js`; `NOTIFICACIONES_HUN.md`; `package.json`; `node --check` exitoso para archivos JS modificados; `npm.cmd test` exitoso; `git diff --check` sin errores.
-**Notas:** Aprobado por el usuario el 2026-07-07. La confirmacion de cita exitosa se envia por WhatsApp y ahora tambien registra intento en `notificaciones` con `session_id_hash`, canal, tipo, estado y proveedor, sin cuerpo del mensaje ni datos de cita. Los recordatorios reales quedan bloqueados operativamente hasta que HUN entregue un endpoint suficiente para consultar candidatos por ventana; mientras tanto queda implementada la interfaz `HunReminderCandidateProvider` y reglas de ventana/reintentos. EmailJS existe como adaptador condicionado por variables, pero el alcance completo de correo queda en `NOTIF-002`.
+**Evidencia:** `lib/notifications.js`; `lib/reminders.js`; `lib/flowHandler.js`; `scripts/check-notifications.js`; `NOTIFICACIONES_HUN.md`; `package.json`; `node --check` exitoso para archivos JS modificados; `npm.cmd test` exitoso; `git diff --check` sin errores; commits en `main`: `1e70600`, `328d70f`.
+**Notas:** Aprobado por el usuario el 2026-07-07. La confirmacion de cita exitosa se envia por WhatsApp y ahora tambien registra intento en `notificaciones` con `session_id_hash`, canal, tipo, estado y proveedor, sin cuerpo del mensaje ni datos de cita. Los recordatorios reales quedan bloqueados operativamente hasta que HUN entregue un endpoint suficiente para consultar candidatos por ventana; mientras tanto queda implementada la interfaz `HunReminderCandidateProvider` y reglas de ventana/reintentos. EmailJS existe como adaptador condicionado por variables, pero el alcance completo de correo queda en `NOTIF-002`. Ajuste 2026-07-12: la confirmacion de agendamiento consulta HUN por numero de cita para mostrar `Procedimiento` real cuando HUN lo entrega; no se persiste procedimiento, numero de cita ni payload completo. En prueba real, correo de confirmacion fue enviado y WhatsApp quedo aceptado por Meta/registrado como enviado; queda como observacion de QA validar entrega final por estado webhook de Meta o auditoria no sensible.
 
 ---
 
@@ -652,31 +652,31 @@ Avance global: 20 / 31 tickets completados (64.5%)
 
 ### CANCEL-001 - Implementar flujo de cancelacion de citas
 
-**Estado:** `pending`
+**Estado:** `ready_for_review`
 **Labels:** `feature`, `backend`, `api`
 **Depende de:** CORE-002, CORE-001, INTAKE-001
 **Desbloquea:** CANCEL-002
 
 **Microsteps:**
-- [ ] Conectar la opcion `Modificar/cancelar` del menu inicial con la rama/Flow de cancelacion.
-- [ ] Consultar citas del paciente por tipo y documento en tiempo real contra HUN.
-- [ ] Filtrar citas cancelables segun estado permitido.
-- [ ] Presentar opciones de cita con `cancel_token` opaco; el numero de cita solo vive en memoria del proceso o se recupera por reconsulta HUN.
-- [ ] Confirmar seleccion antes de llamar API HUN.
-- [ ] Validar `cancel_token` por reconsulta HUN o por contexto efimero de servidor con TTL.
-- [ ] Enviar POST a `/webServiceCancelarCitaH/cancelar_cita`.
-- [ ] Registrar evento de solicitud con estado `cancelacion_procesando` y `cancel_operation_id` no reversible.
+- [x] Conectar la opcion `Modificar/cancelar` del menu inicial con la rama/Flow de cancelacion.
+- [x] Consultar citas del paciente por tipo y documento en tiempo real contra HUN.
+- [x] Filtrar citas cancelables segun estado permitido.
+- [x] Presentar opciones de cita con `cancel_token` opaco; el numero de cita solo vive en memoria del proceso o se recupera por reconsulta HUN.
+- [x] Confirmar seleccion antes de llamar API HUN.
+- [x] Validar `cancel_token` por reconsulta HUN o por contexto efimero de servidor con TTL.
+- [x] Enviar POST a `/webServiceCancelarCitaH/cancelar_cita`.
+- [x] Registrar evento de solicitud con estado `cancelacion_procesando` y `cancel_operation_id` no reversible.
 
 **Criterios de aceptacion:**
-- [ ] Solo se listan citas con estado cancelable.
-- [ ] La cancelacion se inicia desde una rama/Flow separado por intencion `CANCELAR`.
-- [ ] La API de cancelacion no se llama sin confirmacion.
-- [ ] La solicitud no persiste numero de cita ni documento plano en Supabase.
-- [ ] Supabase solo guarda `cancel_operation_id`, `session_id_hash`, estado, timestamps y `expires_at`.
-- [ ] El paciente recibe mensaje de cancelacion en proceso.
+- [x] Solo se listan citas con estado cancelable.
+- [x] La cancelacion se inicia desde una rama/Flow separado por intencion `CANCELAR`.
+- [x] La API de cancelacion no se llama sin confirmacion.
+- [x] La solicitud no persiste numero de cita ni documento plano en Supabase.
+- [x] Supabase solo guarda `cancel_operation_id`, `session_id_hash`, estado, timestamps y `expires_at`.
+- [x] El paciente recibe mensaje de cancelacion en proceso.
 
-**Evidencia:** 
-**Notas:** 
+**Evidencia:** `lib/inboundRouter.js`, `lib/db.js`, `scripts/check-inbound-router.js`, `README.md`; `node --check lib/inboundRouter.js` exitoso; `node --check lib/db.js` exitoso; `node --check scripts/check-inbound-router.js` exitoso; `node scripts/check-inbound-router.js` exitoso; `npm.cmd test` exitoso.
+**Notas:** Implementado como rama conversacional de WhatsApp iniciada por la intencion `Modificar/cancelar`, sin Flow nuevo en Meta. El backend pide consentimiento, solicita identificacion minima, consulta HUN en tiempo real, lista hasta tres citas futuras con estado cancelable, genera `cancel_token` opaco en memoria con TTL y exige confirmacion explicita antes de llamar `hun.cancelarCita`. El numero de cita y documento solo viven en memoria durante la sesion. Supabase recibe `cancel_operation_id` no reversible en `flow_sesiones_temporales.flow_token` con estado `cancelacion_procesando` y `expires_at`, mas evento operativo no sensible con `session_id_hash`; no guarda numero de cita, documento plano, medico, fecha/hora ni payload HUN. La verificacion asincronica y estado final quedan para `CANCEL-002`.
 
 ---
 

@@ -33,6 +33,9 @@ function createDeps() {
   const sent = [];
   const sessions = new Map();
   let flowCount = 0;
+  let cancelCount = 0;
+  let lastCanceled = null;
+  const events = [];
   const deps = {
     sessions,
     now: () => 1000,
@@ -52,18 +55,38 @@ function createDeps() {
         assert(documento === "123456", "Debe consultar con documento recibido.");
         return [
           {
+            Numero_Cita: "111111",
             Fecha_Cita: "2026-07-09",
             Hora_Cita: "08:30:00",
             Nombre_Especialidad: "Dermatologia",
             Nombre_Medico: "Profesional Prueba",
-            Estado: "Asignada",
+            Procedimiento: "Consulta dermatologia",
+            Estado: "Reservada",
           },
           {
+            Numero_Cita: "222222",
             Fecha_Cita: "2026-07-01",
             Hora_Cita: "10:00:00",
             Nombre_Especialidad: "Historica",
           },
+          {
+            Numero_Cita: "333333",
+            Fecha_Cita: "2026-07-10",
+            Hora_Cita: "11:00:00",
+            Nombre_Especialidad: "No cancelable",
+            Estado: "Atendida",
+          },
         ];
+      },
+      cancelarCita: async (cita) => {
+        cancelCount += 1;
+        lastCanceled = cita;
+        return { ok: true };
+      },
+    },
+    db: {
+      guardarEventoOperativo: async (evento) => {
+        events.push(evento);
       },
     },
     sendFlowMessage: async (to) => {
@@ -76,7 +99,10 @@ function createDeps() {
     deps,
     sent,
     sessions,
+    events,
     getFlowCount: () => flowCount,
+    getCancelCount: () => cancelCount,
+    getLastCanceled: () => lastCanceled,
   };
 }
 
@@ -132,14 +158,45 @@ async function assertConsultAppointments() {
 }
 
 async function assertModifyCancelEntryPoint() {
-  const { deps, sent } = createDeps();
+  const { deps, sent, sessions, events, getCancelCount, getLastCanceled } = createDeps();
   await handleIncomingMessage(buttonMessage("INTAKE_MENU_CANCELAR"), deps);
   await handleIncomingMessage(buttonMessage("INTAKE_CONSENT_ACCEPT"), deps);
   await handleIncomingMessage(textMessage("CC 123456"), deps);
 
   assert(
-    sent.some((message) => /modificacion o cancelacion por WhatsApp/.test(message.text || "")),
-    "Modificar/cancelar debe avisar que el flujo completo queda en CANCEL-001."
+    sent.some((message) => /Estas son las citas que puedes cancelar/.test(message.text || "")),
+    "Modificar/cancelar debe listar citas cancelables."
+  );
+  assert(
+    sent.some((message) =>
+      Array.isArray(message.buttons) &&
+      message.buttons.some((button) => button.id === "CANCEL_SELECT_0")
+    ),
+    "Modificar/cancelar debe presentar botones de seleccion."
+  );
+  assert(
+    !sent.some((message) => /Atendida/.test(message.text || "")),
+    "No debe listar citas no cancelables."
+  );
+  assert(
+    sessions.get("573001112233").step === "awaiting_cancel_selection",
+    "Debe esperar seleccion de cita antes de cancelar."
+  );
+
+  await handleIncomingMessage(buttonMessage("CANCEL_SELECT_0"), deps);
+  assert(
+    sent.at(-1).buttons.some((button) => button.id === "CANCEL_CONFIRM_YES"),
+    "Debe pedir confirmacion explicita antes de llamar HUN."
+  );
+  assert(getCancelCount() === 0, "No debe cancelar antes de confirmar.");
+
+  await handleIncomingMessage(buttonMessage("CANCEL_CONFIRM_YES"), deps);
+  assert(getCancelCount() === 1, "Debe llamar HUN una sola vez al confirmar.");
+  assert(getLastCanceled() === "111111", "Debe cancelar la cita seleccionada en memoria.");
+  assert(!sessions.has("573001112233"), "Debe limpiar contexto efimero al solicitar cancelacion.");
+  assert(
+    events.some((event) => event.status === "cancelacion_procesando"),
+    "Debe registrar evento operativo no sensible de cancelacion en proceso."
   );
 }
 

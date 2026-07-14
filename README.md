@@ -252,7 +252,7 @@ Para campanas de demanda inducida, ejecutar tambien las migraciones incrementale
 2. Para mensajes entrantes, el backend envia menu inicial y consentimiento de tratamiento de datos.
 3. Si el paciente acepta y elige agendar, el backend envia el Flow de autoagendamiento con `FLOW_ID`.
 4. Si el paciente acepta y elige consultar, el backend pide identificacion minima y consulta citas HUN solo en memoria.
-5. Si el paciente acepta modificar/cancelar, la conversacion queda preparada para la rama de `CANCEL-001`; no se ejecuta cancelacion sin confirmacion posterior.
+5. Si el paciente acepta modificar/cancelar, el backend consulta HUN en tiempo real, lista solo citas cancelables, usa `cancel_token` efimero en memoria y no llama la API de cancelacion hasta que el paciente confirma.
 6. En Flows, Meta llama `POST /flow-endpoint` con payload cifrado.
 7. `lib/flowCrypto.js` descifra la solicitud y `lib/flowHandler.js` procesa cada pantalla consultando HUN.
 8. El backend responde a Meta con respuesta cifrada y la confirmacion final se envia por WhatsApp cuando HUN responde.
