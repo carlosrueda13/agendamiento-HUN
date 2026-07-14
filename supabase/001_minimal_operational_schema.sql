@@ -88,7 +88,8 @@ create table if not exists public.flow_sesiones_temporales (
       'fallido',
       'cancelacion_solicitada',
       'cancelacion_procesando',
-      'cancelada'
+      'cancelada',
+      'cancelacion_fallida'
     )),
   especialidad_codigo text,
   slot_token text,

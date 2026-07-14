@@ -99,6 +99,7 @@ Copiar `.env.example` a `.env` para pruebas locales y completar valores reales s
 
 - `HUN_API_BASE`
 - `HUN_API_KEY`
+- `CANCEL_VERIFY_MAX_ATTEMPTS`, `CANCEL_VERIFY_INTERVAL_MS` y `CANCEL_VERIFY_INITIAL_DELAY_MS` son opcionales y controlan la verificacion asincronica de cancelaciones.
 
 `FLOW_ID` corresponde al autoagendamiento. Las campanas de demanda inducida deben usar `CAMPAIGN_FLOW_ID` y un JSON de Flow separado.
 
@@ -186,7 +187,7 @@ Las operaciones modificadoras contra HUN de pruebas requieren confirmacion expli
 
 ```bash
 node explorar-api-hun.js --allow-mutations --confirm-hun-test --assign-payload payload.json
-node explorar-api-hun.js --allow-mutations --confirm-hun-test --cancel-cita 1534700
+node explorar-api-hun.js --allow-mutations --confirm-hun-test --cancel-cita 1534700 --tipo CC --documento 41531776
 ```
 
 No ejecutar esas banderas contra ambientes no controlados.
@@ -244,7 +245,7 @@ Vistas esperadas:
 
 Supabase debe usarse solo para trazabilidad operativa, campanas, destinatarios minimos, sesiones temporales y notificaciones no sensibles.
 
-Para campanas de demanda inducida, ejecutar tambien las migraciones incrementales aprobadas, incluida `supabase/004_campaign_audiencia_ref.sql`, antes de usar destinatarios por `id_anonimo` en Supabase real.
+Para campanas de demanda inducida, ejecutar tambien las migraciones incrementales aprobadas, incluida `supabase/004_campaign_audiencia_ref.sql`, antes de usar destinatarios por `id_anonimo` en Supabase real. Para la verificacion final de cancelaciones, aplicar `supabase/006_cancel_operation_failure_state.sql`; esta migracion agrega el estado agregado `cancelacion_fallida` y no incorpora datos personales ni detalles de cita.
 
 ## Flujo WhatsApp
 
@@ -252,7 +253,7 @@ Para campanas de demanda inducida, ejecutar tambien las migraciones incrementale
 2. Para mensajes entrantes, el backend envia menu inicial y consentimiento de tratamiento de datos.
 3. Si el paciente acepta y elige agendar, el backend envia el Flow de autoagendamiento con `FLOW_ID`.
 4. Si el paciente acepta y elige consultar, el backend pide identificacion minima y consulta citas HUN solo en memoria.
-5. Si el paciente acepta modificar/cancelar, el backend consulta HUN en tiempo real, lista solo citas cancelables, usa `cancel_token` efimero en memoria y no llama la API de cancelacion hasta que el paciente confirma.
+5. Si el paciente acepta modificar/cancelar, el backend consulta HUN en tiempo real, lista solo citas cancelables, usa `cancel_token` efimero en memoria y no llama la API de cancelacion hasta que el paciente confirma. Despues del POST, verifica el resultado en segundo plano, evita repetir la operacion y envia por WhatsApp el estado final `cancelada` o `cancelacion_fallida`.
 6. En Flows, Meta llama `POST /flow-endpoint` con payload cifrado.
 7. `lib/flowCrypto.js` descifra la solicitud y `lib/flowHandler.js` procesa cada pantalla consultando HUN.
 8. El backend responde a Meta con respuesta cifrada y la confirmacion final se envia por WhatsApp cuando HUN responde.

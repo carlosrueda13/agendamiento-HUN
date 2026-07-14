@@ -29,6 +29,9 @@ Dejar documentada la configuracion minima para ejecutar el backend localmente y 
 
 - `HUN_API_BASE`: base URL de la API HUN de pruebas.
 - `HUN_API_KEY`: API key de HUN.
+- `CANCEL_VERIFY_MAX_ATTEMPTS`: intentos de verificacion asincronica de cancelacion. Opcional, default `6`.
+- `CANCEL_VERIFY_INTERVAL_MS`: intervalo entre verificaciones HUN. Opcional, default `2000`.
+- `CANCEL_VERIFY_INITIAL_DELAY_MS`: espera inicial antes de verificar. Opcional, default `1500`.
 
 ### API oficial de demanda inducida
 

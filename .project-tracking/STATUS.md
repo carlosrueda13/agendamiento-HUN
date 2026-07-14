@@ -1,6 +1,6 @@
 ﻿# Project Status - Agendamiento HUN por WhatsApp
 
-Ultima actualizacion: 2026-07-14 09:57
+Ultima actualizacion: 2026-07-14 10:14
 Fase activa: Sprint 4 - Cancelacion y reagendamiento
 
 ## Resumen de avance
@@ -11,25 +11,24 @@ Fase activa: Sprint 4 - Cancelacion y reagendamiento
 | Sprint 1 - Core agendamiento | 5 | 5 | 0 | 0 | 0 |
 | Sprint 2 - Integracion WhatsApp | 4 | 4 | 0 | 0 | 0 |
 | Sprint 3 - Campanas y notificaciones | 6 | 6 | 0 | 0 | 0 |
-| Sprint 4 - Cancelacion y reagendamiento | 3 | 0 | 1 | 0 | 2 |
+| Sprint 4 - Cancelacion y reagendamiento | 3 | 1 | 1 | 0 | 1 |
 | Sprint 5 - Operacion y reportes | 2 | 0 | 0 | 0 | 2 |
 | Sprint 6 - QA y seguridad | 3 | 0 | 0 | 0 | 3 |
 | Sprint 7 - Deploy y cierre contractual | 3 | 0 | 0 | 0 | 3 |
-| **TOTAL** | **31** | **20** | **1** | **0** | **10** |
+| **TOTAL** | **31** | **21** | **1** | **0** | **9** |
 
-Avance global: 20 / 31 tickets completados (64.5%)
+Avance global: 21 / 31 tickets completados (67.7%)
 
 ## Estado actual
 
-**Proximo ticket recomendado:** Revisar y aprobar CANCEL-001; luego continuar con CANCEL-002.
-**Tickets en progreso:** CANCEL-001
+**Proximo ticket recomendado:** Revisar y aprobar CANCEL-002; luego evaluar RESCH-001.
+**Tickets en progreso:** CANCEL-002
 **Tickets bloqueados:** -
 
 ### Tickets bloqueados por dependencias no resueltas
 
 | Ticket | Bloqueado por |
 |--------|---------------|
-| CANCEL-002 | CANCEL-001 |
 | RESCH-001 | CANCEL-002, CORE-005 |
 | ADMIN-001 | CANCEL-002 |
 | ADMIN-002 | ADMIN-001 |
@@ -652,7 +651,7 @@ Avance global: 20 / 31 tickets completados (64.5%)
 
 ### CANCEL-001 - Implementar flujo de cancelacion de citas
 
-**Estado:** `ready_for_review`
+**Estado:** `done`
 **Labels:** `feature`, `backend`, `api`
 **Depende de:** CORE-002, CORE-001, INTAKE-001
 **Desbloquea:** CANCEL-002
@@ -676,36 +675,36 @@ Avance global: 20 / 31 tickets completados (64.5%)
 - [x] El paciente recibe mensaje de cancelacion en proceso.
 
 **Evidencia:** `lib/inboundRouter.js`, `lib/hun.js`, `lib/db.js`, `lib/flowHandler.js`, `explorar-api-hun.js`, `scripts/check-inbound-router.js`, `scripts/check-hun-client.js`, `README.md`; `node --check` exitoso para archivos JS modificados; `node scripts/check-inbound-router.js` exitoso; `node scripts/check-hun-client.js` exitoso; `npm.cmd test` exitoso.
-**Notas:** Implementado como rama conversacional de WhatsApp iniciada por la intencion `Modificar/cancelar`, sin Flow nuevo en Meta. El backend pide consentimiento, solicita identificacion minima, consulta HUN en tiempo real, lista hasta tres citas futuras con estado cancelable, genera `cancel_token` opaco en memoria con TTL y exige confirmacion explicita antes de llamar `hun.cancelarCita`. El numero de cita y documento solo viven en memoria durante la sesion. Supabase recibe `cancel_operation_id` no reversible en `flow_sesiones_temporales.flow_token` con estado `cancelacion_procesando` y `expires_at`, mas evento operativo no sensible con `session_id_hash`; no guarda numero de cita, documento plano, medico, fecha/hora ni payload HUN. La verificacion asincronica y estado final quedan para `CANCEL-002`. Ajuste 2026-07-14: se corrigio el normalizador para soportar campos reales de HUN como `Cita_Fecha` y `ESTADO`, y fechas RFC como `Fri, 17 Jul 2026 00:00:00 GMT`, evitando descartar citas reservadas como no cancelables. Segundo ajuste 2026-07-14: el contrato documental de HUN exige `cita`, `tipo_documento` y `documento` en el POST; el cliente enviaba solo `cita`. Se corrigio el payload conservando tipo/documento exclusivamente en memoria durante la sesion y se agregaron pruebas del contrato y diagnostico sanitizado.
+**Notas:** Aprobado por el usuario el 2026-07-14. Implementado como rama conversacional de WhatsApp iniciada por la intencion `Modificar/cancelar`, sin Flow nuevo en Meta. El backend pide consentimiento, solicita identificacion minima, consulta HUN en tiempo real, lista hasta tres citas futuras con estado cancelable, genera `cancel_token` opaco en memoria con TTL y exige confirmacion explicita antes de llamar `hun.cancelarCita`. El numero de cita y documento solo viven en memoria durante la sesion. Supabase recibe `cancel_operation_id` no reversible en `flow_sesiones_temporales.flow_token` con estado `cancelacion_procesando` y `expires_at`, mas evento operativo no sensible con `session_id_hash`; no guarda numero de cita, documento plano, medico, fecha/hora ni payload HUN. La verificacion asincronica y estado final quedan para `CANCEL-002`. Ajuste 2026-07-14: se corrigio el normalizador para soportar campos reales de HUN como `Cita_Fecha` y `ESTADO`, y fechas RFC como `Fri, 17 Jul 2026 00:00:00 GMT`, evitando descartar citas reservadas como no cancelables. Segundo ajuste 2026-07-14: el contrato documental de HUN exige `cita`, `tipo_documento` y `documento` en el POST; el cliente enviaba solo `cita`. Se corrigio el payload conservando tipo/documento exclusivamente en memoria durante la sesion y se agregaron pruebas del contrato y diagnostico sanitizado.
 
 ---
 
 ### CANCEL-002 - Implementar verificacion asincrona de cancelacion
 
-**Estado:** `pending`
+**Estado:** `ready_for_review`
 **Labels:** `feature`, `backend`, `api`
 **Depende de:** CANCEL-001
 **Desbloquea:** RESCH-001, ADMIN-001, QA-001
 
 **Microsteps:**
-- [ ] Crear tarea o funcion para consultar `/verificar_cancelacion/{cita}` usando el numero de cita solo desde memoria o reconsulta HUN dentro del TTL.
-- [ ] Actualizar estado final no sensible a `cancelada` o `cancelacion_fallida`.
-- [ ] Registrar solo resultado agregado, codigo/estado tecnico y `cancel_operation_id`, sin respuesta HUN completa.
-- [ ] Enviar mensaje final al paciente.
-- [ ] Definir reintentos, timeout de verificacion y expiracion del contexto temporal.
-- [ ] Implementar idempotencia con `cancel_operation_id` como hash/correlation id no reversible.
-- [ ] No repetir POST si la operacion esta `cancelacion_procesando`, `cancelada` o `cancelacion_fallida`.
-- [ ] Si el proceso se reinicia y se pierde el contexto temporal, informar al usuario que debe reiniciar la cancelacion.
+- [x] Crear tarea o funcion para consultar `/verificar_cancelacion/{cita}` usando el numero de cita solo desde memoria o reconsulta HUN dentro del TTL.
+- [x] Actualizar estado final no sensible a `cancelada` o `cancelacion_fallida`.
+- [x] Registrar solo resultado agregado, codigo/estado tecnico y `cancel_operation_id`, sin respuesta HUN completa.
+- [x] Enviar mensaje final al paciente.
+- [x] Definir reintentos, timeout de verificacion y expiracion del contexto temporal.
+- [x] Implementar idempotencia con `cancel_operation_id` como hash/correlation id no reversible.
+- [x] No repetir POST si la operacion esta `cancelacion_procesando`, `cancelada` o `cancelacion_fallida`.
+- [x] Si el proceso se reinicia y se pierde el contexto temporal, informar al usuario que debe reiniciar la cancelacion.
 
 **Criterios de aceptacion:**
-- [ ] Una cancelacion en proceso puede verificarse sin persistir numero de cita en Supabase.
-- [ ] El estado final persistido es solo agregado/no sensible: `cancelacion_procesando`, `cancelada` o `cancelacion_fallida`.
-- [ ] El paciente recibe resultado final por WhatsApp.
-- [ ] Fallos de verificacion quedan registrados para seguimiento.
-- [ ] La idempotencia evita repetir POST de cancelacion para una operacion en proceso o finalizada.
+- [x] Una cancelacion en proceso puede verificarse sin persistir numero de cita en Supabase.
+- [x] El estado final persistido es solo agregado/no sensible: `cancelacion_procesando`, `cancelada` o `cancelacion_fallida`.
+- [x] El paciente recibe resultado final por WhatsApp.
+- [x] Fallos de verificacion quedan registrados para seguimiento.
+- [x] La idempotencia evita repetir POST de cancelacion para una operacion en proceso o finalizada.
 
-**Evidencia:** 
-**Notas:** 
+**Evidencia:** `lib/cancellationVerifier.js`, `lib/inboundRouter.js`, `lib/db.js`, `scripts/check-cancellation-verifier.js`, `scripts/check-inbound-router.js`, `supabase/006_cancel_operation_failure_state.sql`, `.env.example`, `SETUP_LOCAL_CHECKLIST.md`, `README.md`, `package.json`; migracion remota `cancel_operation_failure_state` aplicada y restriccion verificada en Supabase; `node --check` exitoso; pruebas especificas de verificacion e inbound exitosas; `npm.cmd test` exitoso; consulta de solo lectura al endpoint HUN real con respuesta clasificada sin exponer payload.
+**Notas:** Implementado con registro efimero en memoria, POST idempotente por `cancel_operation_id`, verificacion en segundo plano con espera inicial, seis intentos por defecto e intervalo configurable. El numero de cita y destinatario solo viven en memoria; Supabase conserva estados agregados, HMAC no reversible del destinatario en eventos y metadatos tecnicos sanitizados. Al confirmar HUN se envia resultado final por WhatsApp. Si Render reinicia y se pierde el numero de cita, el siguiente mensaje del usuario detecta la operacion pendiente por HMAC, la cierra como `cancelacion_fallida` e indica reiniciar el proceso. La migracion agrega el estado agregado `cancelacion_fallida` sin incorporar datos de cita ni datos personales. Los asesores de Supabase mantienen hallazgos previos sobre vistas `security_definer` y funcion publica, pendientes de `SEC-001`; la migracion de este ticket no agrego hallazgos nuevos.
 
 ---
 

@@ -1,3 +1,5 @@
+process.env.FLOW_SESSION_PII_KEY_B64 = Buffer.alloc(32, 17).toString("base64");
+
 const {
   ACTIONS,
   buildRejectText,
@@ -202,6 +204,30 @@ async function assertModifyCancelEntryPoint() {
   );
 }
 
+async function assertLostCancellationContext() {
+  const { deps, sent, events } = createDeps();
+  const finalized = [];
+  deps.db.getOperacionCancelacionActivaPorSesion = async () => ({
+    cancel_operation_id: "c".repeat(64),
+    estado: "cancelacion_procesando",
+  });
+  deps.db.finalizarOperacionCancelacion = async (id, estado, extra) => {
+    finalized.push({ id, estado, extra });
+  };
+  deps.cancellationVerifier = {
+    hasOperation: () => false,
+  };
+
+  const result = await handleIncomingMessage(textMessage("hola"), deps);
+  assert(result.step === "cancel_context_lost", "Debe detectar contexto perdido.");
+  assert(finalized[0].estado === "cancelacion_fallida", "Debe cerrar estado agregado.");
+  assert(
+    events.some((event) => event.error_code === "runtime_context_lost"),
+    "Debe registrar perdida de contexto sin datos de cita."
+  );
+  assert(/se interrumpio/i.test(sent.at(-1).text), "Debe informar que reinicie el proceso.");
+}
+
 function assertHelpers() {
   assert(parseDocumentInput("CC 123.456").documento === "123456", "Debe normalizar documento.");
   assert(parseDocumentInput("xx 123456") === null, "Debe rechazar tipo invalido.");
@@ -217,6 +243,7 @@ async function main() {
   await assertRejectConsent();
   await assertConsultAppointments();
   await assertModifyCancelEntryPoint();
+  await assertLostCancellationContext();
   console.log("Inbound router checks passed.");
 }
 
