@@ -6,6 +6,16 @@ o que surgen durante el desarrollo.
 
 ---
 
+## [2026-07-14] Reagendar mediante asignacion confirmada y cancelacion posterior
+
+**Ticket relacionado:** RESCH-001
+**Decision:** Como HUN no expone endpoint especifico de reagendamiento, la modificacion se disenara como una saga: asignar y confirmar primero la nueva cita, solicitar despues la cancelacion de la cita original, verificar esa cancelacion y confirmar la modificacion al paciente solo cuando ambas operaciones esten cerradas exitosamente.
+**Motivo:** Mantener la cita original hasta confirmar el horario alternativo evita que el paciente pierda su reserva por un fallo o una carrera al asignar el nuevo cupo.
+**Alternativas descartadas:** Cancelar primero y asignar despues; descartado porque puede dejar al paciente sin ninguna cita. Informar exito al confirmar solo la nueva cita; descartado porque la original podria continuar activa. Tratar ambas llamadas como transaccion atomica; descartado porque HUN no ofrece endpoint conjunto, reserva temporal ni rollback.
+**Impacto:** La implementacion debe reutilizar `slot_token`, reconsulta HUN, idempotencia y verificacion asincronica. Una cancelacion original fallida puede producir doble reserva temporal y exige mensaje explicito y conciliacion manual. Supabase solo conservara estado agregado no sensible; los numeros de cita y datos del paciente permaneceran en memoria con TTL.
+
+---
+
 ## [2026-06-27] Usar API HUN como fuente de verdad
 
 **Ticket relacionado:** -

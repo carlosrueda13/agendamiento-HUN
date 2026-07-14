@@ -1,7 +1,7 @@
-﻿# Project Status - Agendamiento HUN por WhatsApp
+# Project Status - Agendamiento HUN por WhatsApp
 
-Ultima actualizacion: 2026-07-14 10:14
-Fase activa: Sprint 4 - Cancelacion y reagendamiento
+Ultima actualizacion: 2026-07-14 10:47
+Fase activa: Sprint 5 - Operacion y reportes
 
 ## Resumen de avance
 
@@ -11,28 +11,25 @@ Fase activa: Sprint 4 - Cancelacion y reagendamiento
 | Sprint 1 - Core agendamiento | 5 | 5 | 0 | 0 | 0 |
 | Sprint 2 - Integracion WhatsApp | 4 | 4 | 0 | 0 | 0 |
 | Sprint 3 - Campanas y notificaciones | 6 | 6 | 0 | 0 | 0 |
-| Sprint 4 - Cancelacion y reagendamiento | 3 | 1 | 1 | 0 | 1 |
+| Sprint 4 - Cancelacion y reagendamiento | 3 | 3 | 0 | 0 | 0 |
 | Sprint 5 - Operacion y reportes | 2 | 0 | 0 | 0 | 2 |
 | Sprint 6 - QA y seguridad | 3 | 0 | 0 | 0 | 3 |
 | Sprint 7 - Deploy y cierre contractual | 3 | 0 | 0 | 0 | 3 |
-| **TOTAL** | **31** | **21** | **1** | **0** | **9** |
+| **TOTAL** | **31** | **23** | **0** | **0** | **8** |
 
-Avance global: 21 / 31 tickets completados (67.7%)
+Avance global: 23 / 31 tickets completados (74.2%)
 
 ## Estado actual
 
-**Proximo ticket recomendado:** Revisar y aprobar CANCEL-002; luego evaluar RESCH-001.
-**Tickets en progreso:** CANCEL-002
+**Proximo ticket recomendado:** ADMIN-001 - Crear consultas administrativas por perfil.
+**Tickets en progreso:** -
 **Tickets bloqueados:** -
 
 ### Tickets bloqueados por dependencias no resueltas
 
 | Ticket | Bloqueado por |
 |--------|---------------|
-| RESCH-001 | CANCEL-002, CORE-005 |
-| ADMIN-001 | CANCEL-002 |
 | ADMIN-002 | ADMIN-001 |
-| QA-001 | CANCEL-002 |
 | QA-002 | QA-001 |
 | SEC-001 | ADMIN-001 |
 | DEPLOY-001 | QA-002, SEC-001 |
@@ -681,7 +678,7 @@ Avance global: 21 / 31 tickets completados (67.7%)
 
 ### CANCEL-002 - Implementar verificacion asincrona de cancelacion
 
-**Estado:** `ready_for_review`
+**Estado:** `done`
 **Labels:** `feature`, `backend`, `api`
 **Depende de:** CANCEL-001
 **Desbloquea:** RESCH-001, ADMIN-001, QA-001
@@ -704,34 +701,34 @@ Avance global: 21 / 31 tickets completados (67.7%)
 - [x] La idempotencia evita repetir POST de cancelacion para una operacion en proceso o finalizada.
 
 **Evidencia:** `lib/cancellationVerifier.js`, `lib/inboundRouter.js`, `lib/db.js`, `scripts/check-cancellation-verifier.js`, `scripts/check-inbound-router.js`, `supabase/006_cancel_operation_failure_state.sql`, `.env.example`, `SETUP_LOCAL_CHECKLIST.md`, `README.md`, `package.json`; migracion remota `cancel_operation_failure_state` aplicada y restriccion verificada en Supabase; `node --check` exitoso; pruebas especificas de verificacion e inbound exitosas; `npm.cmd test` exitoso; consulta de solo lectura al endpoint HUN real con respuesta clasificada sin exponer payload.
-**Notas:** Implementado con registro efimero en memoria, POST idempotente por `cancel_operation_id`, verificacion en segundo plano con espera inicial, seis intentos por defecto e intervalo configurable. El numero de cita y destinatario solo viven en memoria; Supabase conserva estados agregados, HMAC no reversible del destinatario en eventos y metadatos tecnicos sanitizados. Al confirmar HUN se envia resultado final por WhatsApp. Si Render reinicia y se pierde el numero de cita, el siguiente mensaje del usuario detecta la operacion pendiente por HMAC, la cierra como `cancelacion_fallida` e indica reiniciar el proceso. La migracion agrega el estado agregado `cancelacion_fallida` sin incorporar datos de cita ni datos personales. Los asesores de Supabase mantienen hallazgos previos sobre vistas `security_definer` y funcion publica, pendientes de `SEC-001`; la migracion de este ticket no agrego hallazgos nuevos.
+**Notas:** Aprobado por el usuario el 2026-07-14. Implementado con registro efimero en memoria, POST idempotente por `cancel_operation_id`, verificacion en segundo plano con espera inicial, seis intentos por defecto e intervalo configurable. El numero de cita y destinatario solo viven en memoria; Supabase conserva estados agregados, HMAC no reversible del destinatario en eventos y metadatos tecnicos sanitizados. Al confirmar HUN se envia resultado final por WhatsApp. Si Render reinicia y se pierde el numero de cita, el siguiente mensaje del usuario detecta la operacion pendiente por HMAC, la cierra como `cancelacion_fallida` e indica reiniciar el proceso. La migracion agrega el estado agregado `cancelacion_fallida` sin incorporar datos de cita ni datos personales. Los asesores de Supabase mantienen hallazgos previos sobre vistas `security_definer` y funcion publica, pendientes de `SEC-001`; la migracion de este ticket no agrego hallazgos nuevos.
 
 ---
 
 ### RESCH-001 - Evaluar estrategia de reagendamiento
 
-**Estado:** `pending`
+**Estado:** `done`
 **Labels:** `needs-discussion`, `blocked`
 **Depende de:** CANCEL-002, CORE-005
 **Desbloquea:** 
 
 **Microsteps:**
-- [ ] Confirmar si HUN tiene endpoint especifico de reagendamiento.
-- [ ] Documentar riesgos de estrategia cancelar + asignar.
-- [ ] Elevar decision al supervisor si no hay endpoint especifico.
-- [ ] Si no hay endpoint o regla aprobada, documentar reagendamiento como trabajo futuro.
-- [ ] Si se aprueba cancelar + asignar, disenar flujo transaccional con advertencia explicita al usuario.
-- [ ] En la estrategia cancelar + asignar, no liberar el cupo original hasta confirmar disponibilidad alternativa.
-- [ ] Registrar decision tecnica en documentacion final.
+- [x] Confirmar si HUN tiene endpoint especifico de reagendamiento.
+- [x] Documentar riesgos de estrategia cancelar + asignar.
+- [x] Elevar decision al supervisor si no hay endpoint especifico.
+- [x] Si no hay endpoint o regla aprobada, documentar reagendamiento como trabajo futuro.
+- [x] Si se aprueba cancelar + asignar, disenar flujo transaccional con advertencia explicita al usuario.
+- [x] En la estrategia cancelar + asignar, no liberar el cupo original hasta confirmar disponibilidad alternativa.
+- [x] Registrar decision tecnica en documentacion final.
 
 **Criterios de aceptacion:**
-- [ ] Existe decision documentada sobre estrategia de reagendamiento.
-- [ ] Si no existe endpoint o regla aprobada, queda como requerimiento futuro detallado y no bloquea el MVP de agendamiento/cancelacion.
-- [ ] Si se aprueba cancelar + asignar, el flujo evita doble confirmacion ambigua y advierte al usuario antes de afectar su cita original.
-- [ ] La decision menciona riesgos y dependencias HUN.
+- [x] Existe decision documentada sobre estrategia de reagendamiento.
+- [x] Si no existe endpoint o regla aprobada, queda como requerimiento futuro detallado y no bloquea el MVP de agendamiento/cancelacion.
+- [x] Si se aprueba cancelar + asignar, el flujo evita doble confirmacion ambigua y advierte al usuario antes de afectar su cita original.
+- [x] La decision menciona riesgos y dependencias HUN.
 
-**Evidencia:** 
-**Notas:** 
+**Evidencia:** `DOCUMENTACION_CONSUMO_APIS-1.pdf` revisado el 2026-07-14; el documento enumera especialidades, citas por documento/numero, fecha por medico, disponibilidad por medico, agenda, asignacion, cancelacion y verificacion de cancelacion, sin endpoint especifico de reagendamiento. Contraste con `lib/hun.js` y `README.md`, que exponen el mismo contrato sin operacion de reagendamiento. Estrategia, estados parciales, advertencia al paciente, minimizacion y recuperacion documentados en `RESCH_001_ESTRATEGIA_REAGENDAMIENTO.md`; decision registrada en `.project-tracking/DECISIONS.md`.
+**Notas:** Aprobado por el usuario el 2026-07-14. La estrategia definida es `asignar nueva cita -> confirmar nueva cita -> solicitar cancelacion original -> verificar cancelacion`. La cita original no se libera antes de confirmar la nueva. El flujo no informa modificacion exitosa hasta confirmar la cancelacion original. Si esta falla, se informa posible doble reserva y se exige conciliacion manual; no existe rollback atomico entre endpoints HUN. Este ticket evalua y disena la estrategia; la implementacion funcional requiere un ticket posterior con cambios conversacionales, estados agregados, migracion minima y pruebas E2E.
 
 ---
 
@@ -1041,4 +1038,3 @@ Actualiza `Ultima actualizacion:` en el encabezado cada vez que modifiques el ar
 El formato es `YYYY-MM-DD HH:MM` en hora local del proyecto.
 
 -->
-
