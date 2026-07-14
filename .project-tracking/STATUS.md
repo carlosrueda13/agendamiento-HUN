@@ -1,6 +1,6 @@
 ﻿# Project Status - Agendamiento HUN por WhatsApp
 
-Ultima actualizacion: 2026-07-14 09:30
+Ultima actualizacion: 2026-07-14 09:48
 Fase activa: Sprint 4 - Cancelacion y reagendamiento
 
 ## Resumen de avance
@@ -676,7 +676,7 @@ Avance global: 20 / 31 tickets completados (64.5%)
 - [x] El paciente recibe mensaje de cancelacion en proceso.
 
 **Evidencia:** `lib/inboundRouter.js`, `lib/db.js`, `scripts/check-inbound-router.js`, `README.md`; `node --check lib/inboundRouter.js` exitoso; `node --check lib/db.js` exitoso; `node --check scripts/check-inbound-router.js` exitoso; `node scripts/check-inbound-router.js` exitoso; `npm.cmd test` exitoso.
-**Notas:** Implementado como rama conversacional de WhatsApp iniciada por la intencion `Modificar/cancelar`, sin Flow nuevo en Meta. El backend pide consentimiento, solicita identificacion minima, consulta HUN en tiempo real, lista hasta tres citas futuras con estado cancelable, genera `cancel_token` opaco en memoria con TTL y exige confirmacion explicita antes de llamar `hun.cancelarCita`. El numero de cita y documento solo viven en memoria durante la sesion. Supabase recibe `cancel_operation_id` no reversible en `flow_sesiones_temporales.flow_token` con estado `cancelacion_procesando` y `expires_at`, mas evento operativo no sensible con `session_id_hash`; no guarda numero de cita, documento plano, medico, fecha/hora ni payload HUN. La verificacion asincronica y estado final quedan para `CANCEL-002`.
+**Notas:** Implementado como rama conversacional de WhatsApp iniciada por la intencion `Modificar/cancelar`, sin Flow nuevo en Meta. El backend pide consentimiento, solicita identificacion minima, consulta HUN en tiempo real, lista hasta tres citas futuras con estado cancelable, genera `cancel_token` opaco en memoria con TTL y exige confirmacion explicita antes de llamar `hun.cancelarCita`. El numero de cita y documento solo viven en memoria durante la sesion. Supabase recibe `cancel_operation_id` no reversible en `flow_sesiones_temporales.flow_token` con estado `cancelacion_procesando` y `expires_at`, mas evento operativo no sensible con `session_id_hash`; no guarda numero de cita, documento plano, medico, fecha/hora ni payload HUN. La verificacion asincronica y estado final quedan para `CANCEL-002`. Ajuste 2026-07-14: se corrigio el normalizador para soportar campos reales de HUN como `Cita_Fecha` y `ESTADO`, y fechas RFC como `Fri, 17 Jul 2026 00:00:00 GMT`, evitando descartar citas reservadas como no cancelables.
 
 ---
 

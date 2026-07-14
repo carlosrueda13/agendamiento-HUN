@@ -56,12 +56,12 @@ function createDeps() {
         return [
           {
             Numero_Cita: "111111",
-            Fecha_Cita: "2026-07-09",
+            Cita_Fecha: "Fri, 17 Jul 2026 00:00:00 GMT",
             Hora_Cita: "08:30:00",
-            Nombre_Especialidad: "Dermatologia",
-            Nombre_Medico: "Profesional Prueba",
+            Especialidad: "Dermatologia",
+            Medico: "Profesional Prueba",
             Procedimiento: "Consulta dermatologia",
-            Estado: "Reservada",
+            ESTADO: "Reservada",
           },
           {
             Numero_Cita: "222222",
