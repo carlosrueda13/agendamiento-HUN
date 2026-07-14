@@ -75,7 +75,11 @@ async function testCitasYCancelacion() {
       data: { results: [{ Estado: " ASIGNADA " }] },
     },
     "POST /webServiceCancelarCitaH/cancelar_cita": (payload) => {
-      assert.deepStrictEqual(payload, { cita: "123" });
+      assert.deepStrictEqual(payload, {
+        cita: "123",
+        tipo_documento: "CC",
+        documento: "999",
+      });
       return { data: { success: true, message: " OK " } };
     },
     "GET /webServiceCancelarCitaH/verificar_cancelacion/123": {
@@ -89,10 +93,15 @@ async function testCitasYCancelacion() {
   assert.deepStrictEqual(await api.consultarCitaNumero("123"), [
     { Estado: "ASIGNADA" },
   ]);
-  assert.deepStrictEqual(await api.cancelarCita("123"), {
+  assert.deepStrictEqual(await api.cancelarCita("123", "cc", "999"), {
     success: true,
     message: "OK",
   });
+  await assert.rejects(
+    () => api.cancelarCita("123"),
+    (error) =>
+      error instanceof hun.HunApiError && error.category === "invalid_request"
+  );
   assert.deepStrictEqual(await api.verificarCancelacion("123"), {
     success: true,
     estado: "CANCELADA",

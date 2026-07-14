@@ -78,7 +78,9 @@ function createDeps() {
           },
         ];
       },
-      cancelarCita: async (cita) => {
+      cancelarCita: async (cita, tipoDocumento, documento) => {
+        assert(tipoDocumento === "CC", "Debe cancelar con tipo de documento en memoria.");
+        assert(documento === "123456", "Debe cancelar con documento en memoria.");
         cancelCount += 1;
         lastCanceled = cita;
         return { ok: true };

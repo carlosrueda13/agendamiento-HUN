@@ -9,7 +9,7 @@
  *
  * Operaciones modificadoras solo en entorno HUN de pruebas controlado:
  *   node explorar-api-hun.js --allow-mutations --confirm-hun-test --assign-payload payload.json
- *   node explorar-api-hun.js --allow-mutations --confirm-hun-test --cancel-cita 1534700
+ *   node explorar-api-hun.js --allow-mutations --confirm-hun-test --cancel-cita 1534700 --tipo CC --documento 41531776
  */
 
 require("dotenv").config();
@@ -63,7 +63,7 @@ Operaciones modificadoras, deshabilitadas por defecto:
   --allow-mutations
   --confirm-hun-test
   --assign-payload ARCHIVO  JSON para POST /webServiceCita/api/asignar_cita
-  --cancel-cita NUM         POST /webServiceCancelarCitaH/cancelar_cita
+  --cancel-cita NUM         POST /webServiceCancelarCitaH/cancelar_cita usando --tipo y --documento
 
 El reporte guarda resumen tecnico y estructura de campos, no payloads completos.`);
 }
@@ -345,7 +345,11 @@ function buildMutations(config) {
       id: "cancelar_cita",
       name: "Cancelar cita",
       endpoint: "/webServiceCancelarCitaH/cancelar_cita",
-      payload: { cita: String(config.cancelCita) },
+      payload: {
+        cita: String(config.cancelCita),
+        tipo_documento: config.tipo,
+        documento: config.documento,
+      },
       timeoutMs: config.timeoutMs,
     });
   }
@@ -435,7 +439,7 @@ async function main() {
       id: "cancelar_cita",
       method: "POST",
       endpoint: "/webServiceCancelarCitaH/cancelar_cita",
-      reason: "Requiere --allow-mutations --confirm-hun-test --cancel-cita",
+      reason: "Requiere --allow-mutations --confirm-hun-test --cancel-cita --tipo --documento",
     });
   }
 
