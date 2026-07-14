@@ -4,7 +4,7 @@
 
 Backend Node/Express para agendar, confirmar, cancelar y ofrecer citas HUN desde WhatsApp Cloud API usando WhatsApp Flows `data_exchange` cifrado. La API HUN de pruebas es la fuente de verdad para pacientes, disponibilidad, asignacion, cancelacion y estado de cita. Supabase solo puede guardar estado operativo minimo no sensible para campanas, destinatarios, sesiones temporales, notificaciones y eventos tecnicos.
 
-Hay dos Flows separados: autoagendamiento usa `flow-agendamiento.json` y `FLOW_ID`; campanas de demanda inducida usan un JSON separado, por ejemplo `flow-demanda-inducida.json`, y `CAMPAIGN_FLOW_ID`. No reutilizar el Flow de autoagendamiento para campanas.
+Hay tres Flows separados: autoagendamiento usa `flow-agendamiento.json` y `FLOW_ID`; campanas de demanda inducida usan `flow-demanda-inducida.json` y `CAMPAIGN_FLOW_ID`; modificacion de citas usa `flow-reagendamiento.json` y `RESCHEDULE_FLOW_ID`. No mezclar sus pantallas ni estados.
 
 Antes de implementar cualquier cambio, leer `.project-tracking/STATUS.md` y trabajar solo el proximo ticket recomendado o el ticket que el usuario indique. No iniciar el siguiente ticket hasta que el usuario apruebe el actual como `done`.
 
@@ -89,7 +89,7 @@ TODO: agregar scripts `test`, `lint` y `build` cuando los tickets de QA/configur
 
 ## Contexto Adicional
 
-Variables esperadas, sin valores reales: `VERIFY_TOKEN`, `WHATSAPP_TOKEN`, `PHONE_NUMBER_ID`, `GRAPH_API_VERSION`, `FLOW_ID`, `FLOW_SCREEN_ID`, `CAMPAIGN_FLOW_ID`, `CAMPAIGN_FLOW_SCREEN_ID`, `CAMPAIGN_TEMPLATE_NAME`, `CAMPAIGN_TEMPLATE_LANGUAGE`, `CAMPAIGN_FLOW_TOKEN_SECRET_B64`, `FLOW_PRIVATE_KEY_B64`, `FLOW_KEY_PASSPHRASE`, `FLOW_SESSION_PII_KEY_B64`, `FLOW_SLOT_TOKEN_SECRET_B64`, `HUN_API_BASE`, `HUN_API_KEY`, `HUN_DEMANDA_API_BASE`, `HUN_DEMANDA_API_AUTH_TYPE`, `HUN_DEMANDA_API_TOKEN`, `HUN_DEMANDA_API_ENDPOINT`, `HUN_DEMANDA_API_TIMEOUT_MS`, `HUN_ORQUESTADOR_API_BASE`, `HUN_ORQUESTADOR_API_KEY`, `HUN_ORQUESTADOR_API_ENDPOINT`, `EMAILJS_SERVICE_ID`, `EMAILJS_TEMPLATE_ID`, `EMAILJS_PUBLIC_KEY`, `EMAILJS_PRIVATE_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
+Variables esperadas, sin valores reales: `VERIFY_TOKEN`, `WHATSAPP_TOKEN`, `PHONE_NUMBER_ID`, `GRAPH_API_VERSION`, `FLOW_ID`, `FLOW_SCREEN_ID`, `RESCHEDULE_FLOW_ID`, `RESCHEDULE_FLOW_SCREEN_ID`, `CAMPAIGN_FLOW_ID`, `CAMPAIGN_FLOW_SCREEN_ID`, `CAMPAIGN_TEMPLATE_NAME`, `CAMPAIGN_TEMPLATE_LANGUAGE`, `CAMPAIGN_FLOW_TOKEN_SECRET_B64`, `FLOW_PRIVATE_KEY_B64`, `FLOW_KEY_PASSPHRASE`, `FLOW_SESSION_PII_KEY_B64`, `FLOW_SLOT_TOKEN_SECRET_B64`, `HUN_API_BASE`, `HUN_API_KEY`, `HUN_DEMANDA_API_BASE`, `HUN_DEMANDA_API_AUTH_TYPE`, `HUN_DEMANDA_API_TOKEN`, `HUN_DEMANDA_API_ENDPOINT`, `HUN_DEMANDA_API_TIMEOUT_MS`, `HUN_ORQUESTADOR_API_BASE`, `HUN_ORQUESTADOR_API_KEY`, `HUN_ORQUESTADOR_API_ENDPOINT`, `EMAILJS_SERVICE_ID`, `EMAILJS_TEMPLATE_ID`, `EMAILJS_PUBLIC_KEY`, `EMAILJS_PRIVATE_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
 
 Endpoints HUN relevantes: especialidades, citas por documento, cita por numero, agenda por especialidad, asignar cita, cancelar cita y verificar cancelacion. Consultar `PLAN_CONTRATO_AGENDAMIENTO_HUN.md` para el detalle contractual y `PLAN_SPRINTS_AGENDAMIENTO_HUN.md` para el alcance por tickets.
 

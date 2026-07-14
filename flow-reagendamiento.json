@@ -1,0 +1,269 @@
+{
+  "version": "7.3",
+  "data_api_version": "3.0",
+  "routing_model": {
+    "IDENTIFICACION_REAGENDAMIENTO": ["CITA_ORIGINAL", "FINAL_REAGENDAMIENTO"],
+    "CITA_ORIGINAL": ["SLOTS_REAGENDAMIENTO", "FINAL_REAGENDAMIENTO"],
+    "SLOTS_REAGENDAMIENTO": ["CONFIRMAR_REAGENDAMIENTO", "FINAL_REAGENDAMIENTO"],
+    "CONFIRMAR_REAGENDAMIENTO": ["FINAL_REAGENDAMIENTO"],
+    "FINAL_REAGENDAMIENTO": []
+  },
+  "screens": [
+    {
+      "id": "IDENTIFICACION_REAGENDAMIENTO",
+      "title": "Identificacion",
+      "data": {},
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextHeading",
+            "text": "Modificar una cita"
+          },
+          {
+            "type": "TextBody",
+            "text": "Ingresa tus datos para consultar las citas que puedes modificar."
+          },
+          {
+            "type": "Form",
+            "name": "form_identificacion_reagendamiento",
+            "children": [
+              {
+                "type": "Dropdown",
+                "name": "tipo_documento",
+                "label": "Tipo de documento",
+                "required": true,
+                "data-source": [
+                  { "id": "CC", "title": "Cedula de ciudadania" },
+                  { "id": "CE", "title": "Cedula de extranjeria" },
+                  { "id": "PT", "title": "Permiso por proteccion temporal" },
+                  { "id": "TI", "title": "Tarjeta de identidad" },
+                  { "id": "RC", "title": "Registro civil" },
+                  { "id": "PA", "title": "Pasaporte" }
+                ]
+              },
+              {
+                "type": "TextInput",
+                "name": "numero_documento",
+                "label": "Numero de documento",
+                "input-type": "text",
+                "required": true
+              },
+              {
+                "type": "Footer",
+                "label": "Consultar citas",
+                "on-click-action": {
+                  "name": "data_exchange",
+                  "payload": {
+                    "tipo_documento": "${form.tipo_documento}",
+                    "numero_documento": "${form.numero_documento}"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "CITA_ORIGINAL",
+      "title": "Cita actual",
+      "data": {
+        "citas": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "title": { "type": "string" },
+              "description": { "type": "string" }
+            }
+          },
+          "__example__": [
+            {
+              "id": "appointment_token_ejemplo",
+              "title": "17 jul 07:00 - MEDICINA GENERAL",
+              "description": "Consulta de primera vez por medicina general"
+            }
+          ]
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextBody",
+            "text": "Selecciona la cita que quieres modificar."
+          },
+          {
+            "type": "Form",
+            "name": "form_cita_original",
+            "children": [
+              {
+                "type": "RadioButtonsGroup",
+                "name": "cita_original",
+                "label": "Citas disponibles",
+                "required": true,
+                "data-source": "${data.citas}"
+              },
+              {
+                "type": "Footer",
+                "label": "Buscar nuevos horarios",
+                "on-click-action": {
+                  "name": "data_exchange",
+                  "payload": {
+                    "cita_original": "${form.cita_original}"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "SLOTS_REAGENDAMIENTO",
+      "title": "Nuevos horarios",
+      "data": {
+        "procedimiento": {
+          "type": "string",
+          "__example__": "Consulta de primera vez por medicina general"
+        },
+        "slots": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "title": { "type": "string" },
+              "description": { "type": "string" }
+            }
+          },
+          "__example__": [
+            {
+              "id": "slot_token_ejemplo",
+              "title": "24 jul 09:00 - Profesional HUN",
+              "description": "Consulta de primera vez por medicina general"
+            }
+          ]
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextBody",
+            "text": "Procedimiento: ${data.procedimiento}"
+          },
+          {
+            "type": "TextBody",
+            "text": "Selecciona un nuevo horario para el mismo procedimiento."
+          },
+          {
+            "type": "Form",
+            "name": "form_slot_reagendamiento",
+            "children": [
+              {
+                "type": "RadioButtonsGroup",
+                "name": "slot",
+                "label": "Horarios disponibles",
+                "required": true,
+                "data-source": "${data.slots}"
+              },
+              {
+                "type": "Footer",
+                "label": "Continuar",
+                "on-click-action": {
+                  "name": "data_exchange",
+                  "payload": {
+                    "slot": "${form.slot}"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "CONFIRMAR_REAGENDAMIENTO",
+      "title": "Confirmar modificacion",
+      "data": {
+        "cita_actual": {
+          "type": "string",
+          "__example__": "Cita actual: 17 jul 07:00"
+        },
+        "cita_nueva": {
+          "type": "string",
+          "__example__": "Nueva cita: 24 jul 09:00"
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextHeading",
+            "text": "Revisa el cambio"
+          },
+          {
+            "type": "TextBody",
+            "text": "${data.cita_actual}"
+          },
+          {
+            "type": "TextBody",
+            "text": "${data.cita_nueva}"
+          },
+          {
+            "type": "TextBody",
+            "text": "Primero reservaremos el nuevo horario. Cuando HUN lo confirme, solicitaremos la cancelacion de tu cita actual. Si la cancelacion no puede completarse, podrias conservar temporalmente ambas citas y el hospital debera revisar el caso."
+          },
+          {
+            "type": "Footer",
+            "label": "Confirmar modificacion",
+            "on-click-action": {
+              "name": "data_exchange",
+              "payload": {}
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "FINAL_REAGENDAMIENTO",
+      "title": "Solicitud recibida",
+      "terminal": true,
+      "success": true,
+      "data": {
+        "mensaje": {
+          "type": "string",
+          "__example__": "Estamos procesando la modificacion de tu cita."
+        },
+        "detalle": {
+          "type": "string",
+          "__example__": "Te enviaremos el resultado final por WhatsApp."
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextHeading",
+            "text": "${data.mensaje}"
+          },
+          {
+            "type": "TextBody",
+            "text": "${data.detalle}"
+          },
+          {
+            "type": "Footer",
+            "label": "Finalizar",
+            "on-click-action": {
+              "name": "complete",
+              "payload": {}
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

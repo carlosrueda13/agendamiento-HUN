@@ -17,6 +17,8 @@ Dejar documentada la configuracion minima para ejecutar el backend localmente y 
 
 - `FLOW_ID`: identificador del Flow creado en WhatsApp Manager.
 - `FLOW_SCREEN_ID`: pantalla inicial del Flow. Valor esperado para este repo: `IDENTIFICACION`.
+- `RESCHEDULE_FLOW_ID`: identificador del Flow separado de modificacion de citas.
+- `RESCHEDULE_FLOW_SCREEN_ID`: pantalla inicial del Flow de modificacion. Valor esperado: `IDENTIFICACION_REAGENDAMIENTO`.
 - `FLOW_PRIVATE_KEY_B64`: llave privada PEM codificada en base64 para `data_exchange`.
 - `FLOW_KEY_PASSPHRASE`: passphrase de la llave privada, si aplica.
 - `FLOW_SESSION_PII_KEY_B64`: llave backend de 32 bytes en base64 para cifrar correo de contacto transitorio de la sesion del Flow. Se usa desde `SETUP-005`; no debe compartirse con Meta ni guardarse en documentos versionados con valor real.

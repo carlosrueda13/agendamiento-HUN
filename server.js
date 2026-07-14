@@ -6,6 +6,7 @@ const axios = require("axios");
 const { decryptRequest, encryptResponse } = require("./lib/flowCrypto");
 const { handleFlow } = require("./lib/flowHandler");
 const { handleIncomingMessage, DEFAULT_PHONE_LINE } = require("./lib/inboundRouter");
+const rescheduleHandler = require("./lib/rescheduleHandler");
 const hun = require("./lib/hun");
 const whatsapp = require("./lib/whatsapp");
 
@@ -18,10 +19,19 @@ const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 const FLOW_ID = process.env.FLOW_ID;
 const FLOW_SCREEN_ID = process.env.FLOW_SCREEN_ID;
+const RESCHEDULE_FLOW_ID = process.env.RESCHEDULE_FLOW_ID;
+const RESCHEDULE_FLOW_SCREEN_ID =
+  process.env.RESCHEDULE_FLOW_SCREEN_ID || "IDENTIFICACION_REAGENDAMIENTO";
 const GRAPH_API_VERSION = process.env.GRAPH_API_VERSION || "v23.0";
 
 function redactFlowData(data = {}) {
-  const sensitive = new Set(["numero_documento", "documento", "correo", "slot"]);
+  const sensitive = new Set([
+    "numero_documento",
+    "documento",
+    "correo",
+    "slot",
+    "cita_original",
+  ]);
   return Object.fromEntries(
     Object.keys(data).map((key) => [
       key,
@@ -100,6 +110,8 @@ app.post("/webhook", async (req, res) => {
         whatsapp,
         hun,
         sendFlowMessage,
+        sendRescheduleFlow: sendRescheduleFlowMessage,
+        rescheduleHandler,
         phoneLine: DEFAULT_PHONE_LINE,
       });
     }
@@ -195,6 +207,55 @@ async function sendFlowMessage(to) {
     if (error.response && error.response.data) {
       console.error("Detalle de API omitido por privacidad. HTTP:", error.response.status);
     }
+  }
+}
+
+async function sendRescheduleFlowMessage(to, flowToken) {
+  if (!RESCHEDULE_FLOW_ID) {
+    throw new Error("RESCHEDULE_FLOW_ID no configurado.");
+  }
+
+  const url = `https://graph.facebook.com/${GRAPH_API_VERSION}/${PHONE_NUMBER_ID}/messages`;
+  const payload = {
+    messaging_product: "whatsapp",
+    to,
+    type: "interactive",
+    interactive: {
+      type: "flow",
+      header: { type: "text", text: "Modificar una cita" },
+      body: {
+        text: "Completa el formulario para elegir tu cita actual y consultar horarios equivalentes.",
+      },
+      footer: { text: "Hospital Universitario Nacional" },
+      action: {
+        name: "flow",
+        parameters: {
+          flow_message_version: "3",
+          flow_token: flowToken,
+          flow_id: RESCHEDULE_FLOW_ID,
+          flow_cta: "Modificar cita",
+          flow_action: "navigate",
+          flow_action_payload: { screen: RESCHEDULE_FLOW_SCREEN_ID },
+        },
+      },
+    },
+  };
+
+  try {
+    const response = await axios.post(url, payload, {
+      headers: {
+        Authorization: `Bearer ${WHATSAPP_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+    });
+    console.log("Flow de modificacion enviado. ID:", response.data?.messages?.[0]?.id);
+    return true;
+  } catch (error) {
+    console.error("Error enviando Flow de modificacion:", error.message);
+    if (error.response?.data) {
+      console.error("Detalle de API omitido por privacidad. HTTP:", error.response.status);
+    }
+    return false;
   }
 }
 

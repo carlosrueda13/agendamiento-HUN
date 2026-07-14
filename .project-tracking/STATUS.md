@@ -1,6 +1,6 @@
 # Project Status - Agendamiento HUN por WhatsApp
 
-Ultima actualizacion: 2026-07-14 10:47
+Ultima actualizacion: 2026-07-14 11:53
 Fase activa: Sprint 5 - Operacion y reportes
 
 ## Resumen de avance
@@ -11,13 +11,13 @@ Fase activa: Sprint 5 - Operacion y reportes
 | Sprint 1 - Core agendamiento | 5 | 5 | 0 | 0 | 0 |
 | Sprint 2 - Integracion WhatsApp | 4 | 4 | 0 | 0 | 0 |
 | Sprint 3 - Campanas y notificaciones | 6 | 6 | 0 | 0 | 0 |
-| Sprint 4 - Cancelacion y reagendamiento | 3 | 3 | 0 | 0 | 0 |
+| Sprint 4 - Cancelacion y reagendamiento | 4 | 4 | 0 | 0 | 0 |
 | Sprint 5 - Operacion y reportes | 2 | 0 | 0 | 0 | 2 |
 | Sprint 6 - QA y seguridad | 3 | 0 | 0 | 0 | 3 |
 | Sprint 7 - Deploy y cierre contractual | 3 | 0 | 0 | 0 | 3 |
-| **TOTAL** | **31** | **23** | **0** | **0** | **8** |
+| **TOTAL** | **32** | **24** | **0** | **0** | **8** |
 
-Avance global: 23 / 31 tickets completados (74.2%)
+Avance global: 24 / 32 tickets completados (75.0%)
 
 ## Estado actual
 
@@ -732,6 +732,43 @@ Avance global: 23 / 31 tickets completados (74.2%)
 
 ---
 
+### RESCH-002 - Implementar Flow y saga de reagendamiento
+
+**Estado:** `done`
+**Labels:** `feature`, `backend`, `api`, `flow`
+**Depende de:** RESCH-001, CANCEL-002, CORE-005, FLOW-001
+**Desbloquea:** QA-001
+
+**Microsteps:**
+- [x] Crear y publicar `flow-reagendamiento.json` con pantallas exclusivas de identificacion, cita original, slots, confirmacion y final de procesamiento.
+- [x] Configurar `RESCHEDULE_FLOW_ID` y `RESCHEDULE_FLOW_SCREEN_ID` y enviar este Flow desde la opcion `Modificar/cancelar` despues del consentimiento.
+- [x] Consultar HUN por tipo y numero de documento y listar citas futuras modificables mediante `appointment_token` opaco con TTL.
+- [x] Obtener de la cita seleccionada el codigo de especialidad y `Cod_Pro`; si HUN solo devuelve nombre de especialidad, resolverlo sin ambiguedad contra el catalogo HUN.
+- [x] Consultar agenda por la especialidad original y filtrar cupos autogestionables cuyo codigo de procedimiento coincida exactamente con `Cod_Pro`.
+- [x] Presentar alternativas mediante `slot_token` firmado, sin persistir numero de cita, documento ni datos completos de slots.
+- [x] Reconsultar la cita original y el slot seleccionado antes de ejecutar operaciones modificadoras.
+- [x] Implementar idempotencia con `reschedule_operation_id` no reversible y estados agregados de saga con TTL.
+- [x] Asignar la nueva cita y confirmar su existencia antes de solicitar la cancelacion original.
+- [x] Cancelar la cita original y reutilizar verificacion asincrona con reintentos hasta estado final HUN.
+- [x] Informar exito solo cuando la nueva cita este confirmada y la original cancelada; si falla la cancelacion, informar posible doble reserva y marcar conciliacion manual.
+- [x] Agregar migracion minima de estados agregados no sensibles, pruebas unitarias/integracion y documentacion operativa.
+
+**Criterios de aceptacion:**
+- [x] Existe un tercer Flow publicado y separado de autoagendamiento y campanas.
+- [x] El paciente solo puede escoger una cita propia consultada en HUN y horarios del mismo procedimiento.
+- [x] La especialidad y procedimiento provienen de la cita original; no pueden seleccionarse manualmente.
+- [x] La cita original permanece activa hasta confirmar la nueva cita.
+- [x] La modificacion solo se informa como exitosa despues de verificar la cancelacion original.
+- [x] Los reintentos o confirmaciones duplicadas no crean mas de una nueva cita ni repiten la cancelacion original.
+- [x] Un fallo despues de asignar la nueva cita queda como revision manual y advierte la posible doble reserva.
+- [x] Supabase no guarda documento plano, numero de cita, medico, fecha/hora, procedimiento ni payload HUN completo.
+- [x] Existen pruebas para cupo perdido, asignacion rechazada, cancelacion fallida, reinicio e idempotencia.
+
+**Evidencia:** Flow Meta `1055273933723521`, `flow-reagendamiento.json` publicado y health check exitoso, confirmados por el usuario el 2026-07-14. Implementacion en `lib/rescheduleHandler.js`, `lib/inboundRouter.js`, `lib/flowHandler.js`, `server.js`, `lib/db.js`, `supabase/007_reschedule_operation_states.sql`, `.env.example`, `README.md`, `SETUP_LOCAL_CHECKLIST.md` y `scripts/check-reschedule-flow.js`. Verificaciones ejecutadas: `node --check` para JS modificados, `node scripts/check-reschedule-flow.js`, `node scripts/check-inbound-router.js`, `node scripts/check-sensitive-persistence.js` y `npm.cmd test`.
+**Notas:** Aprobado por el usuario el 2026-07-14. Variables `RESCHEDULE_FLOW_ID` y `RESCHEDULE_FLOW_SCREEN_ID` configuradas en Render antes de iniciar cambios dependientes. La saga aprobada asigna/confirma primero la nueva cita y cancela/verifica despues la original. El proceso usa tokens opacos con TTL, idempotencia no reversible, estados agregados no sensibles y revision manual si falla la cancelacion despues de crear la nueva cita.
+
+---
+
 ## Sprint 5 - Operacion y reportes
 
 ---
@@ -800,7 +837,7 @@ Avance global: 23 / 31 tickets completados (74.2%)
 
 **Estado:** `pending`
 **Labels:** `testing`, `docs`
-**Depende de:** CORE-005, FLOW-004, CAMPAIGN-003, CANCEL-002, NOTIF-001
+**Depende de:** CORE-005, FLOW-004, CAMPAIGN-003, CANCEL-002, RESCH-002, NOTIF-001
 **Desbloquea:** QA-002, DOCS-001
 
 **Microsteps:**

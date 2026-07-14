@@ -6,6 +6,16 @@ o que surgen durante el desarrollo.
 
 ---
 
+## [2026-07-14] Usar un tercer Flow para modificar citas existentes
+
+**Ticket relacionado:** RESCH-002
+**Decision:** La modificacion de citas usa `flow-reagendamiento.json` y `RESCHEDULE_FLOW_ID`, separados de autoagendamiento y demanda inducida. El paciente se identifica, selecciona una cita HUN existente y recibe solo slots autogestionables cuyo codigo de procedimiento coincide exactamente con `Cod_Pro` de la cita original.
+**Motivo:** El reagendamiento tiene estado, riesgos y operaciones diferentes a crear una cita nueva. Separarlo evita que el paciente cambie manualmente especialidad/procedimiento y permite aplicar la saga aprobada sin contaminar los otros Flows.
+**Alternativas descartadas:** Reutilizar el Flow de autoagendamiento; descartado porque permite elegir especialidad y no conserva referencia a la cita original. Implementar todo por mensajes conversacionales; descartado porque la seleccion de cita y horario requiere un formulario consistente y el proyecto eligio WhatsApp Flows para procesos de agendamiento.
+**Impacto:** `server.js` debe enviar el tercer Flow despues del consentimiento y la seleccion `Modificar cita`; `lib/flowHandler.js` debe enrutar pantallas exclusivas; HUN sigue siendo fuente de verdad y Supabase solo guarda estados agregados e IDs no reversibles. Flow Meta publicado con ID `1055273933723521`.
+
+---
+
 ## [2026-07-14] Reagendar mediante asignacion confirmada y cancelacion posterior
 
 **Ticket relacionado:** RESCH-001

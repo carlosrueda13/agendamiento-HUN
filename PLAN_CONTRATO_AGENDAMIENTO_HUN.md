@@ -51,6 +51,7 @@ Componentes actuales:
 - `server.js`: webhook Meta, envio de Flow, endpoint cifrado `/flow-endpoint`, health check y prueba HUN.
 - `flow-agendamiento.json`: Flow de autoagendamiento con pantallas `IDENTIFICACION`, `ESPECIALIDAD`, `SLOTS`, `CONFIRMAR`, `FINAL`.
 - `flow-demanda-inducida.json`: Flow separado de campanas; no permite seleccion manual de especialidad y, en v1, pide identificacion minima por limitacion del API orquestador.
+- `flow-reagendamiento.json`: Flow separado de modificacion; parte de una cita HUN existente y solo ofrece slots de la misma especialidad y `Cod_Pro`.
 - `lib/hun.js`: cliente de API HUN para especialidades, agenda, citas por documento y asignacion.
 - `lib/flowHandler.js`: orquestacion del Flow, seleccion de cupos, persistencia y confirmacion asincrona.
 - `lib/db.js`: persistencia Supabase pendiente de ajustar a almacenamiento minimo no sensible.
@@ -73,6 +74,8 @@ Variables requeridas en local/Render:
 - `GRAPH_API_VERSION`
 - `FLOW_ID`
 - `FLOW_SCREEN_ID`
+- `RESCHEDULE_FLOW_ID`
+- `RESCHEDULE_FLOW_SCREEN_ID`
 - `FLOW_PRIVATE_KEY_B64`
 - `FLOW_KEY_PASSPHRASE`
 - `HUN_API_BASE`
@@ -413,11 +416,15 @@ Entregable contractual asociado:
 
 ### Semana 6 - Reagendamiento y demanda inducida avanzada
 
-Objetivo: dejar reagendamiento como flujo funcional si supervisor lo prioriza, o documentarlo como fase futura si no hay endpoint especifico o regla operativa suficiente.
+Objetivo: implementar el reagendamiento priorizado por el supervisor mediante un tercer Flow y una saga controlada, porque HUN no expone endpoint atomico de modificacion.
 
 Tareas:
 
-- Disenar reagendamiento como cancelar + nueva asignacion, salvo que HUN entregue endpoint especifico.
+- Consultar la cita original y obtener su especialidad y `Cod_Pro`.
+- Ofrecer solo cupos autogestionables de la misma especialidad y procedimiento.
+- Asignar y confirmar primero la nueva cita.
+- Cancelar y verificar despues la cita original.
+- Informar exito solo cuando ambas operaciones queden confirmadas por HUN.
 - Validar riesgos:
   - perdida del cupo original
   - doble reserva
@@ -435,6 +442,7 @@ Evidencia:
 - Matriz de reglas de negocio.
 - Pruebas de campana y demanda inducida.
 - Decision tecnica sobre reagendamiento.
+- Evidencia del tercer Flow, filtrado por procedimiento, idempotencia y estados parciales de la saga.
 
 ### Semana 7 - Pruebas integrales, seguridad y estabilidad
 

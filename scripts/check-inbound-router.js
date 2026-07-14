@@ -35,6 +35,7 @@ function createDeps() {
   const sent = [];
   const sessions = new Map();
   let flowCount = 0;
+  let rescheduleFlowCount = 0;
   let cancelCount = 0;
   let lastCanceled = null;
   const events = [];
@@ -97,6 +98,14 @@ function createDeps() {
       flowCount += 1;
       sent.push({ to, type: "flow" });
     },
+    sendRescheduleFlow: async (to, flowToken) => {
+      rescheduleFlowCount += 1;
+      sent.push({ to, type: "reschedule_flow", flowToken });
+    },
+    rescheduleHandler: {
+      createFlowSession: () => "reschedule_test_token",
+      hasOperation: () => false,
+    },
   };
 
   return {
@@ -105,6 +114,7 @@ function createDeps() {
     sessions,
     events,
     getFlowCount: () => flowCount,
+    getRescheduleFlowCount: () => rescheduleFlowCount,
     getCancelCount: () => cancelCount,
     getLastCanceled: () => lastCanceled,
   };
@@ -165,6 +175,15 @@ async function assertModifyCancelEntryPoint() {
   const { deps, sent, sessions, events, getCancelCount, getLastCanceled } = createDeps();
   await handleIncomingMessage(buttonMessage("INTAKE_MENU_CANCELAR"), deps);
   await handleIncomingMessage(buttonMessage("INTAKE_CONSENT_ACCEPT"), deps);
+  assert(
+    sessions.get("573001112233").step === "awaiting_modify_cancel_choice",
+    "Modificar/cancelar debe separar ambas acciones despues del consentimiento."
+  );
+  assert(
+    sent.at(-1).buttons.some((button) => button.id === "INTAKE_CANCEL_APPOINTMENT"),
+    "Debe ofrecer la opcion explicita de cancelar."
+  );
+  await handleIncomingMessage(buttonMessage("INTAKE_CANCEL_APPOINTMENT"), deps);
   await handleIncomingMessage(textMessage("CC 123456"), deps);
 
   assert(
@@ -204,6 +223,20 @@ async function assertModifyCancelEntryPoint() {
   );
 }
 
+async function assertRescheduleEntryPoint() {
+  const { deps, sent, sessions, getRescheduleFlowCount } = createDeps();
+  await handleIncomingMessage(buttonMessage("INTAKE_MENU_CANCELAR"), deps);
+  await handleIncomingMessage(buttonMessage("INTAKE_CONSENT_ACCEPT"), deps);
+  await handleIncomingMessage(buttonMessage("INTAKE_MODIFY_APPOINTMENT"), deps);
+
+  assert(getRescheduleFlowCount() === 1, "Modificar debe enviar el tercer Flow.");
+  assert(
+    sent.at(-1).flowToken === "reschedule_test_token",
+    "El Flow debe usar token opaco de reagendamiento."
+  );
+  assert(!sessions.has("573001112233"), "Debe limpiar la sesion de menu al abrir el Flow.");
+}
+
 async function assertLostCancellationContext() {
   const { deps, sent, events } = createDeps();
   const finalized = [];
@@ -228,6 +261,31 @@ async function assertLostCancellationContext() {
   assert(/se interrumpio/i.test(sent.at(-1).text), "Debe informar que reinicie el proceso.");
 }
 
+async function assertLostRescheduleContext() {
+  const { deps, sent, events } = createDeps();
+  const finalized = [];
+  deps.db.getOperacionCancelacionActivaPorSesion = async () => null;
+  deps.db.getOperacionReagendamientoActivaPorSesion = async () => ({
+    reschedule_operation_id: "d".repeat(64),
+    estado: "reagendamiento_asignando",
+  });
+  deps.db.finalizarOperacionReagendamiento = async (id, estado, extra) => {
+    finalized.push({ id, estado, extra });
+  };
+
+  const result = await handleIncomingMessage(textMessage("hola"), deps);
+  assert(result.step === "reschedule_context_lost", "Debe detectar saga interrumpida.");
+  assert(
+    finalized[0].estado === "reagendamiento_revision_manual",
+    "Saga interrumpida debe quedar para revision manual."
+  );
+  assert(
+    events.some((event) => event.error_code === "runtime_context_lost"),
+    "Debe registrar perdida de contexto sin numeros de cita."
+  );
+  assert(/revisada por el hospital/i.test(sent.at(-1).text), "Debe informar conciliacion.");
+}
+
 function assertHelpers() {
   assert(parseDocumentInput("CC 123.456").documento === "123456", "Debe normalizar documento.");
   assert(parseDocumentInput("xx 123456") === null, "Debe rechazar tipo invalido.");
@@ -243,7 +301,9 @@ async function main() {
   await assertRejectConsent();
   await assertConsultAppointments();
   await assertModifyCancelEntryPoint();
+  await assertRescheduleEntryPoint();
   await assertLostCancellationContext();
+  await assertLostRescheduleContext();
   console.log("Inbound router checks passed.");
 }
 

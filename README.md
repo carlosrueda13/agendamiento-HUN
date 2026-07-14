@@ -5,7 +5,7 @@ Backend Node/Express para pruebas del canal de agendamiento HUN con WhatsApp Clo
 El proyecto permite:
 
 - Recibir mensajes entrantes de WhatsApp por webhook.
-- Enviar Flow de autoagendamiento o Flow separado de demanda inducida, segun el contexto.
+- Enviar Flows separados de autoagendamiento, demanda inducida o modificacion de citas, segun el contexto.
 - Procesar pantallas del Flow desde `/flow-endpoint`.
 - Consultar especialidades, agenda e historial contra la API HUN de pruebas.
 - Confirmar citas contra HUN en segundo plano.
@@ -84,6 +84,8 @@ Copiar `.env.example` a `.env` para pruebas locales y completar valores reales s
 
 - `FLOW_ID`
 - `FLOW_SCREEN_ID`
+- `RESCHEDULE_FLOW_ID`
+- `RESCHEDULE_FLOW_SCREEN_ID`
 - `CAMPAIGN_FLOW_ID`
 - `CAMPAIGN_FLOW_SCREEN_ID`
 - `CAMPAIGN_TEMPLATE_NAME`
@@ -101,7 +103,7 @@ Copiar `.env.example` a `.env` para pruebas locales y completar valores reales s
 - `HUN_API_KEY`
 - `CANCEL_VERIFY_MAX_ATTEMPTS`, `CANCEL_VERIFY_INTERVAL_MS` y `CANCEL_VERIFY_INITIAL_DELAY_MS` son opcionales y controlan la verificacion asincronica de cancelaciones.
 
-`FLOW_ID` corresponde al autoagendamiento. Las campanas de demanda inducida deben usar `CAMPAIGN_FLOW_ID` y un JSON de Flow separado.
+`FLOW_ID` corresponde al autoagendamiento, `CAMPAIGN_FLOW_ID` a demanda inducida y `RESCHEDULE_FLOW_ID` a modificacion de citas. Cada recorrido usa un JSON de Flow separado.
 
 ### API oficial de demanda inducida
 
@@ -245,7 +247,7 @@ Vistas esperadas:
 
 Supabase debe usarse solo para trazabilidad operativa, campanas, destinatarios minimos, sesiones temporales y notificaciones no sensibles.
 
-Para campanas de demanda inducida, ejecutar tambien las migraciones incrementales aprobadas, incluida `supabase/004_campaign_audiencia_ref.sql`, antes de usar destinatarios por `id_anonimo` en Supabase real. Para la verificacion final de cancelaciones, aplicar `supabase/006_cancel_operation_failure_state.sql`; esta migracion agrega el estado agregado `cancelacion_fallida` y no incorpora datos personales ni detalles de cita.
+Para campanas de demanda inducida, ejecutar tambien las migraciones incrementales aprobadas, incluida `supabase/004_campaign_audiencia_ref.sql`, antes de usar destinatarios por `id_anonimo` en Supabase real. Para la verificacion final de cancelaciones, aplicar `supabase/006_cancel_operation_failure_state.sql`. Para la saga de modificacion, aplicar `supabase/007_reschedule_operation_states.sql`. Estas migraciones agregan solo estados operativos y no incorporan datos personales ni detalles de cita.
 
 ## Flujo WhatsApp
 
@@ -253,10 +255,13 @@ Para campanas de demanda inducida, ejecutar tambien las migraciones incrementale
 2. Para mensajes entrantes, el backend envia menu inicial y consentimiento de tratamiento de datos.
 3. Si el paciente acepta y elige agendar, el backend envia el Flow de autoagendamiento con `FLOW_ID`.
 4. Si el paciente acepta y elige consultar, el backend pide identificacion minima y consulta citas HUN solo en memoria.
-5. Si el paciente acepta modificar/cancelar, el backend consulta HUN en tiempo real, lista solo citas cancelables, usa `cancel_token` efimero en memoria y no llama la API de cancelacion hasta que el paciente confirma. Despues del POST, verifica el resultado en segundo plano, evita repetir la operacion y envia por WhatsApp el estado final `cancelada` o `cancelacion_fallida`.
-6. En Flows, Meta llama `POST /flow-endpoint` con payload cifrado.
-7. `lib/flowCrypto.js` descifra la solicitud y `lib/flowHandler.js` procesa cada pantalla consultando HUN.
-8. El backend responde a Meta con respuesta cifrada y la confirmacion final se envia por WhatsApp cuando HUN responde.
+5. Si el paciente acepta modificar/cancelar, el backend pregunta si desea modificar o cancelar.
+6. Cancelar conserva la rama conversacional: consulta HUN, usa `cancel_token`, exige confirmacion y verifica asincronicamente el resultado.
+7. Modificar abre `flow-reagendamiento.json`: consulta las citas del paciente, obtiene especialidad y `Cod_Pro` de la cita original y ofrece solo slots autogestionables con el mismo procedimiento.
+8. La saga de modificacion asigna y confirma primero la nueva cita; solo despues cancela y verifica la original. Si la segunda operacion falla, informa posible doble reserva y marca revision manual.
+9. En Flows, Meta llama `POST /flow-endpoint` con payload cifrado.
+10. `lib/flowCrypto.js` descifra la solicitud y `lib/flowHandler.js` enruta cada Flow consultando HUN.
+11. El backend responde a Meta con respuesta cifrada y la confirmacion final se envia por WhatsApp cuando HUN cierra la operacion.
 
 ## Documentacion de trabajo
 

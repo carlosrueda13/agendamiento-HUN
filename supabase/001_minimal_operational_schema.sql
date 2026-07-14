@@ -89,7 +89,15 @@ create table if not exists public.flow_sesiones_temporales (
       'cancelacion_solicitada',
       'cancelacion_procesando',
       'cancelada',
-      'cancelacion_fallida'
+      'cancelacion_fallida',
+      'reagendamiento_seleccionando_cita',
+      'reagendamiento_eligiendo_slot',
+      'reagendamiento_confirmando',
+      'reagendamiento_asignando',
+      'reagendamiento_cancelando_original',
+      'reagendamiento_completado',
+      'reagendamiento_revision_manual',
+      'reagendamiento_fallido'
     )),
   especialidad_codigo text,
   slot_token text,
