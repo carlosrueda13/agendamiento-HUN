@@ -10,6 +10,8 @@ const wa = require("../lib/whatsapp");
 const savedSessions = [];
 const savedEvents = [];
 const sentMessages = [];
+const recipientStateUpdates = [];
+let recipientUpdateFailureMode = null;
 
 hun.consultarCitasDocumento = async () => [
   {
@@ -73,6 +75,14 @@ db.guardarEventoOperativo = async (event) => {
 
 db.finalizarSesionTemporal = async () => {};
 db.getContactoEmailSesion = async () => null;
+db.actualizarEstadoDestinatario = async (recipientId, estado) => {
+  recipientStateUpdates.push({ recipientId, estado });
+  if (recipientUpdateFailureMode === "mixed") {
+    if (estado === "flow_iniciado") return null;
+    throw new Error("fallo Supabase simulado");
+  }
+  return { id: recipientId };
+};
 
 const { createCampaignFlowToken, handleFlow } = require("../lib/flowHandler");
 
@@ -160,6 +170,14 @@ async function assertCampaignIdentificationSkipsSpecialty() {
     ),
     "Debe registrar evento operativo no sensible con contexto de campania."
   );
+  assert(
+    recipientStateUpdates.some(
+      (update) =>
+        update.recipientId === "recipient-test" &&
+        update.estado === "flow_iniciado"
+    ),
+    "Debe marcar el destinatario como flow_iniciado al identificarlo."
+  );
 
   const summary = await handleFlow(
     flowPayload(flowToken, "SLOTS", { slot: response.data.slots[0].id })
@@ -179,6 +197,69 @@ async function assertCampaignIdentificationSkipsSpecialty() {
     sentMessages[0].message.includes("CONSULTA DE PRIMERA VEZ POR MEDICINA GENERAL"),
     "Confirmacion de campania debe usar Procedimiento real de la cita creada."
   );
+  assert(
+    recipientStateUpdates.some(
+      (update) =>
+        update.recipientId === "recipient-test" && update.estado === "agendado"
+    ),
+    "Debe marcar el destinatario como agendado despues de crear la cita."
+  );
+}
+
+async function assertRecipientUpdateFailureDoesNotBreakCampaignFlow() {
+  recipientUpdateFailureMode = "mixed";
+  const flowToken = createCampaignFlowToken({
+    campaign_id: "campaign-update-failure",
+    recipient_id: "recipient-update-failure",
+    audiencia_ref: "HUN-UPDATE-FAILURE",
+    especialidad_codigo: "590",
+    contacto_telefono: "573001112244",
+    expires_at: new Date(Date.now() + 30 * 60000).toISOString(),
+  });
+
+  try {
+    const response = await handleFlow(
+      flowPayload(flowToken, "IDENTIFICACION", {
+        tipo_documento: "CC",
+        numero_documento: "123456",
+      })
+    );
+    assert(
+      response.screen === "SLOTS",
+      "Fallo actualizando flow_iniciado no debe romper las pantallas del Flow."
+    );
+
+    const summary = await handleFlow(
+      flowPayload(flowToken, "SLOTS", { slot: response.data.slots[0].id })
+    );
+    assert(summary.screen === "CONFIRMAR", "Debe permitir seleccionar el slot.");
+
+    const final = await handleFlow(flowPayload(flowToken, "CONFIRMAR"));
+    assert(final.screen === "FINAL", "Debe completar el Flow aunque falle Supabase.");
+    await waitFor(
+      () => sentMessages.length === 2,
+      "Debe enviar confirmacion aunque falle el update de agendado."
+    );
+    assert(
+      sentMessages[1].to === "573001112244",
+      "La confirmacion del caso con fallo debe llegar al paciente correcto."
+    );
+    assert(
+      recipientStateUpdates.some(
+        (update) =>
+          update.recipientId === "recipient-update-failure" &&
+          update.estado === "flow_iniciado"
+      ) &&
+        recipientStateUpdates.some(
+          (update) =>
+            update.recipientId === "recipient-update-failure" &&
+            update.estado === "agendado"
+        ),
+      "Debe intentar ambos cambios de estado aun cuando Supabase falle."
+    );
+  } finally {
+    recipientUpdateFailureMode = null;
+  }
 }
 
 async function assertCampaignMissingTokenDoesNotUseSelfScheduling() {
@@ -198,6 +279,7 @@ async function assertCampaignMissingTokenDoesNotUseSelfScheduling() {
 
 async function main() {
   await assertCampaignIdentificationSkipsSpecialty();
+  await assertRecipientUpdateFailureDoesNotBreakCampaignFlow();
   await assertCampaignMissingTokenDoesNotUseSelfScheduling();
   console.log("Campaign Flow checks passed.");
 }

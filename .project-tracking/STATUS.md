@@ -1,6 +1,6 @@
 # Project Status - Agendamiento HUN por WhatsApp
 
-Ultima actualizacion: 2026-07-14 11:53
+Ultima actualizacion: 2026-07-14 23:44
 Fase activa: Sprint 5 - Operacion y reportes
 
 ## Resumen de avance
@@ -15,9 +15,10 @@ Fase activa: Sprint 5 - Operacion y reportes
 | Sprint 5 - Operacion y reportes | 2 | 0 | 0 | 0 | 2 |
 | Sprint 6 - QA y seguridad | 3 | 0 | 0 | 0 | 3 |
 | Sprint 7 - Deploy y cierre contractual | 3 | 0 | 0 | 0 | 3 |
-| **TOTAL** | **32** | **24** | **0** | **0** | **8** |
+| Sprint 8 - API de campanas para panel del hospital | 11 | 11 | 0 | 0 | 0 |
+| **TOTAL** | **43** | **35** | **0** | **0** | **8** |
 
-Avance global: 24 / 32 tickets completados (75.0%)
+Avance global: 35 / 43 tickets completados (81.4%)
 
 ## Estado actual
 
@@ -797,8 +798,8 @@ Avance global: 24 / 32 tickets completados (75.0%)
 - [ ] No se exponen secretos ni payloads completos sensibles.
 - [ ] No se exponen documento plano, numero de cita, EPS, medico, fecha/hora exacta, CUPS ni respuesta HUN completa.
 
-**Evidencia:** 
-**Notas:** 
+**Evidencia:**
+**Notas:**
 
 ---
 
@@ -824,8 +825,8 @@ Avance global: 24 / 32 tickets completados (75.0%)
 - [ ] Los exportes no incluyen tokens, credenciales, documento plano, numero de cita, EPS, medico, fecha/hora exacta, CUPS ni respuesta HUN completa.
 - [ ] Los exportes pueden usarse como soporte de informe.
 
-**Evidencia:** 
-**Notas:** 
+**Evidencia:**
+**Notas:**
 
 ---
 
@@ -857,8 +858,8 @@ Avance global: 24 / 32 tickets completados (75.0%)
 - [ ] La matriz incluye columna de evidencia.
 - [ ] La matriz distingue pruebas con mocks/placeholders de pruebas requeridas para cierre contractual.
 
-**Evidencia:** 
-**Notas:** 
+**Evidencia:**
+**Notas:**
 
 ---
 
@@ -884,8 +885,8 @@ Avance global: 24 / 32 tickets completados (75.0%)
 - [ ] Hay pruebas de errores sin EPS y sin slot.
 - [ ] Las pruebas automatizadas unitarias no crean ni cancelan citas; las pruebas funcionales/integracion si pueden hacerlo contra la API HUN de pruebas controlada.
 
-**Evidencia:** 
-**Notas:** 
+**Evidencia:**
+**Notas:**
 
 ---
 
@@ -913,8 +914,8 @@ Avance global: 24 / 32 tickets completados (75.0%)
 - [ ] La vista medica/operativa y la vista IT/auditoria tienen campos diferenciados y documentados.
 - [ ] La documentacion incluye checklist de Ley 1581/confidencialidad.
 
-**Evidencia:** 
-**Notas:** 
+**Evidencia:**
+**Notas:**
 
 ---
 
@@ -944,8 +945,8 @@ Avance global: 24 / 32 tickets completados (75.0%)
 - [ ] WhatsApp Flow puede llamar el endpoint publico.
 - [ ] Existe evidencia de estabilidad basica del despliegue.
 
-**Evidencia:** 
-**Notas:** 
+**Evidencia:**
+**Notas:**
 
 ---
 
@@ -973,8 +974,8 @@ Avance global: 24 / 32 tickets completados (75.0%)
 - [ ] El documento incluye modelo de trazabilidad separado para medicos/personal operativo e IT/auditoria.
 - [ ] El documento cubre variables y dependencias externas.
 
-**Evidencia:** 
-**Notas:** 
+**Evidencia:**
+**Notas:**
 
 ---
 
@@ -983,7 +984,7 @@ Avance global: 24 / 32 tickets completados (75.0%)
 **Estado:** `pending`
 **Labels:** `docs`
 **Depende de:** DOCS-001, DEPLOY-001
-**Desbloquea:** 
+**Desbloquea:**
 
 **Microsteps:**
 - [ ] Consolidar resultados de matriz de pruebas.
@@ -1008,8 +1009,308 @@ Avance global: 24 / 32 tickets completados (75.0%)
 - [ ] El trabajo futuro incluye adjuntos/autorizaciones, portal administrativo, analitica y hardening.
 - [ ] El documento esta listo para entregar al supervisor.
 
-**Evidencia:** 
-**Notas:** 
+**Evidencia:**
+**Notas:**
+
+---
+
+## Sprint 8 - API de campanas para panel del hospital
+
+Plan fuente: `PLAN_PANEL_CAMPANAS_API.md`. Contrato a implementar: `INSTRUCTIVO_PANEL_CAMPANAS.md` (ante duda, gana el instructivo). Leer la seccion "Contexto obligatorio para el desarrollador" del plan antes de iniciar cualquier ticket de este sprint.
+
+---
+
+### PANEL-001 - Crear migracion de referencia_externa en campanas
+
+**Estado:** `done`
+**Labels:** `database`, `chore`
+**Depende de:** -
+**Desbloquea:** PANEL-002, PANEL-011
+
+**Microsteps:**
+- [x] Crear `supabase/008_campaign_external_ref.sql`.
+- [x] Agregar `alter table public.campanas add column if not exists referencia_externa text;`.
+- [x] Agregar un indice unico parcial: `create unique index if not exists idx_campanas_referencia_externa on public.campanas(referencia_externa) where referencia_externa is not null;` (parcial para permitir multiples campanas sin referencia, como las creadas manualmente hasta hoy).
+- [x] Encabezar el archivo con un comentario SQL que explique el proposito (idempotencia de creacion desde el panel administrativo) y que no incorpora datos personales, siguiendo el estilo de las migraciones previas.
+- [x] Mencionar la migracion en la seccion Supabase de `README.md` junto a las migraciones 004/006/007 ya listadas (una linea).
+
+**Criterios de aceptacion:**
+- [x] El archivo `supabase/008_campaign_external_ref.sql` existe y es idempotente (usa `if not exists` en columna e indice).
+- [x] Dos campanas con `referencia_externa = null` pueden coexistir; dos con el mismo valor no nulo violan el indice.
+- [x] `README.md` menciona la migracion 008 como requisito para usar el API del panel.
+
+**Evidencia:** `supabase/008_campaign_external_ref.sql` y seccion Supabase de `README.md`. Migracion remota `campaign_external_ref` aplicada al proyecto Supabase activo `agendamiento-HUN`. Prueba transaccional remota confirmo columna `text` nullable, coexistencia de dos referencias nulas, rechazo por unicidad de una referencia no nula duplicada y rollback de todos los registros de prueba. `npm.cmd test` completo exitoso.
+**Notas:** Aprobado por el usuario el 2026-07-14. La CLI local de Supabase no esta instalada; el archivo se creo con el nombre exacto aprobado por el plan y la migracion se aplico mediante el conector Supabase. Los asesores no reportaron hallazgos nuevos asociados a PANEL-001; permanecen observaciones preexistentes para SEC-001 sobre vistas `security definer`, `search_path`, funcion privilegiada y ausencia de politicas RLS.
+
+---
+
+### PANEL-002 - Agregar helpers de consulta de campanas y contadores en db.js
+
+**Estado:** `done`
+**Labels:** `backend`, `database`
+**Depende de:** PANEL-001
+**Desbloquea:** PANEL-004, PANEL-005, PANEL-006, PANEL-007, PANEL-008, PANEL-011
+
+**Microsteps:**
+- [x] En `lib/db.js`, crear `obtenerCampana(campaignId)`: select de `campanas` por `id` con columnas `id, nombre, especialidad_codigo, estado, responsable, cupos_objetivo, origen_datos, referencia_externa, created_at`; usar `.maybeSingle()` y devolver el registro o `null`.
+- [x] Crear `obtenerCampanaPorReferenciaExterna(referenciaExterna)`: mismo select filtrando por `referencia_externa`; devolver `null` si el argumento viene vacio (usar el helper interno `cleanText`).
+- [x] Crear `contarDestinatariosCampana(campaignId)`: select de `campana_destinatarios` filtrando por `campaign_id`, trayendo solo `estado_contacto` y `motivo_exclusion`, y agregar en JS un objeto `{ total, pendientes, enviados, fallidos, flow_iniciados, agendados, no_interesados, excluidos }` mas `fallos_por_motivo` (mapa `motivo_exclusion -> conteo` solo de los registros con `estado_contacto = "fallido"`). Los estados `entregado`, `leido` y `respondido` existen en `DESTINATARIO_ESTADOS` pero no se reportan por separado en v1: sumarlos dentro de `enviados`.
+- [x] Crear `campanaAdmiteDestinatarios(estado)` y `campanaAdmiteLanzamiento(estado)` como helpers puros exportados (o exportar `CAMPANA_ESTADOS` y decidir en el router; elegir una sola via y ser consistente). Reglas: admite destinatarios si el estado NO es `cerrada` ni `cancelada`; admite lanzamiento si el estado es `borrador`, `programada` o `activa`.
+- [x] Extender `buildCampanaRecord` para aceptar y limpiar `referencia_externa` (usar `cleanText`; opcional).
+- [x] Exportar las funciones nuevas en el `module.exports` del modulo y tambien bajo `_private` las que sean puras, siguiendo el patron ya usado (`buildCampanaRecord` esta en `_private`).
+
+**Criterios de aceptacion:**
+- [x] `obtenerCampana` devuelve `null` para un id inexistente y el registro completo para uno existente.
+- [x] `obtenerCampanaPorReferenciaExterna(null)` y `("")` devuelven `null` sin consultar Supabase.
+- [x] `contarDestinatariosCampana` devuelve todos los contadores en cero (y `fallos_por_motivo` vacio) para una campana sin destinatarios, sin lanzar excepcion.
+- [x] Con Supabase no configurado (`supabase = null`), todas las funciones nuevas devuelven `null` o contadores vacios sin lanzar excepcion.
+- [x] `crearCampana` persiste `referencia_externa` cuando se le pasa.
+
+**Evidencia:** `lib/db.js`, `scripts/check-campaign-db.js`, `scripts/check-campaign-model.js`, `package.json`; `node --check` exitoso para `lib/db.js` y el check nuevo; `node scripts/check-campaign-db.js` exitoso; `npm.cmd test` completo exitoso. Consulta remota de solo lectura al proyecto Supabase `agendamiento-HUN` confirmo las nueve columnas seleccionadas de `campanas` y estados agregables existentes en `campana_destinatarios`.
+**Notas:** Aprobado por el usuario el 2026-07-14. Los helpers aceptan un cliente opcional solo para pruebas, conservando el cliente Supabase real por defecto. Sin configuracion devuelven valores seguros; un error real al contar devuelve `null` para permitir que PANEL-007 distinga indisponibilidad de una campana sin destinatarios. Solo se consultan columnas operativas permitidas y no se incorporan datos personales ni detalles de cita. Ajuste post-revision (2026-07-14 22:06): `contarDestinatariosCampana` ahora devuelve `{ contadores, fallos_por_motivo }` como claves hermanas, calzando exactamente con la respuesta del GET del contrato (INSTRUCTIVO_PANEL_CAMPANAS.md seccion 5.4); asi PANEL-007 arma la respuesta con spread directo sin riesgo de anidar `fallos_por_motivo` dentro de `contadores`. `scripts/check-campaign-db.js` actualizado a la nueva forma; `npm.cmd test` completo exitoso tras el ajuste.
+
+---
+
+### PANEL-003 - Crear router /api/campanas con autenticacion por API key
+
+**Estado:** `done`
+**Labels:** `backend`, `api`, `auth`, `security`
+**Depende de:** -
+**Desbloquea:** PANEL-004, PANEL-005, PANEL-006, PANEL-007, PANEL-008, PANEL-011
+
+**Microsteps:**
+- [x] Crear `lib/campaignAdminApi.js` exportando `function createCampaignAdminRouter(deps = {})` que devuelve un `express.Router()`; aceptar `deps` (`dbClient`, `sender`, `demanda`, `env`) con defaults a los modulos reales, siguiendo el patron de inyeccion de `createCampaignSender` en `lib/campaignSender.js`.
+- [x] Implementar middleware de autenticacion: leer `env.PANEL_CAMPAIGN_API_KEY`; si la variable no esta configurada, responder `503 { error: "panel_api_no_configurada", detalle: ... }` (el servicio no debe quedar abierto por omision); si el header `x-api-key` falta o no coincide, responder `401 { error: "no_autorizado", detalle: "x-api-key invalida o ausente" }`. Comparar con `crypto.timingSafeEqual` sobre buffers de igual longitud (si difieren en longitud, rechazar sin comparar).
+- [x] Definir las cinco rutas del contrato (`POST /`, `POST /:campaignId/destinatarios`, `POST /:campaignId/lanzar`, `GET /:campaignId`, `POST /:campaignId/cancelar`) respondiendo `501` como placeholder.
+- [x] Agregar un manejador de errores del router (middleware de 4 argumentos) que loguee `console.error("campaignAdminApi:", error.message)` sin datos de pacientes y responda `500 { error: "error_interno", detalle: "error inesperado" }`.
+- [x] En `server.js`, importar el modulo y montar `app.use("/api/campanas", createCampaignAdminRouter())` antes de `app.listen`, con un comentario corto en el estilo de los existentes ("// 5. API administrativa de campanas para el panel del hospital.").
+- [x] Nunca loguear la API key ni el header recibido.
+
+**Criterios de aceptacion:**
+- [x] Cualquier llamada a `/api/campanas/*` sin header `x-api-key` devuelve `401` con el formato de error uniforme.
+- [x] Con `PANEL_CAMPAIGN_API_KEY` sin configurar, toda llamada devuelve `503` (nunca procesa).
+- [x] Con la llave correcta, las cinco rutas responden (aunque sea `501`).
+- [x] La comparacion de llave usa `crypto.timingSafeEqual`.
+- [x] `GET /` y `POST /webhook` y `/flow-endpoint` existentes siguen funcionando (el router nuevo no intercepta otras rutas).
+
+**Evidencia:** `lib/campaignAdminApi.js`, `server.js`, `scripts/check-campaign-admin-api.js`, `package.json`; `node --check` exitoso para router, check y servidor; `node scripts/check-campaign-admin-api.js` exitoso con servidor HTTP efimero; `npm.cmd test` completo exitoso. El check cubre API no configurada `503`, llave ausente o invalida `401`, las cinco rutas autenticadas `501` y aislamiento de `/`, `/webhook` y `/flow-endpoint`.
+**Notas:** Aprobado por el usuario el 2026-07-14. La API queda cerrada por defecto mientras `PANEL_CAMPAIGN_API_KEY` no este configurada. La llave y el header nunca se imprimen. En este ticket no se configura una llave real ni en local ni en Render; los endpoints funcionales se implementan desde PANEL-004 y la variable se documenta formalmente en PANEL-011. Ajuste post-revision (2026-07-14 22:06): se agrego `asyncHandler` (Express 4 no encamina promesas rechazadas de handlers async al middleware de error; sin el wrapper el request queda colgado) y se extrajo `errorHandler` como funcion nombrada exportada en `_private`. Regla obligatoria: toda ruta real de PANEL-004..008 se registra envuelta en `asyncHandler`. `scripts/check-campaign-admin-api.js` gano un caso que verifica 500 `error_interno` ante un handler async que lanza; `npm.cmd test` completo exitoso tras el ajuste.
+
+---
+
+### PANEL-004 - Implementar POST /api/campanas (crear campana idempotente)
+
+**Estado:** `done`
+**Labels:** `backend`, `api`, `feature`
+**Depende de:** PANEL-002, PANEL-003
+**Desbloquea:** PANEL-010, PANEL-011
+
+**Microsteps:**
+- [x] En la ruta `POST /` del router, validar el body: `nombre` obligatorio (string no vacio tras trim); `cupos_objetivo` opcional pero, si viene, entero `>= 0`; `referencia_externa`, `especialidad_codigo`, `responsable`, `origen_datos` opcionales (strings). Ante violacion responder `422 { error: "validacion", detalle: "<campo y problema>" }`.
+- [x] Si viene `referencia_externa`, consultar `db.obtenerCampanaPorReferenciaExterna`; si existe, responder `200 { campaign_id, referencia_externa, estado }` con los datos del registro existente, sin crear nada.
+- [x] Llamar `db.crearCampana` con `{ nombre, especialidad_codigo, responsable, cupos_objetivo, origen_datos, referencia_externa, estado: "borrador" }`.
+- [x] Si `crearCampana` devuelve `null` (Supabase caido o no configurado), responder `503 { error: "persistencia_no_disponible", detalle: ... }`.
+- [x] Manejar la carrera de idempotencia: si el insert falla por unicidad de `referencia_externa` (dos llamadas simultaneas), reconsultar por referencia y responder `200` con la existente.
+- [x] Responder `201 { campaign_id, referencia_externa, estado: "borrador" }`.
+
+**Criterios de aceptacion:**
+- [x] Body sin `nombre` devuelve `422`; `cupos_objetivo: -1` o `"abc"` devuelve `422`.
+- [x] Primera llamada con `referencia_externa` nueva devuelve `201` con `campaign_id` (uuid) y `estado: "borrador"`.
+- [x] Segunda llamada identica devuelve `200` con el MISMO `campaign_id` y no crea una segunda fila.
+- [x] Llamada sin `referencia_externa` crea siempre una campana nueva (`201`).
+- [x] La respuesta nunca incluye campos no documentados en el instructivo.
+
+**Evidencia:** `lib/campaignAdminApi.js`, `scripts/check-campaign-admin-api.js`; `node --check` exitoso para ambos archivos; `node scripts/check-campaign-admin-api.js` exitoso; `npm.cmd test` completo exitoso. El check HTTP verifica `201` de creacion, `200` idempotente con el mismo UUID, dos creaciones distintas sin referencia, validaciones `422`, persistencia no disponible `503`, reconsulta de carrera por indice unico, respuesta con exactamente tres claves y descarte de un campo extra `telefono` antes de llamar a persistencia.
+**Notas:** Aprobado por el usuario el 2026-07-14. Se respeto la correccion post-revision de PANEL-003: el handler real esta registrado con `asyncHandler` y conserva `errorHandler`. La carrera se resuelve reconsultando por `referencia_externa` cuando `crearCampana` no retorna un id; si tampoco existe una campana ganadora, responde `503`. No se crearon filas remotas de prueba ni se configuro una API key real.
+
+---
+
+### PANEL-005 - Implementar POST /api/campanas/:id/destinatarios (carga por lotes)
+
+**Estado:** `done`
+**Labels:** `backend`, `api`, `feature`
+**Depende de:** PANEL-002, PANEL-003
+**Desbloquea:** PANEL-010, PANEL-011
+
+**Microsteps:**
+- [x] En la ruta `POST /:campaignId/destinatarios`, consultar `db.obtenerCampana(campaignId)`; si no existe responder `404 { error: "campana_no_encontrada", detalle: ... }`.
+- [x] Si el estado de la campana es `cerrada` o `cancelada`, responder `409 { error: "estado_no_admite_destinatarios", detalle: "estado actual: <estado>" }`.
+- [x] Validar el body: `destinatarios` debe ser un arreglo no vacio con maximo 500 elementos; si no, `422` (mensajes distintos para "falta el arreglo", "arreglo vacio" y "mas de 500").
+- [x] Mapear cada elemento a `{ id_anonimo, cod_especialidad_requerida }` tomando los alias que `normalizeAudienceRecord` ya acepta, descartando explicitamente cualquier otra propiedad del objeto recibido (proteccion contra PII accidental).
+- [x] Llamar `demanda.sincronizarAudienciaCampana({ campaignId, records })` y responder `200` con `{ campaign_id, total, aceptados, guardados, duplicados, rechazados, errores, detalles_rechazados }` tal cual devuelve el resumen (los `detalles_rechazados` ya tienen `{ index, motivo, campos }`).
+- [x] Si `errores > 0` y `guardados === 0` con Supabase caido, responder `503 { error: "persistencia_no_disponible" }` en lugar de `200` (distinguir "todo fallo por infraestructura" de "algunos registros invalidos").
+
+**Criterios de aceptacion:**
+- [x] Cargar el mismo lote dos veces produce `duplicados` en la segunda llamada y no duplica filas en `campana_destinatarios`.
+- [x] Un registro sin `cod_especialidad_requerida` aparece en `detalles_rechazados` con su `index` y no aborta el resto del lote.
+- [x] Lote de 501 elementos devuelve `422` sin procesar ninguno.
+- [x] `campaign_id` inexistente devuelve `404`; campana `cancelada` devuelve `409`.
+- [x] Un registro que incluya campos extra (por ejemplo `nombre` o `telefono`) se procesa usando solo los dos campos permitidos y ningun campo extra llega a Supabase.
+
+**Evidencia:** `lib/campaignAdminApi.js`, `lib/demandaInducida.js`, `lib/db.js`, `scripts/check-campaign-admin-api.js`, `scripts/check-campaign-db.js`; `node --check` exitoso para archivos modificados; checks focalizados `check-campaign-db`, `check-campaign-audience` y `check-campaign-admin-api` exitosos; `npm.cmd test` completo exitoso. El check HTTP cubre lote mixto valido/invalido, aliases, descarte de nombre/telefono/correo, segunda carga reportada como duplicada, tres validaciones `422` distintas, `404`, `409` y fallo total de persistencia `503`.
+**Notas:** Aprobado por el usuario el 2026-07-14. La ruta real conserva el `asyncHandler` obligatorio. `guardarDestinatarioCampana` devuelve metadata interna `duplicate` y no actualiza una fila existente, evitando que una recarga restablezca a `pendiente` un destinatario ya avanzado. `sincronizarAudienciaCampana` deduplica por `audiencia_ref` dentro de la campana y trata un retorno nulo de persistencia como error operativo. No se hicieron llamadas remotas ni se crearon filas de prueba en Supabase. Ajustes post-revision (2026-07-14 23:19): (a) el `503 persistencia_no_disponible` del lote exige ahora `duplicados === 0` ademas de `guardados === 0`, para no reportar caida total cuando una recarga de duplicados sufre un unico error transitorio; (b) `detalles_rechazados` se sanitiza con `buildRejectionDetail` y expone solo `index`, `motivo`, `campos` y `error_code`, sin el flag interno `ok` (contrato seccion 5.2). `scripts/check-campaign-admin-api.js` gano el caso duplicados+error transitorio -> 200; `npm.cmd test` completo exitoso tras el ajuste. La semantica de deduplicacion por `campaign_id + id_anonimo` quedo registrada como decision formal en DECISIONS.md (2026-07-14), incluyendo el punto de coordinacion pendiente con el hospital sobre `id_anonimo` por necesidad de cita.
+
+---
+
+### PANEL-006 - Implementar POST /api/campanas/:id/lanzar con envio en segundo plano
+
+**Estado:** `done`
+**Labels:** `backend`, `api`, `feature`
+**Depende de:** PANEL-002, PANEL-003
+**Desbloquea:** PANEL-010, PANEL-011
+
+**Microsteps:**
+- [x] Crear en `lib/campaignAdminApi.js` un `Map` a nivel de modulo (`lanzamientosEnCurso`) con `campaignId -> true` como lock; documentar con un comentario que asume instancia unica de Render.
+- [x] En la ruta `POST /:campaignId/lanzar`: consultar la campana (`404` si no existe); si el estado no es `borrador`, `programada` ni `activa`, responder `409 { error: "estado_no_admite_lanzamiento", detalle: "estado actual: <estado>" }`; si el lock esta tomado, responder `409 { error: "lanzamiento_en_curso" }`.
+- [x] Validar `limite` del body: opcional, entero entre 1 y 500, default 500; si es invalido responder `422`.
+- [x] Validar la configuracion efectiva de Flow, plantilla, orquestador, WhatsApp y secreto de token antes de aceptar un envio real; responder `503 { error: "envio_no_configurado" }` sin tomar lock ni invocar el sender si falta algun requisito.
+- [x] Contar elegibles con `db.listarDestinatariosPendientesCampana(campaignId, limite)`; si la lista esta vacia, responder `200 { campaign_id, estado: <estado actual>, destinatarios_a_procesar: 0 }` sin cambiar estado ni tomar lock.
+- [x] Tomar el lock, llamar `db.actualizarEstadoCampana(campaignId, "enviando")` y responder `202 { campaign_id, estado: "enviando", destinatarios_a_procesar: <n> }`.
+- [x] Ejecutar el envio despues de responder (funcion async lanzada sin `await`, por ejemplo via `setImmediate`): `sender.enviarOfertasCampania({ campaignId, limit: limite })`; envolver TODO en try/catch/finally.
+- [x] En el `finally`: liberar el lock y llamar `db.actualizarEstadoCampana(campaignId, "activa")` (tambien si el envio fallo a mitad: los destinatarios ya quedaron marcados individualmente `enviado`/`fallido` por `campaignSender`, y el estado `activa` permite relanzar los pendientes restantes). En el `catch`: loguear `console.error` con el mensaje del error, sin telefonos ni payloads.
+- [x] Registrar un evento operativo agregado al terminar el bloque via `db.guardarEventoOperativo` con `event_type: "campaign_launch"`, `campaign_id`, `status: "exitosa"|"fallida"` y `resultado_operativo` con los totales (`enviados`/`fallidos` numericos), sin datos personales.
+
+**Criterios de aceptacion:**
+- [x] `POST lanzar` responde `202` en menos de 2 segundos aun con muchos destinatarios (el envio no bloquea la respuesta).
+- [x] Segunda llamada a `lanzar` mientras el envio corre devuelve `409 { error: "lanzamiento_en_curso" }`.
+- [x] Al terminar el envio, la campana queda en estado `activa` y el lock liberado (una tercera llamada ya no da `409` por lock).
+- [x] Lanzar una campana sin pendientes devuelve `200` con `destinatarios_a_procesar: 0` y NO la deja en `enviando`.
+- [x] Si `enviarOfertasCampania` lanza una excepcion, la campana igual termina en `activa`, el lock queda liberado y el proceso Node no muere (sin unhandled rejection).
+- [x] Relanzar una campana `activa` solo procesa destinatarios en `pendiente` (comportamiento ya garantizado por `listarDestinatariosPendientesCampana`; verificarlo en el check).
+- [x] Campana `cancelada` o `cerrada` devuelve `409`.
+- [x] Configuracion de envio incompleta devuelve `503` sin ejecutar el sender; fallo al persistir `enviando` devuelve `503` y libera el lock.
+
+**Evidencia:** `lib/campaignAdminApi.js`, `scripts/check-campaign-admin-api.js`; `node --check` exitoso; check HTTP focalizado exitoso; `npm.cmd test` completo exitoso en dos ejecuciones. La prueba valida `202` inmediato, limite default/explicito e invalidos, doble lanzamiento `409`, transicion `enviando -> activa`, relanzamiento de pendientes, cero pendientes `200`, recuperacion tras excepcion sin unhandled rejection, estados cerrada/cancelada, configuracion faltante `503`, persistencia inicial fallida `503`, evento agregado y ausencia de PII/resultados individuales.
+**Notas:** Aprobado por el usuario el 2026-07-14. El lock es un `Map` compartido por los routers del proceso y sigue la decision vigente de instancia unica en Render; PANEL-008 reutilizara el mismo lock. El resultado agregado se persiste como JSON textual con solo contadores numericos porque `eventos_operativos.resultado_operativo` es columna `text`. Los codigos de error se limitan a identificadores tecnicos seguros. No se enviaron mensajes reales, no se lanzaron campanas y no se hicieron cambios en Meta, Render ni Supabase.
+
+---
+
+### PANEL-007 - Implementar GET /api/campanas/:id (estado y contadores)
+
+**Estado:** `done`
+**Labels:** `backend`, `api`, `feature`
+**Depende de:** PANEL-002, PANEL-003
+**Desbloquea:** PANEL-010, PANEL-011
+
+**Microsteps:**
+- [x] En la ruta `GET /:campaignId`, consultar `db.obtenerCampana`; `404` si no existe.
+- [x] Llamar `db.contarDestinatariosCampana(campaignId)`.
+- [x] Armar la respuesta exactamente con la forma del instructivo: `{ campaign_id, referencia_externa, nombre, estado, contadores: { total, pendientes, enviados, fallidos, flow_iniciados, agendados, no_interesados, excluidos }, fallos_por_motivo, actualizado_en }` donde `actualizado_en` es `new Date().toISOString()` (momento de la consulta).
+- [x] Verificar que la respuesta no incluya nada mas del registro (ni `mensaje_template_id` ni otros internos): construir el objeto a mano, no hacer spread del row.
+- [x] Si `contarDestinatariosCampana` devuelve `null` por Supabase caido, responder `503 { error: "persistencia_no_disponible" }`.
+
+**Criterios de aceptacion:**
+- [x] Campana recien creada sin destinatarios devuelve todos los contadores en `0` y `fallos_por_motivo: {}`.
+- [x] Tras un lanzamiento con fallos, `fallos_por_motivo` refleja los `motivo_exclusion` de los destinatarios `fallido` (por ejemplo `{ "telefono_invalido": 2 }`).
+- [x] `campaign_id` inexistente devuelve `404`.
+- [x] La respuesta contiene exactamente las claves documentadas en el instructivo, sin extras.
+
+**Evidencia:** `lib/campaignAdminApi.js`, `scripts/check-campaign-admin-api.js`; `node --check` exitoso; check HTTP focalizado exitoso antes y despues de la auditoria de campos internos; `npm.cmd test` completo exitoso. Las pruebas cubren campana vacia con ceros, timestamp ISO, fallos agrupados `{ telefono_invalido: 2 }`, `404`, conteo indisponible `503` y descarte de columnas/campos internos tanto del registro de campana como del resumen de conteo.
+**Notas:** Aprobado por el usuario el 2026-07-14. Se respeto la nota previa: la respuesta consume la correccion post-revision de PANEL-002 con `{ contadores, fallos_por_motivo }` como claves hermanas y la ruta usa `asyncHandler`. Para cumplir la prohibicion de extras, en lugar de propagar el objeto completo se construyen manualmente las ocho claves superiores y los ocho contadores; los valores no enteros o negativos se normalizan a cero. El endpoint es de solo lectura y no se hicieron consultas remotas, escrituras en Supabase ni cambios en Meta o Render.
+
+---
+
+### PANEL-008 - Implementar POST /api/campanas/:id/cancelar
+
+**Estado:** `done`
+**Labels:** `backend`, `api`, `feature`
+**Depende de:** PANEL-002, PANEL-003
+**Desbloquea:** PANEL-010, PANEL-011
+
+**Microsteps:**
+- [x] En la ruta `POST /:campaignId/cancelar`, consultar la campana; `404` si no existe.
+- [x] Si ya esta `cancelada`, responder `200 { campaign_id, estado: "cancelada" }` (idempotente).
+- [x] Si esta `cerrada`, responder `409 { error: "estado_no_admite_cancelacion" }`.
+- [x] Si hay un lanzamiento en curso (lock de PANEL-006 tomado), responder `409 { error: "lanzamiento_en_curso", detalle: "esperar a que el envio termine antes de cancelar" }`.
+- [x] Llamar `db.actualizarEstadoCampana(campaignId, "cancelada")` y responder `200 { campaign_id, estado: "cancelada" }`.
+- [x] Registrar evento operativo `event_type: "campaign_cancel"` con `campaign_id` y `status: "exitosa"`.
+
+**Criterios de aceptacion:**
+- [x] Cancelar una campana `borrador` o `activa` la deja en `cancelada` y responde `200`.
+- [x] Cancelar dos veces responde `200` ambas veces sin error.
+- [x] Tras cancelar, `POST lanzar` sobre esa campana devuelve `409` y `POST destinatarios` devuelve `409`.
+- [x] Cancelar durante un lanzamiento en curso devuelve `409` sin cambiar el estado.
+
+**Evidencia:** `lib/campaignAdminApi.js`, `scripts/check-campaign-admin-api.js`; `node --check` exitoso para ambos archivos; check HTTP focalizado exitoso; `npm.cmd test` completo exitoso. Las pruebas cubren cancelacion de campanas `borrador` y `activa`, respuesta idempotente sin segunda escritura/evento, campana cerrada `409`, ID inexistente `404`, cancelacion durante lanzamiento `409` sin cambio de estado, bloqueo posterior de lanzamiento y carga de destinatarios, preservacion de destinatarios, persistencia fallida `503`, liberacion del lock y fallo no bloqueante del evento operativo.
+**Notas:** Aprobado por el usuario el 2026-07-14. La ruta usa `asyncHandler` y reutiliza el lock compartido de PANEL-006; ademas reserva ese lock durante la escritura de cancelacion para impedir que un lanzamiento se interponga entre la validacion y el cambio de estado. La cancelacion solo actualiza `campanas.estado`: no muta destinatarios, no retira mensajes enviados y no toca citas HUN. El evento `campaign_cancel` contiene solo identificadores y estado operativos; si su escritura falla despues de cancelar, el panel conserva la respuesta `200`. No se hicieron llamadas remotas ni cambios en Supabase, Meta o Render. Ajuste post-revision (2026-07-14 23:19): el `409 estado_no_admite_cancelacion` incluye ahora `detalle`, cumpliendo el formato uniforme de error del contrato (seccion 9); check actualizado y `npm.cmd test` completo exitoso.
+
+---
+
+### PANEL-009 - Actualizar estado del destinatario desde el Flow (flow_iniciado, agendado)
+
+**Estado:** `done`
+**Labels:** `backend`, `feature`
+**Depende de:** -
+**Desbloquea:** PANEL-011
+
+**Microsteps:**
+- [x] En `lib/flowHandler.js`, funcion `pasoIdentificacionCampania` (aprox. linea 1336): despues de guardar la sesion y el evento exitoso (el evento ya lleva `estado_contacto: "flow_iniciado"`), llamar `db.actualizarEstadoDestinatario(campaignContext.recipient_id, "flow_iniciado")` cuando `campaignContext.recipient_id` exista. Envolver en try/catch: un fallo de este update NO debe romper el Flow del paciente (loguear y continuar).
+- [x] En `lib/flowHandler.js`, funcion `asignarYConfirmar` (aprox. linea 1830): en la rama exitosa (despues de `db.finalizarSesionTemporal(flowToken, "completado", ...)`), si `session.recipient_id` existe, llamar `db.actualizarEstadoDestinatario(session.recipient_id, "agendado")` con el mismo criterio de try/catch no bloqueante.
+- [x] Verificar que en la sesion runtime creada por `pasoIdentificacionCampania` el campo `recipient_id` ya se guarda (linea aprox. 1399: si) y que `asignarYConfirmar` recibe esa `session` — no persistir nada nuevo.
+- [x] No tocar el recorrido de autoagendamiento ni el de reagendamiento: ambos updates deben ejecutarse solo cuando hay contexto de campana (`recipient_id` presente).
+- [x] Extender `scripts/check-flow-campaign.js` (o el check existente que cubra `pasoIdentificacionCampania`) con un caso que verifique la llamada a `actualizarEstadoDestinatario` con `"flow_iniciado"`, usando el patron de mocks del propio script.
+
+**Criterios de aceptacion:**
+- [x] Al completar la pantalla IDENTIFICACION del Flow de campana, el destinatario pasa a `estado_contacto = "flow_iniciado"` en Supabase.
+- [x] Al crearse la cita en HUN desde el Flow de campana, el destinatario pasa a `estado_contacto = "agendado"`.
+- [x] Si el update a Supabase falla, el paciente igual recibe sus pantallas y su confirmacion (el Flow no se rompe).
+- [x] Un agendamiento por autoagendamiento normal (sin campana) no llama `actualizarEstadoDestinatario`.
+- [x] `node scripts/check-flow-campaign.js` pasa con el caso nuevo.
+
+**Evidencia:** `lib/flowHandler.js`, `scripts/check-flow-campaign.js`, `scripts/check-flow-confirmation.js`; `node --check` exitoso para los tres archivos; checks focalizados de Flow de campana y confirmacion exitosos; `npm.cmd test` completo exitoso. Las pruebas verifican transiciones `flow_iniciado` y `agendado` con el `recipient_id` correcto, continuidad completa hasta confirmacion WhatsApp cuando Supabase devuelve `null` o lanza excepcion, y cero llamadas a `actualizarEstadoDestinatario` desde autoagendamiento.
+**Notas:** Aprobado por el usuario el 2026-07-14. Se agrego un helper no bloqueante que solo actua cuando la sesion runtime contiene `recipient_id`; registra un mensaje tecnico sin identificadores ni datos del paciente si la actualizacion no se confirma. `flow_iniciado` se actualiza despues del evento exitoso de identificacion y `agendado` despues de que HUN crea la cita y la sesion temporal se finaliza. No se agregaron columnas ni persistencia nueva: `recipient_id` ya formaba parte del contexto runtime de campana. Autoagendamiento y reagendamiento conservan su recorrido porque no tienen ese contexto. No se hicieron escrituras remotas ni cambios en Supabase, Meta o Render.
+
+---
+
+### PANEL-010 - Crear script de verificacion check-campaign-api.js
+
+**Estado:** `done`
+**Labels:** `testing`
+**Depende de:** PANEL-004, PANEL-005, PANEL-006, PANEL-007, PANEL-008
+**Desbloquea:** PANEL-011
+
+**Microsteps:**
+- [x] Construir mocks: `dbClient` en memoria (mapa de campanas y destinatarios con las funciones usadas por el router), `sender` que registra llamadas y devuelve un resumen fijo, `demanda.sincronizarAudienciaCampana` real (es pura respecto a `dbClient` inyectado) o falsa.
+- [x] Casos de autenticacion: sin header -> 401; llave incorrecta -> 401; sin `PANEL_CAMPAIGN_API_KEY` en env -> 503.
+- [x] Casos de creacion: `201` con body valido; `422` sin nombre; idempotencia por `referencia_externa` (`200` con mismo id).
+- [x] Casos de destinatarios: lote valido con resumen correcto; lote de 501 -> `422`; campana cancelada -> `409`; registro con PII extra no llega al `dbClient` (inspeccionar lo guardado).
+- [x] Casos de lanzamiento: `202` inmediato y llamada al `sender` con el `campaignId` y `limit` correctos; doble lanzamiento -> `409`; sin pendientes -> `200` con `destinatarios_a_procesar: 0`; excepcion del `sender` -> campana termina `activa` y lock liberado (usar un sender que rechaza y esperar el drain con `await new Promise(setImmediate)` o similar).
+- [x] Casos de consulta y cancelacion: `GET` con contadores del mock; `404` por id inexistente; cancelar idempotente; lanzar tras cancelar -> `409`.
+- [x] Registrar el script en la seccion de smoke tests del `README.md` si los demas checks estan listados alli (verificar convencion).
+
+**Criterios de aceptacion:**
+- [x] `node scripts/check-campaign-api.js` termina con exit code 0 e imprime un `OK` por caso.
+- [x] Ningun caso hace llamadas de red reales ni requiere `.env` con secretos (el env se inyecta en el test).
+- [x] Cubre como minimo: 401, 503 por llave ausente, 201/200 idempotente, 422 por lote grande, 409 por doble lanzamiento, drenaje del envio en segundo plano y liberacion del lock ante excepcion.
+
+**Evidencia:** `scripts/check-campaign-api.js`, `scripts/check-campaign-admin-api.js`, `package.json`, `README.md`; `node --check` exitoso para ambos scripts; `node scripts/check-campaign-api.js` exitoso con 15 escenarios `OK`; comando historico `node scripts/check-campaign-admin-api.js` exitoso; `npm.cmd test` completo exitoso usando la nueva entrada canonica. La cobertura incluye autenticacion `401/503`, creacion `201/200/422`, carga y filtrado de PII, lote de 501, estados cancelados, lanzamiento asincrono/doble/vacio, recuperacion del sender, consulta/404 y cancelacion idempotente.
+**Notas:** Aprobado por el usuario el 2026-07-14. `check-campaign-api.js` reutiliza el runner y los mocks exhaustivos existentes en `check-campaign-admin-api.js`, que ahora exporta `runCampaignApiChecks` y conserva ejecucion directa para compatibilidad. Esto evita duplicar mas de mil lineas de fixtures y assertions. El check levanta servidores efimeros solo en `127.0.0.1`, inyecta API key y dependencias falsas, y no consulta HUN, Meta, Supabase, Render ni variables secretas de `.env`. README registra el comando en Smoke tests y `npm test` ejecuta la entrada nueva. No se realizaron operaciones remotas.
+
+---
+
+### PANEL-011 - Actualizar documentacion y tracking del proyecto
+
+**Estado:** `done`
+**Labels:** `docs`, `chore`
+**Depende de:** PANEL-001, PANEL-002, PANEL-003, PANEL-004, PANEL-005, PANEL-006, PANEL-007, PANEL-008, PANEL-009, PANEL-010
+**Desbloquea:**
+
+**Microsteps:**
+- [x] `README.md`: agregar las rutas nuevas a la tabla de endpoints, `PANEL_CAMPAIGN_API_KEY` a la seccion de variables de entorno, y una subseccion corta "API del panel de campanas" que remita a `INSTRUCTIVO_PANEL_CAMPANAS.md`.
+- [x] `.env.example`: agregar `PANEL_CAMPAIGN_API_KEY=` con comentario de que es la llave compartida con el panel del hospital.
+- [x] `.project-tracking/STATUS.md`: registrar los tickets PANEL-001..011 con su estado y evidencia (comando de check ejecutado), siguiendo el formato de los tickets existentes.
+- [x] `.project-tracking/DECISIONS.md`: registrar tres decisiones: (a) lanzamiento asincrono con polling en lugar de webhook, (b) lock en memoria valido solo con instancia unica de Render y su plan de migracion, (c) idempotencia por `referencia_externa`.
+- [x] Revisar que `INSTRUCTIVO_PANEL_CAMPANAS.md` siga coincidiendo con lo implementado (codigos HTTP, formas de respuesta); si hubo desviaciones durante el desarrollo, corregir el instructivo y anotarlas.
+
+**Criterios de aceptacion:**
+- [x] `README.md` documenta los 5 endpoints y la variable `PANEL_CAMPAIGN_API_KEY`.
+- [x] `.env.example` incluye la variable nueva sin valor real.
+- [x] `STATUS.md` refleja los tickets PANEL con evidencia verificable.
+- [x] `DECISIONS.md` registra las tres decisiones tecnicas.
+- [x] No hay discrepancias entre el instructivo y la implementacion final.
+
+**Evidencia:** `README.md`, `.env.example`, `INSTRUCTIVO_PANEL_CAMPANAS.md`, `AGENTS.md`, `.project-tracking/DECISIONS.md`, `.project-tracking/STATUS.md`; verificacion documental automatizada exitosa para las cinco rutas, variable vacia y tres decisiones; `node scripts/check-campaign-api.js` exitoso con 15 escenarios `OK`; `npm.cmd test` completo exitoso; `git -c safe.directory=C:/Users/carlo/Desktop/agendamiento-HUN diff --check` exitoso.
+**Notas:** Aprobado por el usuario el 2026-07-14. Las tres decisiones tecnicas ya estaban registradas en `DECISIONS.md` y se verificaron vigentes tras la implementacion, sin crear entradas duplicadas. Se corrigio el instructivo para documentar con precision autenticacion, errores de persistencia, idempotencia de cancelacion y codigos `404`, `409`, `422` y `503` por ruta. README y AGENTS reflejan la API administrativa y la persistencia ya minimizada. No se agregaron secretos ni se hicieron llamadas remotas o cambios en Supabase, Meta o Render. `ADMIN-001` no fue iniciado.
 
 ---
 

@@ -6,6 +6,7 @@ const axios = require("axios");
 const { decryptRequest, encryptResponse } = require("./lib/flowCrypto");
 const { handleFlow } = require("./lib/flowHandler");
 const { handleIncomingMessage, DEFAULT_PHONE_LINE } = require("./lib/inboundRouter");
+const { createCampaignAdminRouter } = require("./lib/campaignAdminApi");
 const rescheduleHandler = require("./lib/rescheduleHandler");
 const hun = require("./lib/hun");
 const whatsapp = require("./lib/whatsapp");
@@ -258,6 +259,9 @@ async function sendRescheduleFlowMessage(to, flowToken) {
     return false;
   }
 }
+
+// 5. API administrativa de campanas para el panel del hospital.
+app.use("/api/campanas", createCampaignAdminRouter());
 
 // Render asigna process.env.PORT automaticamente.
 const PORT = process.env.PORT || 3000;

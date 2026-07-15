@@ -22,7 +22,8 @@ Archivos principales:
 - `lib/flowHandler.js`: orquestacion del Flow y confirmacion asincrona.
 - `lib/flowCrypto.js`: descifrado/cifrado requerido por WhatsApp Flows.
 - `lib/whatsapp.js`: envio de mensajes WhatsApp.
-- `lib/db.js`: capa Supabase. Debe refactorizarse en `SETUP-005` para eliminar persistencia sensible.
+- `lib/campaignAdminApi.js`: API REST autenticada para crear, cargar, lanzar, consultar y cancelar campanas desde el panel del hospital.
+- `lib/db.js`: capa Supabase ya minimizada; solo admite sesiones temporales y estado operativo no sensible.
 - `explorar-api-hun.js`: exploracion controlada de endpoints HUN.
 - `.project-tracking/STATUS.md`: fuente de verdad operativa de tickets, dependencias, microsteps y criterios.
 - `.project-tracking/DECISIONS.md`: decisiones tecnicas vigentes.
@@ -89,7 +90,7 @@ TODO: agregar scripts `test`, `lint` y `build` cuando los tickets de QA/configur
 
 ## Contexto Adicional
 
-Variables esperadas, sin valores reales: `VERIFY_TOKEN`, `WHATSAPP_TOKEN`, `PHONE_NUMBER_ID`, `GRAPH_API_VERSION`, `FLOW_ID`, `FLOW_SCREEN_ID`, `RESCHEDULE_FLOW_ID`, `RESCHEDULE_FLOW_SCREEN_ID`, `CAMPAIGN_FLOW_ID`, `CAMPAIGN_FLOW_SCREEN_ID`, `CAMPAIGN_TEMPLATE_NAME`, `CAMPAIGN_TEMPLATE_LANGUAGE`, `CAMPAIGN_FLOW_TOKEN_SECRET_B64`, `FLOW_PRIVATE_KEY_B64`, `FLOW_KEY_PASSPHRASE`, `FLOW_SESSION_PII_KEY_B64`, `FLOW_SLOT_TOKEN_SECRET_B64`, `HUN_API_BASE`, `HUN_API_KEY`, `HUN_DEMANDA_API_BASE`, `HUN_DEMANDA_API_AUTH_TYPE`, `HUN_DEMANDA_API_TOKEN`, `HUN_DEMANDA_API_ENDPOINT`, `HUN_DEMANDA_API_TIMEOUT_MS`, `HUN_ORQUESTADOR_API_BASE`, `HUN_ORQUESTADOR_API_KEY`, `HUN_ORQUESTADOR_API_ENDPOINT`, `EMAILJS_SERVICE_ID`, `EMAILJS_TEMPLATE_ID`, `EMAILJS_PUBLIC_KEY`, `EMAILJS_PRIVATE_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
+Variables esperadas, sin valores reales: `VERIFY_TOKEN`, `WHATSAPP_TOKEN`, `PHONE_NUMBER_ID`, `GRAPH_API_VERSION`, `PANEL_CAMPAIGN_API_KEY`, `FLOW_ID`, `FLOW_SCREEN_ID`, `RESCHEDULE_FLOW_ID`, `RESCHEDULE_FLOW_SCREEN_ID`, `CAMPAIGN_FLOW_ID`, `CAMPAIGN_FLOW_SCREEN_ID`, `CAMPAIGN_TEMPLATE_NAME`, `CAMPAIGN_TEMPLATE_LANGUAGE`, `CAMPAIGN_FLOW_TOKEN_SECRET_B64`, `FLOW_PRIVATE_KEY_B64`, `FLOW_KEY_PASSPHRASE`, `FLOW_SESSION_PII_KEY_B64`, `FLOW_SLOT_TOKEN_SECRET_B64`, `HUN_API_BASE`, `HUN_API_KEY`, `HUN_DEMANDA_API_BASE`, `HUN_DEMANDA_API_AUTH_TYPE`, `HUN_DEMANDA_API_TOKEN`, `HUN_DEMANDA_API_ENDPOINT`, `HUN_DEMANDA_API_TIMEOUT_MS`, `HUN_ORQUESTADOR_API_BASE`, `HUN_ORQUESTADOR_API_KEY`, `HUN_ORQUESTADOR_API_ENDPOINT`, `EMAILJS_SERVICE_ID`, `EMAILJS_TEMPLATE_ID`, `EMAILJS_PUBLIC_KEY`, `EMAILJS_PRIVATE_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
 
 Endpoints HUN relevantes: especialidades, citas por documento, cita por numero, agenda por especialidad, asignar cita, cancelar cita y verificar cancelacion. Consultar `PLAN_CONTRATO_AGENDAMIENTO_HUN.md` para el detalle contractual y `PLAN_SPRINTS_AGENDAMIENTO_HUN.md` para el alcance por tickets.
 

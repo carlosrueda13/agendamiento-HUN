@@ -9,6 +9,7 @@ const savedSessions = [];
 const savedEvents = [];
 const sentMessages = [];
 const assignedPayloads = [];
+const recipientStateUpdates = [];
 let agendaMode = "available";
 let agendaCalls = 0;
 
@@ -88,6 +89,10 @@ db.finalizarSesionTemporal = async (flowToken, estado, extra = {}) => {
 };
 
 db.getContactoEmailSesion = async () => null;
+db.actualizarEstadoDestinatario = async (recipientId, estado) => {
+  recipientStateUpdates.push({ recipientId, estado });
+  return { id: recipientId };
+};
 
 const { handleFlow } = require("../lib/flowHandler");
 
@@ -205,6 +210,10 @@ async function assertExpiredSlotIsRecoverable() {
 async function main() {
   await assertConfirmRequeriesAndAssignsFreshSlot();
   await assertExpiredSlotIsRecoverable();
+  assert(
+    recipientStateUpdates.length === 0,
+    "Autoagendamiento sin recipient_id no debe actualizar destinatarios de campania."
+  );
   console.log("Flow confirmation checks passed.");
 }
 

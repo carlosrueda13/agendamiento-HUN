@@ -55,6 +55,7 @@ const campana = db._private.buildCampanaRecord({
   origen_datos: "api_hun_demanda_inducida",
   responsable: "Consulta Externa",
   cupos_objetivo: 50,
+  referencia_externa: " panel-campana-001 ",
   nombre_paciente: "NO DEBE PASAR",
 });
 
@@ -62,6 +63,7 @@ assert.strictEqual(campana.estado, "programada");
 assert.strictEqual(campana.especialidad_codigo, "590");
 assert.strictEqual(campana.responsable, "Consulta Externa");
 assert.strictEqual(campana.cupos_objetivo, 50);
+assert.strictEqual(campana.referencia_externa, "panel-campana-001");
 assertNoForbiddenFields(campana);
 
 const campanaMultiespecialidad = db._private.buildCampanaRecord({
@@ -73,6 +75,7 @@ const campanaMultiespecialidad = db._private.buildCampanaRecord({
 
 assert.strictEqual(campanaMultiespecialidad.especialidad_codigo, null);
 assert.strictEqual(campanaMultiespecialidad.nombre, "PQRS Sanitas julio");
+assert.strictEqual(campanaMultiespecialidad.referencia_externa, null);
 assertNoForbiddenFields(campanaMultiespecialidad);
 
 const destinatario = db._private.buildDestinatarioRecord({

@@ -166,6 +166,46 @@ o que surgen durante el desarrollo.
 
 ---
 
+## [2026-07-14] Exponer API REST autenticada con lanzamiento asincrono para el panel del hospital
+
+**Ticket relacionado:** PANEL-003, PANEL-006, PANEL-007
+**Decision:** El panel administrativo del hospital creara y lanzara campanas contra endpoints REST del backend (`/api/campanas/*`) autenticados con header `x-api-key` (`PANEL_CAMPAIGN_API_KEY`). El lanzamiento responde `202` de inmediato y ejecuta el envio en segundo plano; el panel consulta avance por polling de `GET /api/campanas/{id}` con estado y contadores. El contrato completo esta en `INSTRUCTIVO_PANEL_CAMPANAS.md`.
+**Motivo:** El envio de ofertas es secuencial contra WhatsApp (minutos para cientos de destinatarios) y una respuesta sincrona se cortaria en Render. La API key servidor-a-servidor replica el patron ya usado con el orquestador y es suficiente para un unico consumidor confiable.
+**Alternativas descartadas:** Webhook de "campana terminada" hacia el panel; pospuesto a fase 2 para no acoplar el MVP a un endpoint del hospital. Acceso directo del panel a Supabase; descartado porque expone la service role key y rompe la frontera de minimizacion. Respuesta sincrona del lanzamiento; descartada por timeouts de plataforma.
+**Impacto:** Afecta `server.js`, `lib/campaignAdminApi.js` (nuevo), `lib/campaignSender.js`, PANEL-003..008, PANEL-010, QA-001 y DOCS-001. Reemplaza el lanzamiento manual por `scripts/send-campaign-offers.js`, que queda como herramienta de contingencia.
+
+---
+
+## [2026-07-14] Usar lock en memoria para lanzamientos, valido solo con instancia unica
+
+**Ticket relacionado:** PANEL-006, PANEL-008
+**Decision:** El bloqueo anti doble-lanzamiento por campana sera un `Map` en memoria del proceso Node. Mientras el lock este tomado, `lanzar` y `cancelar` responden `409 lanzamiento_en_curso`.
+**Motivo:** Render corre una sola instancia del servicio en el plan actual; un lock en memoria es suficiente y evita introducir infraestructura de coordinacion para el MVP.
+**Alternativas descartadas:** Lock persistido en Supabase con estado `enviando` como semaforo; descartado en v1 porque un crash del proceso dejaria la campana bloqueada sin proceso que la libere, y exigiria logica de expiracion. Colas externas (Redis/worker); descartadas por sobredimensionadas para el volumen actual.
+**Impacto:** Si el servicio escala a mas de una instancia, el lock deja de proteger y debe migrarse a un semaforo persistente con TTL (registrado como limitacion en el plan `PLAN_PANEL_CAMPANAS_API.md`). Un reinicio del proceso durante un envio deja la campana en `enviando` hasta intervencion; el relanzamiento posterior solo procesa pendientes, por lo que no hay riesgo de doble contacto.
+
+---
+
+## [2026-07-14] Idempotencia de creacion de campanas por referencia_externa
+
+**Ticket relacionado:** PANEL-001, PANEL-004
+**Decision:** La tabla `campanas` gana la columna `referencia_externa` (unica cuando no es nula, migracion `supabase/008_campaign_external_ref.sql`). El panel envia su propio id de campana en ese campo; si `POST /api/campanas` recibe una referencia ya registrada, devuelve `200` con la campana existente en lugar de crear un duplicado.
+**Motivo:** El panel puede reintentar la creacion por timeouts o arranque en frio de Render; sin llave de idempotencia cada reintento crearia una campana duplicada con destinatarios repartidos.
+**Alternativas descartadas:** Header `Idempotency-Key` generico con tabla de deduplicacion; descartado por complejidad frente a una referencia de negocio que el panel ya posee. Deduplicar por `nombre`; descartado porque los nombres operativos pueden repetirse legitimamente entre cohortes.
+**Impacto:** Afecta `supabase/008_campaign_external_ref.sql`, `lib/db.js` (`buildCampanaRecord`, `obtenerCampanaPorReferenciaExterna`) y el contrato de `POST /api/campanas`. Las campanas creadas manualmente (sin referencia) siguen funcionando con `referencia_externa = null`.
+
+---
+
+## [2026-07-14] Deduplicar destinatarios de campana por campaign_id + id_anonimo
+
+**Ticket relacionado:** PANEL-005 (ajusta el comportamiento original de CAMPAIGN-002)
+**Decision:** Un destinatario de campana es unico por `campaign_id + id_anonimo`. Al cargar un lote, un `id_anonimo` ya existente en la campana se reporta como `duplicado` y no modifica la fila existente (ni especialidad ni `estado_contacto`). La deduplicacion en memoria de `sincronizarAudienciaCampana` usa `audiencia_ref` como llave unica, alineada con el indice `ux_destinatarios_campaign_audiencia_ref` de la migracion 004 y con el contrato del panel (INSTRUCTIVO_PANEL_CAMPANAS.md seccion 5.2).
+**Motivo:** La deduplicacion previa por `id_anonimo:especialidad` solo existia en el filtro en memoria del lote: la base de datos siempre tuvo unicidad por `(campaign_id, audiencia_ref)` (migracion 004), y el segundo registro con otra especialidad hacia UPDATE silencioso de la fila existente, sobrescribiendo la especialidad y regresando `estado_contacto` a `pendiente`, lo que habilitaba re-contactos de pacientes ya atendidos. Ademas, `id_anonimo` referencia una necesidad de cita del orquestador (`get-appointment/{id_anonimo}` devuelve fecha, servicio y especialidad), no un paciente: un paciente con dos necesidades de especialidades distintas llega como dos `id_anonimo` distintos, por lo que el caso multi-especialidad no requiere filas duplicadas.
+**Alternativas descartadas:** Permitir dos filas por paciente con unicidad `(campaign_id, audiencia_ref, especialidad_codigo)`; descartado porque exige migracion, cambio del contrato seccion 5.2 y del indice unico que el hospital ya replico, y aun asi no lograria el objetivo: al enviar, la especialidad del orquestador prima sobre la de Supabase (decision 2026-07-09), asi que ambas filas producirian dos mensajes ofreciendo la misma especialidad y hasta dos citas si el paciente abre ambos Flows. Mantener el UPDATE de la fila existente en recargas; descartado por el reset de `estado_contacto` a `pendiente` (re-contacto) y por reportar como `guardado` lo que el contrato define como `duplicado`.
+**Impacto:** Afecta `lib/demandaInducida.js` (`source_key = audiencia_ref`), `lib/db.js` (`guardarDestinatarioCampana` devuelve `{ id, duplicate }` y no actualiza filas existentes), PANEL-005 y los checks de campana. Una recarga de lote no actualiza la especialidad de respaldo en Supabase; el dato fresco lo aporta el orquestador al enviar. Queda pendiente de coordinacion (agenda seccion 11 del instructivo): confirmar con el hospital que su orquestador emite un `id_anonimo` por necesidad de cita, no por paciente — es la suposicion que sostiene el caso multi-especialidad.
+
+---
+
 <!-- Las entradas se agregan aqui durante el desarrollo con este formato:
 
 ## [YYYY-MM-DD] Titulo breve de la decision

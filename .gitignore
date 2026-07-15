@@ -7,3 +7,9 @@ local-server*.log
 resultados-api-hun*.json
 resultados-api-hun*.txt
 .DS_Store
+ACTUALIZACION_PRESENTACION_PROYECTO_HUN.md
+INSTRUCTIVO_PANEL_CAMPANAS.md
+agendamiento-HUN.env
+*.pem
+graphify-out/
+.tmp-hun-orquestador/

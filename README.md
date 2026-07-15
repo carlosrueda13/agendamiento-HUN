@@ -19,7 +19,7 @@ Reglas vigentes:
 
 - La API HUN es la fuente de verdad para paciente, disponibilidad, cita creada, cita cancelada y estado de cita.
 - Supabase no debe guardar citas, datos clinicos, documento plano, EPS, medico, fecha/hora, CUPS, numero de cita ni respuestas HUN completas.
-- La persistencia sensible existente en `lib/db.js` y `lib/flowHandler.js` se corrige en `SETUP-005`.
+- La persistencia sensible original fue eliminada en `SETUP-005`; Supabase conserva solo estado operativo minimo y contacto cifrado transitorio cuando aplica.
 - La asignacion y cancelacion de citas estan permitidas solo en la API HUN de pruebas controlada. Antes de usar un ambiente productivo o no controlado, se debe revalidar la regla operativa.
 
 ## Stack
@@ -68,6 +68,18 @@ Reglas vigentes:
 | GET | `/webhook` | Verificacion de webhook de Meta con `hub.challenge`. |
 | POST | `/webhook` | Recibe mensajes entrantes, muestra menu inicial, solicita consentimiento y enruta a Flow o consulta HUN. |
 | POST | `/flow-endpoint` | Endpoint cifrado de WhatsApp Flow `data_exchange`. |
+| POST | `/api/campanas` | Crea una campana de forma idempotente mediante `referencia_externa`. |
+| POST | `/api/campanas/{campaign_id}/destinatarios` | Carga hasta 500 referencias anonimas por lote. |
+| POST | `/api/campanas/{campaign_id}/lanzar` | Inicia el envio en segundo plano y responde `202`. |
+| GET | `/api/campanas/{campaign_id}` | Consulta estado, contadores y fallos agregados. |
+| POST | `/api/campanas/{campaign_id}/cancelar` | Cancela la campana de forma idempotente. |
+
+### API del panel de campanas
+
+El contrato servidor-a-servidor para crear, cargar, lanzar, consultar y cancelar
+campanas esta en [INSTRUCTIVO_PANEL_CAMPANAS.md](INSTRUCTIVO_PANEL_CAMPANAS.md).
+Las cinco rutas requieren el header `x-api-key`; la llave compartida nunca debe
+exponerse en el navegador ni enviarse junto con datos personales de pacientes.
 
 ## Variables de entorno
 
@@ -120,6 +132,10 @@ Estas variables quedan documentadas aunque el endpoint real aun no este disponib
 
 El adaptador de audiencia esta documentado en `DEMANDA_INDUCIDA_API.md`. La campana debe guardar solo `id_anonimo` / `audiencia_ref` en Supabase; el telefono y contexto se consultan en memoria contra el orquestador justo antes de enviar WhatsApp. Si las APIs reales no estan configuradas, el backend puede usar un mock contractual para desarrollo; eso no equivale a `CONTRACT_READY` sin API real o waiver formal.
 
+### Panel administrativo de campanas
+
+- `PANEL_CAMPAIGN_API_KEY`: llave compartida servidor-a-servidor que protege las cinco rutas `/api/campanas`; es obligatoria para habilitar el API.
+
 ### EmailJS
 
 Estas variables son opcionales hasta que el proveedor de correo quede aprobado y configurado:
@@ -171,6 +187,13 @@ Conectividad HUN:
 
 ```bash
 curl http://localhost:3000/test-hun
+```
+
+Contrato HTTP del API administrativo de campanas, con servidor y dependencias
+simulados localmente:
+
+```bash
+node scripts/check-campaign-api.js
 ```
 
 Exploracion manual de la API HUN:
@@ -247,7 +270,7 @@ Vistas esperadas:
 
 Supabase debe usarse solo para trazabilidad operativa, campanas, destinatarios minimos, sesiones temporales y notificaciones no sensibles.
 
-Para campanas de demanda inducida, ejecutar tambien las migraciones incrementales aprobadas, incluida `supabase/004_campaign_audiencia_ref.sql`, antes de usar destinatarios por `id_anonimo` en Supabase real. Para la verificacion final de cancelaciones, aplicar `supabase/006_cancel_operation_failure_state.sql`. Para la saga de modificacion, aplicar `supabase/007_reschedule_operation_states.sql`. Estas migraciones agregan solo estados operativos y no incorporan datos personales ni detalles de cita.
+Para campanas de demanda inducida, ejecutar tambien las migraciones incrementales aprobadas, incluida `supabase/004_campaign_audiencia_ref.sql`, antes de usar destinatarios por `id_anonimo` en Supabase real. Para la verificacion final de cancelaciones, aplicar `supabase/006_cancel_operation_failure_state.sql`. Para la saga de modificacion, aplicar `supabase/007_reschedule_operation_states.sql`. Antes de usar el API del panel, aplicar `supabase/008_campaign_external_ref.sql` para habilitar la idempotencia por `referencia_externa`. Estas migraciones agregan solo estados operativos y no incorporan datos personales ni detalles de cita.
 
 ## Flujo WhatsApp
 
