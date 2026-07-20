@@ -513,6 +513,7 @@ Hacer la consulta de citas mas clara para pacientes: seleccionar primero el tipo
 8. Enviar botones `Volver al menu` y `Finalizar` despues del resultado definitivo de cada proceso.
 9. Mantener el consentimiento aceptado solo en memoria durante el TTL de la sesion y reutilizarlo al volver al menu.
 10. Al finalizar, borrar el estado operativo y la autorizacion efimera para que una conversacion nueva vuelva a solicitar consentimiento.
+11. Diferenciar el menu inicial del menu de continuidad para no repetir el saludo de Natalia al volver.
 
 ### Criterios de aceptacion
 - [ ] El paciente no necesita conocer abreviaturas de documento.
@@ -526,6 +527,7 @@ Hacer la consulta de citas mas clara para pacientes: seleccionar primero el tipo
 - [ ] Volver al menu dentro de la misma sesion no repite el consentimiento.
 - [ ] Finalizar elimina el consentimiento y contexto temporal de la conversacion.
 - [ ] Ninguna operacion asincrona ofrece cierre antes de recibir su resultado definitivo.
+- [ ] Volver al menu usa un mensaje de continuidad y el saludo aparece solo en una conversacion nueva.
 
 ### Sprint 3 - Campanas y notificaciones
 

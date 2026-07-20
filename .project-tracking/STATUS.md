@@ -537,6 +537,7 @@ Avance global: 38 / 47 tickets completados (80.9%)
 - [x] Conservar el consentimiento solo en memoria durante el TTL de la sesion para no solicitarlo en cada gestion.
 - [x] Revocar consentimiento y limpiar estado operativo al finalizar la conversacion.
 - [x] Mantener pendiente cualquier operacion asincrona hasta su resultado antes de ofrecer acciones de cierre.
+- [x] Usar un mensaje de continuidad al volver al menu, sin repetir el saludo inicial de Natalia.
 
 **Criterios de aceptacion:**
 - [x] El paciente puede elegir Cedula de ciudadania, Cedula de extranjeria, Permiso temporal, Tarjeta de identidad, Registro civil o Pasaporte sin conocer su abreviatura.
@@ -548,9 +549,10 @@ Avance global: 38 / 47 tickets completados (80.9%)
 - [x] Volver al menu durante la misma sesion no repite el consentimiento.
 - [x] Finalizar elimina la autorizacion efimera y una conversacion posterior vuelve a solicitarla.
 - [x] Los cuatro procesos ofrecen las mismas acciones solo despues de su resultado final.
+- [x] El saludo inicial aparece solo al comenzar una conversacion nueva.
 
 **Evidencia:** implementacion en `lib/conversationLifecycle.js`, `lib/inboundRouter.js`, `lib/whatsapp.js`, `lib/flowHandler.js`, `lib/cancellationVerifier.js` y `lib/rescheduleHandler.js`; pruebas en `scripts/check-conversation-lifecycle.js`, `scripts/check-inbound-router.js`, `scripts/check-cancellation-verifier.js`, `scripts/check-reschedule-flow.js` y `scripts/check-flow-confirmation.js`; documentacion en `README.md` y `PLAN_SPRINTS_AGENDAMIENTO_HUN.md`; `npm.cmd test` completo exitoso el 2026-07-19.
-**Notas:** Aprobado por el usuario el 2026-07-19. No requiere publicar JSON ni configurar acciones en Meta porque usa mensajes interactivos estandar de WhatsApp Cloud API. El consentimiento vive en un mapa de memoria separado del contexto de cada gestion, vence con `INBOUND_SESSION_TTL_MINUTES` y se elimina explicitamente al finalizar.
+**Notas:** Aprobado por el usuario el 2026-07-19, incluida la correccion visual que reemplaza el saludo repetido por un mensaje de continuidad al volver al menu. No requiere publicar JSON ni configurar acciones en Meta porque usa mensajes interactivos estandar de WhatsApp Cloud API. El consentimiento vive en un mapa de memoria separado del contexto de cada gestion, vence con `INBOUND_SESSION_TTL_MINUTES` y se elimina explicitamente al finalizar.
 
 ---
 

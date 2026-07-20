@@ -237,6 +237,11 @@ async function assertConsentOncePerSessionAndSecureClose() {
     deps
   );
   assert(sent.at(-1).buttons.some((button) => button.id === "INTAKE_MENU_CONSULTAR"));
+  assert(
+    /Continuemos con tu atención/.test(sent.at(-1).body) &&
+      !/Hola|Natalia/.test(sent.at(-1).body),
+    "Volver al menu debe continuar la conversacion sin repetir el saludo."
+  );
 
   const consentMessagesBefore = sent.filter(
     (message) => message.buttons?.[0]?.id === "INTAKE_CONSENT_ACCEPT"
