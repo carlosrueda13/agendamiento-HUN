@@ -3,8 +3,15 @@
   "data_api_version": "3.0",
   "routing_model": {
     "IDENTIFICACION_REAGENDAMIENTO": ["CITA_ORIGINAL", "FINAL_REAGENDAMIENTO"],
-    "CITA_ORIGINAL": ["SLOTS_REAGENDAMIENTO", "FINAL_REAGENDAMIENTO"],
-    "SLOTS_REAGENDAMIENTO": ["CONFIRMAR_REAGENDAMIENTO", "FINAL_REAGENDAMIENTO"],
+    "CITA_ORIGINAL": ["FECHA_REAGENDAMIENTO", "FINAL_REAGENDAMIENTO"],
+    "FECHA_REAGENDAMIENTO": [
+      "SLOTS_REAGENDAMIENTO",
+      "FINAL_REAGENDAMIENTO"
+    ],
+    "SLOTS_REAGENDAMIENTO": [
+      "CONFIRMAR_REAGENDAMIENTO",
+      "FINAL_REAGENDAMIENTO"
+    ],
     "CONFIRMAR_REAGENDAMIENTO": ["FINAL_REAGENDAMIENTO"],
     "FINAL_REAGENDAMIENTO": []
   },
@@ -122,12 +129,84 @@
       }
     },
     {
+      "id": "FECHA_REAGENDAMIENTO",
+      "title": "Fecha disponible",
+      "data": {
+        "procedimiento": {
+          "type": "string",
+          "__example__": "Procedimiento: CONSULTA DE PRIMERA VEZ POR MEDICINA GENERAL"
+        },
+        "fechas": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "title": { "type": "string" },
+              "description": { "type": "string" }
+            }
+          },
+          "__example__": [
+            {
+              "id": "resdate_token_ejemplo",
+              "title": "Viernes 24 de julio",
+              "description": "6 horarios disponibles"
+            }
+          ]
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextBody",
+            "text": "${data.procedimiento}"
+          },
+          {
+            "type": "TextBody",
+            "text": "Selecciona el dia en el que quieres recibir tu nueva cita."
+          },
+          {
+            "type": "Form",
+            "name": "form_fecha_reagendamiento",
+            "children": [
+              {
+                "type": "Dropdown",
+                "name": "fecha_token",
+                "label": "Fecha disponible",
+                "required": true,
+                "data-source": "${data.fechas}"
+              },
+              {
+                "type": "Footer",
+                "label": "Ver horarios",
+                "on-click-action": {
+                  "name": "data_exchange",
+                  "payload": {
+                    "fecha_token": "${form.fecha_token}"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       "id": "SLOTS_REAGENDAMIENTO",
       "title": "Nuevos horarios",
       "data": {
         "procedimiento": {
           "type": "string",
           "__example__": "Consulta de primera vez por medicina general"
+        },
+        "fecha_seleccionada": {
+          "type": "string",
+          "__example__": "Fecha: viernes 24 de julio"
+        },
+        "pagina_horarios": {
+          "type": "string",
+          "__example__": "Horarios 1 a 8 de 12"
         },
         "slots": {
           "type": "array",
@@ -157,7 +236,15 @@
           },
           {
             "type": "TextBody",
-            "text": "Selecciona un nuevo horario para el mismo procedimiento."
+            "text": "${data.fecha_seleccionada}"
+          },
+          {
+            "type": "TextCaption",
+            "text": "${data.pagina_horarios}"
+          },
+          {
+            "type": "TextBody",
+            "text": "Selecciona una hora. Si ninguna te sirve, regresa para escoger otra fecha."
           },
           {
             "type": "Form",

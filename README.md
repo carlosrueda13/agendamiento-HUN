@@ -280,7 +280,7 @@ Para campanas de demanda inducida, ejecutar tambien las migraciones incrementale
 4. Si el paciente acepta y elige consultar, el backend pide identificacion minima y consulta citas HUN solo en memoria.
 5. Si el paciente acepta modificar/cancelar, el backend pregunta si desea modificar o cancelar.
 6. Cancelar conserva la rama conversacional: consulta HUN, usa `cancel_token`, exige confirmacion y verifica asincronicamente el resultado.
-7. Modificar abre `flow-reagendamiento.json`: consulta las citas del paciente, obtiene especialidad y `Cod_Pro` de la cita original y ofrece solo slots autogestionables con el mismo procedimiento.
+7. Modificar abre `flow-reagendamiento.json`: consulta las citas del paciente, obtiene especialidad y `Cod_Pro` de la cita original, muestra primero los dias con disponibilidad y despues solo los horarios autogestionables del dia elegido para el mismo procedimiento.
 8. La saga de modificacion asigna y confirma primero la nueva cita; solo despues cancela y verifica la original. Si la segunda operacion falla, informa posible doble reserva y marca revision manual.
 9. En Flows, Meta llama `POST /flow-endpoint` con payload cifrado.
 10. `lib/flowCrypto.js` descifra la solicitud y `lib/flowHandler.js` enruta cada Flow consultando HUN.

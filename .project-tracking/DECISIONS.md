@@ -6,6 +6,16 @@ o que surgen durante el desarrollo.
 
 ---
 
+## [2026-07-19] Separar fecha y hora sin ciclos en el Flow de reagendamiento
+
+**Ticket relacionado:** RESCH-003
+**Decision:** El reagendamiento muestra primero un `Dropdown` con todos los dias que tienen cupos equivalentes y despues los horarios del dia elegido. No se recorta la disponibilidad antes de agrupar por fecha. Como Meta exige un `routing_model` aciclico, el cambio de fecha usa la navegacion nativa de regreso y los horarios de cada dia se muestran en una sola pantalla, sin autorutas ni paginacion ciclica.
+**Motivo:** El recorte global de horarios ocultaba fechas posteriores cuando el primer dia concentraba muchos cupos. Declarar autorutas para paginar fue rechazado por el validador de Meta por formar ciclos.
+**Alternativas descartadas:** Mantener una lista global limitada; descartado porque oculta dias disponibles. Declarar `FECHA_REAGENDAMIENTO -> FECHA_REAGENDAMIENTO` o `SLOTS_REAGENDAMIENTO -> SLOTS_REAGENDAMIENTO`; descartado porque Meta no permite ciclos en el modelo de rutas. Crear un numero fijo de pantallas de paginacion; descartado porque introduce un limite artificial y complica el regreso a otra fecha.
+**Impacto:** `flow-reagendamiento.json` incorpora `FECHA_REAGENDAMIENTO`; `lib/rescheduleHandler.js` genera `resdate_v1`, reconsulta HUN al elegir fecha y hora y mantiene los candidatos solo en memoria. Supabase conserva exclusivamente estados agregados y tokens opacos permitidos.
+
+---
+
 ## [2026-07-14] Usar un tercer Flow para modificar citas existentes
 
 **Ticket relacionado:** RESCH-002

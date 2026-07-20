@@ -28,32 +28,44 @@ function appointmentRow() {
   };
 }
 
-function agendaRows(includeSelected = true) {
-  const rows = [
-    {
-      fecha_atencion: "2026-07-20",
-      hora_inicial: "09:00:00",
-      codigo_medico: "MED-1",
-      nombre_medico: "PROFESIONAL PRUEBA",
-      numero_consultorio: "12",
-      tiempo_intervalo: "30",
-      nombre_especialidad: "DERMATOLOGIA",
-      cups: [
-        {
-          agenda_detalle_id: "DET-1",
-          codigo: "890201",
-          descripcion: "CONSULTA DE PRIMERA VEZ POR DERMATOLOGIA",
-          autogestionable: "SI",
-        },
-        {
-          agenda_detalle_id: "DET-2",
-          codigo: "890202",
-          descripcion: "CONSULTA DE CONTROL POR DERMATOLOGIA",
-          autogestionable: "SI",
-        },
-      ],
-    },
-  ];
+function agendaRow(date, time, index) {
+  return {
+    fecha_atencion: date,
+    hora_inicial: time,
+    codigo_medico: `MED-${index}`,
+    nombre_medico: `PROFESIONAL PRUEBA ${index}`,
+    numero_consultorio: String(10 + index),
+    tiempo_intervalo: "20",
+    nombre_especialidad: "DERMATOLOGIA",
+    cups: [
+      {
+        agenda_detalle_id: `DET-${index}`,
+        codigo: "890201",
+        descripcion: "CONSULTA DE PRIMERA VEZ POR DERMATOLOGIA",
+        autogestionable: "SI",
+      },
+      {
+        agenda_detalle_id: `DET-OTRO-${index}`,
+        codigo: "890202",
+        descripcion: "CONSULTA DE CONTROL POR DERMATOLOGIA",
+        autogestionable: "SI",
+      },
+    ],
+  };
+}
+
+function agendaRows(includeSelected = true, options = {}) {
+  const rows = [agendaRow("2026-07-20", "09:00:00", 1)];
+  if (options.multipleDates) {
+    rows.length = 0;
+    for (let index = 0; index < 21; index += 1) {
+      const hour = String(7 + Math.floor(index / 3)).padStart(2, "0");
+      const minute = String((index % 3) * 20).padStart(2, "0");
+      rows.push(agendaRow("2026-07-20", `${hour}:${minute}:00`, index + 1));
+    }
+    rows.push(agendaRow("2026-07-21", "14:00:00", 30));
+    rows.push(agendaRow("2026-07-21", "16:00:00", 31));
+  }
   return includeSelected ? rows : [];
 }
 
@@ -64,6 +76,7 @@ function createHarness(options = {}) {
   let assignmentCount = 0;
   let cancelCount = 0;
   let agendaAvailable = true;
+  let agendaFilter = (rows) => rows;
 
   const hun = {
     consultarCitasDocumento: async () => {
@@ -76,7 +89,7 @@ function createHarness(options = {}) {
     getAgendaPorEspecialidad: async (specialty) => {
       assert(String(specialty) === "382", "Debe consultar la especialidad de la cita original.");
       calls.push("consultar_agenda");
-      const rows = agendaRows(agendaAvailable);
+      const rows = agendaFilter(agendaRows(agendaAvailable, options));
       if (options.agendaWithoutDescription && rows[0]?.cups?.[0]) {
         delete rows[0].cups[0].descripcion;
       }
@@ -136,12 +149,15 @@ function createHarness(options = {}) {
     setAgendaAvailable: (value) => {
       agendaAvailable = value;
     },
+    setAgendaFilter: (filter) => {
+      agendaFilter = filter;
+    },
     getAssignmentCount: () => assignmentCount,
     getCancelCount: () => cancelCount,
   };
 }
 
-async function navigateToSlots(harness) {
+async function navigateToDates(harness) {
   const flowToken = harness.handler.createFlowSession("573001112233");
   const identified = await harness.handler.handleFlow({
     action: "data_exchange",
@@ -154,16 +170,31 @@ async function navigateToSlots(harness) {
   assert(identified.data.citas.length === 1, "Debe listar una cita modificable.");
   assert(!/111111/.test(identified.data.citas[0].id), "El token no debe exponer numero de cita.");
 
-  const slots = await harness.handler.handleFlow({
+  const dates = await harness.handler.handleFlow({
     action: "data_exchange",
     screen: SCREENS.APPOINTMENT,
     flow_token: flowToken,
     version: "3.0",
     data: { cita_original: identified.data.citas[0].id },
   });
-  assert(slots.screen === SCREENS.SLOTS, "Debe avanzar a horarios equivalentes.");
-  assert(slots.data.slots.length === 1, "Debe filtrar cupos de procedimientos diferentes.");
-  return { flowToken, slots };
+  assert(dates.screen === SCREENS.DATE, "Debe avanzar primero a las fechas disponibles.");
+  assert(dates.data.fechas.length >= 1, "Debe listar al menos una fecha disponible.");
+  assert(!/2026-07-20/.test(dates.data.fechas[0].id), "El token no debe exponer la fecha.");
+  return { flowToken, dates };
+}
+
+async function navigateToSlots(harness) {
+  const { flowToken, dates } = await navigateToDates(harness);
+  const slots = await harness.handler.handleFlow({
+    action: "data_exchange",
+    screen: SCREENS.DATE,
+    flow_token: flowToken,
+    version: "3.0",
+    data: { fecha_token: dates.data.fechas[0].id },
+  });
+  assert(slots.screen === SCREENS.SLOTS, "Debe avanzar a los horarios de la fecha.");
+  assert(slots.data.slots.length >= 1, "Debe listar horarios del procedimiento correcto.");
+  return { flowToken, dates, slots };
 }
 
 async function navigateToConfirm(harness) {
@@ -210,6 +241,120 @@ function assertFlowUsesWholeDynamicProperties() {
   }
 
   visit(flow);
+
+  const screens = Object.fromEntries(flow.screens.map((screen) => [screen.id, screen]));
+  assert(screens[SCREENS.DATE], "El JSON debe incluir la pantalla de fechas.");
+  assert(
+    flow.routing_model[SCREENS.APPOINTMENT].includes(SCREENS.DATE),
+    "La cita original debe navegar a la seleccion de fecha."
+  );
+  assert(
+    flow.routing_model[SCREENS.DATE].includes(SCREENS.SLOTS),
+    "La fecha debe navegar a la seleccion de hora."
+  );
+  assert(
+    !flow.routing_model[SCREENS.DATE].includes(SCREENS.DATE) &&
+      !flow.routing_model[SCREENS.SLOTS].includes(SCREENS.SLOTS),
+    "El routing_model debe permanecer aciclico para Meta."
+  );
+  const dateJson = JSON.stringify(screens[SCREENS.DATE]);
+  assert(dateJson.includes('"type":"Dropdown"'), "Las fechas deben usar un Dropdown compacto.");
+  assert(dateJson.includes('"fecha_token"'), "El formulario debe enviar fecha_token.");
+  for (const key of ["procedimiento", "fecha_seleccionada", "pagina_horarios", "slots"]) {
+    assert(screens[SCREENS.SLOTS].data[key], `La pantalla de horas debe declarar ${key}.`);
+  }
+}
+
+async function assertDatesAreSeparatedFromSlots() {
+  const harness = createHarness({ multipleDates: true });
+  const { flowToken, dates } = await navigateToDates(harness);
+  assert(
+    dates.data.fechas.length === 2,
+    "Debe mostrar la segunda fecha aunque el primer dia tenga mas de veinte cupos."
+  );
+  assert(
+    /21 horarios disponibles/.test(dates.data.fechas[0].description),
+    "Debe agregar el conteo completo por fecha."
+  );
+  assert(
+    /2 horarios disponibles/.test(dates.data.fechas[1].description),
+    "Debe contar independientemente los horarios de la segunda fecha."
+  );
+
+  const secondDateSlots = await harness.handler.handleFlow({
+    action: "data_exchange",
+    screen: SCREENS.DATE,
+    flow_token: flowToken,
+    version: "3.0",
+    data: { fecha_token: dates.data.fechas[1].id },
+  });
+  assert(secondDateSlots.screen === SCREENS.SLOTS, "Debe abrir la segunda fecha.");
+  assert(secondDateSlots.data.slots.length === 2, "Solo debe mostrar horas de la segunda fecha.");
+  assert(
+    secondDateSlots.data.fecha_seleccionada.includes("21 de julio"),
+    "Debe identificar la fecha seleccionada."
+  );
+
+  const firstDateSlots = await harness.handler.handleFlow({
+    action: "data_exchange",
+    screen: SCREENS.DATE,
+    flow_token: flowToken,
+    version: "3.0",
+    data: { fecha_token: dates.data.fechas[0].id },
+  });
+  assert(firstDateSlots.screen === SCREENS.SLOTS, "Debe permitir cambiar de fecha al regresar.");
+  assert(
+    firstDateSlots.data.slots.length === 21,
+    "No debe aplicar el recorte global de veinte horarios."
+  );
+  assert(
+    harness.calls.filter((call) => call === "consultar_agenda").length === 3,
+    "Debe reconsultar HUN al seleccionar cada fecha."
+  );
+
+  const persistedSessions = JSON.stringify(
+    harness.dbWrites.filter((write) => write.type === "session")
+  );
+  assert(!persistedSessions.includes("2026-07-20"), "Supabase no debe guardar la fecha elegida.");
+  assert(!persistedSessions.includes("890201"), "Supabase no debe guardar el procedimiento.");
+}
+
+async function assertStaleDateAndSlotAreRecoverable() {
+  const staleDateHarness = createHarness({ multipleDates: true });
+  const { flowToken, dates } = await navigateToDates(staleDateHarness);
+  staleDateHarness.setAgendaFilter((rows) =>
+    rows.filter((row) => row.fecha_atencion === "2026-07-20")
+  );
+  const staleDate = await staleDateHarness.handler.handleFlow({
+    action: "data_exchange",
+    screen: SCREENS.DATE,
+    flow_token: flowToken,
+    version: "3.0",
+    data: { fecha_token: dates.data.fechas[1].id },
+  });
+  assert(staleDate.screen === SCREENS.DATE, "Una fecha agotada debe refrescar las fechas.");
+  assert(staleDate.data.fechas.length === 1, "Debe retirar la fecha que perdio sus cupos.");
+  assert(/cambiaron/i.test(staleDate.data.error_message), "Debe explicar que los cupos cambiaron.");
+
+  const staleSlotHarness = createHarness({ multipleDates: true });
+  const navigation = await navigateToSlots(staleSlotHarness);
+  const lostToken = navigation.slots.data.slots[0].id;
+  staleSlotHarness.setAgendaFilter((rows) =>
+    rows.filter(
+      (row) =>
+        row.fecha_atencion !== "2026-07-20" || row.hora_inicial !== "07:00:00"
+    )
+  );
+  const staleSlot = await staleSlotHarness.handler.handleFlow({
+    action: "data_exchange",
+    screen: SCREENS.SLOTS,
+    flow_token: navigation.flowToken,
+    version: "3.0",
+    data: { slot: lostToken },
+  });
+  assert(staleSlot.screen === SCREENS.SLOTS, "Un horario perdido debe refrescar el mismo dia.");
+  assert(staleSlot.data.slots.length === 20, "Debe conservar los demas horarios del dia.");
+  assert(/no esta disponible/i.test(staleSlot.data.error_message), "Debe informar el horario perdido.");
 }
 
 async function assertProcedureFallbacks() {
@@ -318,6 +463,8 @@ async function assertLostSlot() {
 
 async function main() {
   assertFlowUsesWholeDynamicProperties();
+  await assertDatesAreSeparatedFromSlots();
+  await assertStaleDateAndSlotAreRecoverable();
   await assertProcedureFallbacks();
   await assertSuccessfulSaga();
   await assertAssignmentRejected();

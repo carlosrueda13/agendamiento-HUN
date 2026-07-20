@@ -54,9 +54,10 @@ Se construira un MVP operativo para agendar, confirmar, cancelar y ofrecer citas
 | CANCEL-002 | Implementar verificacion asincrona de cancelacion | Sprint 4 - Cancelacion y reagendamiento | `feature`, `backend`, `api` | CANCEL-001 |
 | RESCH-001 | Evaluar estrategia de reagendamiento | Sprint 4 - Cancelacion y reagendamiento | `needs-discussion`, `blocked` | CANCEL-002, CORE-005 |
 | RESCH-002 | Implementar Flow y saga de reagendamiento | Sprint 4 - Cancelacion y reagendamiento | `feature`, `backend`, `api`, `flow` | RESCH-001, CANCEL-002, CORE-005, FLOW-001 |
+| RESCH-003 | Separar seleccion de fecha y hora en reagendamiento | Sprint 4 - Cancelacion y reagendamiento | `feature`, `backend`, `flow`, `testing` | RESCH-002 |
 | ADMIN-001 | Crear consultas administrativas por perfil | Sprint 5 - Operacion y reportes | `feature`, `backend`, `api` | CORE-002, CAMPAIGN-001, CANCEL-002 |
 | ADMIN-002 | Crear exportes por perfil de trazabilidad | Sprint 5 - Operacion y reportes | `feature`, `backend`, `docs` | ADMIN-001 |
-| QA-001 | Construir matriz de pruebas funcionales | Sprint 6 - QA y seguridad | `testing`, `docs` | CORE-005, FLOW-004, CAMPAIGN-003, CANCEL-002, RESCH-002, NOTIF-001 |
+| QA-001 | Construir matriz de pruebas funcionales | Sprint 6 - QA y seguridad | `testing`, `docs` | CORE-005, FLOW-004, CAMPAIGN-003, CANCEL-002, RESCH-002, RESCH-003, NOTIF-001 |
 | QA-002 | Implementar pruebas automatizadas de modulos criticos | Sprint 6 - QA y seguridad | `testing`, `backend` | QA-001 |
 | SEC-001 | Revisar proteccion de datos personales y secretos | Sprint 6 - QA y seguridad | `security`, `backend`, `docs` | CORE-002, ADMIN-001 |
 | DEPLOY-001 | Preparar despliegue y verificacion de estabilidad | Sprint 7 - Deploy y cierre contractual | `infra`, `backend`, `testing` | QA-002, SEC-001 |
@@ -716,6 +717,34 @@ Implementar un tercer WhatsApp Flow independiente para modificar una cita existe
 - [ ] Supabase no guarda documento plano, numero de cita, medico, fecha/hora, procedimiento ni payload HUN completo.
 - [ ] Existen pruebas para cupo perdido, asignacion rechazada, cancelacion fallida, reinicio e idempotencia.
 
+## [RESCH-003] Separar seleccion de fecha y hora en reagendamiento
+
+**Labels**: `feature`, `backend`, `flow`, `testing`
+**Depends on**: RESCH-002
+**Blocked by**: Publicacion en Meta de `flow-reagendamiento.json` con `FECHA_REAGENDAMIENTO`.
+
+### Descripcion
+Corregir el recorte global de cupos del reagendamiento para que el paciente seleccione primero uno de todos los dias disponibles y despues vea unicamente los horarios de ese dia. HUN sigue siendo la fuente de verdad y cada seleccion se valida mediante token opaco y reconsulta, sin persistir fecha, procedimiento ni slots en Supabase.
+
+### Microsteps
+1. Publicar `FECHA_REAGENDAMIENTO` con `Dropdown` de fechas y mantener un `routing_model` aciclico compatible con Meta.
+2. Reemplazar el limite global de slots por agrupacion completa de cupos equivalentes por fecha.
+3. Generar `resdate_v1` firmado y ligado a sesion, especialidad, procedimiento, fecha y expiracion.
+4. Reconsultar HUN al elegir fecha y mostrar solo sus horarios.
+5. Permitir regresar con la navegacion nativa para seleccionar otro dia y reemplazar el contexto temporal anterior.
+6. Reconsultar HUN al elegir hora y antes de confirmar la saga.
+7. Manejar fecha agotada, horario perdido y ausencia total de cupos sin modificar la cita original.
+8. Probar multiples fechas, mas de veinte cupos en el primer dia, cambio de fecha y minimizacion de Supabase.
+
+### Criterios de aceptacion
+- [ ] La lista de fechas no depende de un recorte global de horarios.
+- [ ] Un primer dia con mas de veinte cupos no oculta fechas posteriores.
+- [ ] El paciente ve exclusivamente los horarios de la fecha seleccionada y puede regresar para cambiarla.
+- [ ] Los tokens de fecha y slot son opacos, firmados y se validan por reconsulta HUN.
+- [ ] El `routing_model` no contiene ciclos rechazados por Meta.
+- [ ] Supabase no recibe fecha, hora, procedimiento, medico, documento, numero de cita ni payload HUN.
+- [ ] La saga de asignar, confirmar y cancelar conserva idempotencia y manejo de cupo perdido.
+
 ### Sprint 5 - Operacion y reportes
 
 ## [ADMIN-001] Crear consultas administrativas por perfil
@@ -941,9 +970,9 @@ Preparar el cierre contractual con informe final de pruebas y documento de traba
 7. Ejecutar CAMPAIGN-001 solo despues de SETUP-005; luego CAMPAIGN-002, FLOW-004 y CAMPAIGN-003. CAMPAIGN-003 no debe enviar plantillas que abran el Flow de autoagendamiento; debe esperar a que `CAMPAIGN_FLOW_ID` este creado/publicado. Si el API real de demanda inducida/orquestador no esta disponible, CAMPAIGN-002 debe avanzar con el adaptador/mock contractual, sin declarar `CONTRACT_READY` salvo waiver formal.
 8. Ejecutar NOTIF-001 despues de CORE-005 y CAMPAIGN-001; al cerrar NOTIF-001 se debe elevar advertencia si el proveedor/API de correo no esta definido. NOTIF-002 solo puede hacer envio real cuando exista proveedor/API aprobado; si no, se limita a interfaz/adaptador placeholder.
 9. Ejecutar CANCEL-001 y CANCEL-002 despues de estabilizar el cliente HUN y trazabilidad.
-10. Ejecutar RESCH-001 despues de CANCEL-002 y CORE-005. Si se aprueba la estrategia, ejecutar RESCH-002 con un tercer Flow publicado antes de cerrar la matriz funcional.
+10. Ejecutar RESCH-001 despues de CANCEL-002 y CORE-005. Si se aprueba la estrategia, ejecutar RESCH-002 con un tercer Flow publicado y RESCH-003 para separar fecha/hora antes de cerrar la matriz funcional.
 11. Ejecutar ADMIN-001 y ADMIN-002 cuando existan datos de eventos operativos, campanas y cancelaciones verificadas contra HUN.
-12. Ejecutar QA-001 cuando los flujos principales, FLOW-004, RESCH-002 y NOTIF-001 esten implementados; QA-002 despues de definir la matriz.
+12. Ejecutar QA-001 cuando los flujos principales, FLOW-004, RESCH-002, RESCH-003 y NOTIF-001 esten implementados; QA-002 despues de definir la matriz.
 13. Ejecutar SEC-001 antes de cualquier despliegue operativo.
 14. Ejecutar DEPLOY-001 despues de QA-002 y SEC-001.
 15. Ejecutar DOCS-001 y DOCS-002 al cierre, usando evidencia de QA, seguridad, despliegue y operacion.
@@ -957,7 +986,7 @@ Preparar el cierre contractual con informe final de pruebas y documento de traba
 - Campana de oferta de citas: CAMPAIGN-001, CAMPAIGN-002, FLOW-004, CAMPAIGN-003.
 - Recordatorios y confirmaciones: NOTIF-001, NOTIF-002.
 - Cancelacion: CANCEL-001, CANCEL-002.
-- Reagendamiento: RESCH-001, RESCH-002, QA-001, DOCS-002.
+- Reagendamiento: RESCH-001, RESCH-002, RESCH-003, QA-001, DOCS-002.
 - Trazabilidad administrativa por perfil: CORE-002, ADMIN-001, ADMIN-002.
 - Pruebas funcionales y estabilidad: QA-001, QA-002, DEPLOY-001.
 - Seguridad, confidencialidad y datos personales: SEC-001.

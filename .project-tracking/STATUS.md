@@ -1,7 +1,7 @@
 # Project Status - Agendamiento HUN por WhatsApp
 
-Ultima actualizacion: 2026-07-19 19:39
-Fase activa: Sprint 5 - Operacion y reportes
+Ultima actualizacion: 2026-07-19
+Fase activa: Sprint 4 - Cancelacion y reagendamiento
 
 ## Resumen de avance
 
@@ -11,19 +11,19 @@ Fase activa: Sprint 5 - Operacion y reportes
 | Sprint 1 - Core agendamiento | 5 | 5 | 0 | 0 | 0 |
 | Sprint 2 - Integracion WhatsApp | 4 | 4 | 0 | 0 | 0 |
 | Sprint 3 - Campanas y notificaciones | 6 | 6 | 0 | 0 | 0 |
-| Sprint 4 - Cancelacion y reagendamiento | 4 | 4 | 0 | 0 | 0 |
+| Sprint 4 - Cancelacion y reagendamiento | 5 | 4 | 1 | 0 | 0 |
 | Sprint 5 - Operacion y reportes | 2 | 0 | 0 | 0 | 2 |
 | Sprint 6 - QA y seguridad | 3 | 0 | 0 | 0 | 3 |
 | Sprint 7 - Deploy y cierre contractual | 3 | 0 | 0 | 0 | 3 |
 | Sprint 8 - API de campanas para panel del hospital | 11 | 11 | 0 | 0 | 0 |
-| **TOTAL** | **43** | **35** | **0** | **0** | **8** |
+| **TOTAL** | **44** | **35** | **1** | **0** | **8** |
 
-Avance global: 35 / 43 tickets completados (81.4%)
+Avance global: 35 / 44 tickets completados (79.5%)
 
 ## Estado actual
 
-**Proximo ticket recomendado:** ADMIN-001 - Crear consultas administrativas por perfil.
-**Tickets en progreso:** -
+**Proximo ticket recomendado:** RESCH-003 - Separar seleccion de fecha y hora en reagendamiento.
+**Tickets en progreso:** RESCH-003
 **Tickets bloqueados:** -
 
 ### Tickets bloqueados por dependencias no resueltas
@@ -738,7 +738,7 @@ Avance global: 35 / 43 tickets completados (81.4%)
 **Estado:** `done`
 **Labels:** `feature`, `backend`, `api`, `flow`
 **Depende de:** RESCH-001, CANCEL-002, CORE-005, FLOW-001
-**Desbloquea:** QA-001
+**Desbloquea:** RESCH-003
 
 **Microsteps:**
 - [x] Crear y publicar `flow-reagendamiento.json` con pantallas exclusivas de identificacion, cita original, slots, confirmacion y final de procesamiento.
@@ -767,6 +767,38 @@ Avance global: 35 / 43 tickets completados (81.4%)
 
 **Evidencia:** Flow Meta `1055273933723521`, `flow-reagendamiento.json` publicado y health check exitoso, confirmados por el usuario el 2026-07-14. Implementacion en `lib/rescheduleHandler.js`, `lib/inboundRouter.js`, `lib/flowHandler.js`, `server.js`, `lib/db.js`, `supabase/007_reschedule_operation_states.sql`, `.env.example`, `README.md`, `SETUP_LOCAL_CHECKLIST.md` y `scripts/check-reschedule-flow.js`. Verificaciones ejecutadas: `node --check` para JS modificados, `node scripts/check-reschedule-flow.js`, `node scripts/check-inbound-router.js`, `node scripts/check-sensitive-persistence.js` y `npm.cmd test`. Correccion visual del 2026-07-19: nueva version de `flow-reagendamiento.json` publicada en Meta y confirmada por el usuario; `node --check lib/rescheduleHandler.js`, `node --check scripts/check-reschedule-flow.js`, `node scripts/check-reschedule-flow.js`, `npm.cmd test` y `git diff --check` exitosos.
 **Notas:** Aprobado por el usuario el 2026-07-14. Variables `RESCHEDULE_FLOW_ID` y `RESCHEDULE_FLOW_SCREEN_ID` configuradas en Render antes de iniciar cambios dependientes. La saga aprobada asigna/confirma primero la nueva cita y cancela/verifica despues la original. El proceso usa tokens opacos con TTL, idempotencia no reversible, estados agregados no sensibles y revision manual si falla la cancelacion despues de crear la nueva cita. Ajuste 2026-07-19: se corrigio la referencia dinamica de procedimiento para que `TextBody.text` sea completamente dinamico; el backend entrega el rotulo `Procedimiento: ...` y reutiliza nombre/codigo de la cita original cuando la agenda no trae descripcion. Las pruebas ahora rechazan propiedades que mezclen texto estatico con `${data.*}` o `${form.*}`.
+
+---
+
+### RESCH-003 - Separar seleccion de fecha y hora en reagendamiento
+
+**Estado:** `in_progress`
+**Labels:** `feature`, `backend`, `flow`, `testing`
+**Depende de:** RESCH-002
+**Desbloquea:** QA-001
+
+**Microsteps:**
+- [x] Publicar `flow-reagendamiento.json` con `FECHA_REAGENDAMIENTO`, Dropdown de fechas y modelo de rutas aciclico.
+- [x] Eliminar el recorte global que ocultaba fechas posteriores.
+- [x] Agrupar todos los cupos equivalentes por fecha y generar `resdate_v1` firmado.
+- [x] Reconsultar HUN al seleccionar fecha y mostrar solo los horarios de ese dia.
+- [x] Permitir cambiar de fecha mediante la navegacion nativa de regreso del Flow.
+- [x] Reconsultar HUN al seleccionar hora y antes de confirmar la modificacion.
+- [x] Mantener fecha, hora, procedimiento y candidatos exclusivamente en memoria temporal.
+- [x] Agregar pruebas con mas de veinte cupos en el primer dia y disponibilidad en fechas posteriores.
+
+**Criterios de aceptacion:**
+- [x] Todas las fechas con cupos equivalentes dentro de la ventana HUN aparecen en el Dropdown.
+- [x] Un dia con mas de veinte horarios no oculta dias posteriores.
+- [x] La pantalla de horas contiene exclusivamente cupos de la fecha seleccionada.
+- [x] El usuario puede regresar y consultar otra fecha dentro de la misma sesion.
+- [x] Fecha y slot se validan mediante tokens opacos y reconsulta HUN.
+- [x] El `routing_model` es aciclico y fue aceptado por Meta.
+- [x] Supabase no guarda fecha, hora, procedimiento, medico, documento, numero de cita ni slots completos.
+- [x] La saga e idempotencia de RESCH-002 permanecen cubiertas por pruebas.
+
+**Evidencia:** `flow-reagendamiento.json` corregido, aprobado y publicado en Meta por el usuario el 2026-07-19; implementacion en `lib/rescheduleHandler.js`; pruebas en `scripts/check-reschedule-flow.js`; documentacion en `README.md`, `PLAN_SPRINTS_AGENDAMIENTO_HUN.md` y `.project-tracking/DECISIONS.md`; `node --check` exitoso; prueba especifica de reagendamiento exitosa; `npm.cmd test` completo exitoso; `git diff --check` sin errores.
+**Notas:** Meta rechazo inicialmente las autorutas de fecha y horarios por ciclo en `routing_model`. El plan se ajusto a rutas aciclicas: el cambio de fecha usa la flecha nativa y cada dia muestra todos sus horarios en una sola pantalla. El ticket queda en progreso hasta completar verificaciones y recibir aprobacion del usuario.
 
 ---
 
@@ -838,7 +870,7 @@ Avance global: 35 / 43 tickets completados (81.4%)
 
 **Estado:** `pending`
 **Labels:** `testing`, `docs`
-**Depende de:** CORE-005, FLOW-004, CAMPAIGN-003, CANCEL-002, RESCH-002, NOTIF-001
+**Depende de:** CORE-005, FLOW-004, CAMPAIGN-003, CANCEL-002, RESCH-002, RESCH-003, NOTIF-001
 **Desbloquea:** QA-002, DOCS-001
 
 **Microsteps:**
