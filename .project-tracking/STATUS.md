@@ -1,6 +1,6 @@
 # Project Status - Agendamiento HUN por WhatsApp
 
-Ultima actualizacion: 2026-07-14 23:44
+Ultima actualizacion: 2026-07-19 19:39
 Fase activa: Sprint 5 - Operacion y reportes
 
 ## Resumen de avance
@@ -765,8 +765,8 @@ Avance global: 35 / 43 tickets completados (81.4%)
 - [x] Supabase no guarda documento plano, numero de cita, medico, fecha/hora, procedimiento ni payload HUN completo.
 - [x] Existen pruebas para cupo perdido, asignacion rechazada, cancelacion fallida, reinicio e idempotencia.
 
-**Evidencia:** Flow Meta `1055273933723521`, `flow-reagendamiento.json` publicado y health check exitoso, confirmados por el usuario el 2026-07-14. Implementacion en `lib/rescheduleHandler.js`, `lib/inboundRouter.js`, `lib/flowHandler.js`, `server.js`, `lib/db.js`, `supabase/007_reschedule_operation_states.sql`, `.env.example`, `README.md`, `SETUP_LOCAL_CHECKLIST.md` y `scripts/check-reschedule-flow.js`. Verificaciones ejecutadas: `node --check` para JS modificados, `node scripts/check-reschedule-flow.js`, `node scripts/check-inbound-router.js`, `node scripts/check-sensitive-persistence.js` y `npm.cmd test`.
-**Notas:** Aprobado por el usuario el 2026-07-14. Variables `RESCHEDULE_FLOW_ID` y `RESCHEDULE_FLOW_SCREEN_ID` configuradas en Render antes de iniciar cambios dependientes. La saga aprobada asigna/confirma primero la nueva cita y cancela/verifica despues la original. El proceso usa tokens opacos con TTL, idempotencia no reversible, estados agregados no sensibles y revision manual si falla la cancelacion despues de crear la nueva cita.
+**Evidencia:** Flow Meta `1055273933723521`, `flow-reagendamiento.json` publicado y health check exitoso, confirmados por el usuario el 2026-07-14. Implementacion en `lib/rescheduleHandler.js`, `lib/inboundRouter.js`, `lib/flowHandler.js`, `server.js`, `lib/db.js`, `supabase/007_reschedule_operation_states.sql`, `.env.example`, `README.md`, `SETUP_LOCAL_CHECKLIST.md` y `scripts/check-reschedule-flow.js`. Verificaciones ejecutadas: `node --check` para JS modificados, `node scripts/check-reschedule-flow.js`, `node scripts/check-inbound-router.js`, `node scripts/check-sensitive-persistence.js` y `npm.cmd test`. Correccion visual del 2026-07-19: nueva version de `flow-reagendamiento.json` publicada en Meta y confirmada por el usuario; `node --check lib/rescheduleHandler.js`, `node --check scripts/check-reschedule-flow.js`, `node scripts/check-reschedule-flow.js`, `npm.cmd test` y `git diff --check` exitosos.
+**Notas:** Aprobado por el usuario el 2026-07-14. Variables `RESCHEDULE_FLOW_ID` y `RESCHEDULE_FLOW_SCREEN_ID` configuradas en Render antes de iniciar cambios dependientes. La saga aprobada asigna/confirma primero la nueva cita y cancela/verifica despues la original. El proceso usa tokens opacos con TTL, idempotencia no reversible, estados agregados no sensibles y revision manual si falla la cancelacion despues de crear la nueva cita. Ajuste 2026-07-19: se corrigio la referencia dinamica de procedimiento para que `TextBody.text` sea completamente dinamico; el backend entrega el rotulo `Procedimiento: ...` y reutiliza nombre/codigo de la cita original cuando la agenda no trae descripcion. Las pruebas ahora rechazan propiedades que mezclen texto estatico con `${data.*}` o `${form.*}`.
 
 ---
 

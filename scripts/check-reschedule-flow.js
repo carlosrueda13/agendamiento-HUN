@@ -3,6 +3,8 @@ process.env.CANCEL_VERIFY_INITIAL_DELAY_MS = "0";
 process.env.CANCEL_VERIFY_INTERVAL_MS = "0";
 process.env.CANCEL_VERIFY_MAX_ATTEMPTS = "2";
 
+const fs = require("fs");
+const path = require("path");
 const {
   SCREENS,
   createRescheduleHandler,
@@ -66,13 +68,19 @@ function createHarness(options = {}) {
   const hun = {
     consultarCitasDocumento: async () => {
       calls.push("consultar_documento");
-      return [appointmentRow()];
+      const row = appointmentRow();
+      if (options.appointmentWithoutProcedureName) delete row.Procedimiento;
+      return [row];
     },
     getEspecialidades: async () => [{ id: "382", title: "DERMATOLOGIA" }],
     getAgendaPorEspecialidad: async (specialty) => {
       assert(String(specialty) === "382", "Debe consultar la especialidad de la cita original.");
       calls.push("consultar_agenda");
-      return agendaRows(agendaAvailable);
+      const rows = agendaRows(agendaAvailable);
+      if (options.agendaWithoutDescription && rows[0]?.cups?.[0]) {
+        delete rows[0].cups[0].descripcion;
+      }
+      return rows;
     },
     asignarCita: async (payload) => {
       assignmentCount += 1;
@@ -133,7 +141,7 @@ function createHarness(options = {}) {
   };
 }
 
-async function navigateToConfirm(harness) {
+async function navigateToSlots(harness) {
   const flowToken = harness.handler.createFlowSession("573001112233");
   const identified = await harness.handler.handleFlow({
     action: "data_exchange",
@@ -155,6 +163,16 @@ async function navigateToConfirm(harness) {
   });
   assert(slots.screen === SCREENS.SLOTS, "Debe avanzar a horarios equivalentes.");
   assert(slots.data.slots.length === 1, "Debe filtrar cupos de procedimientos diferentes.");
+  return { flowToken, slots };
+}
+
+async function navigateToConfirm(harness) {
+  const { flowToken, slots } = await navigateToSlots(harness);
+  assert(
+    slots.data.procedimiento ===
+      "Procedimiento: CONSULTA DE PRIMERA VEZ POR DERMATOLOGIA",
+    "Debe enviar el rotulo completo de procedimiento como dato dinamico."
+  );
   assert(
     /PRIMERA VEZ/.test(slots.data.slots[0].description),
     "Debe mostrar el mismo procedimiento de la cita original."
@@ -169,6 +187,45 @@ async function navigateToConfirm(harness) {
   });
   assert(confirmation.screen === SCREENS.CONFIRM, "Debe pedir confirmacion explicita.");
   return { flowToken };
+}
+
+function assertFlowUsesWholeDynamicProperties() {
+  const flowPath = path.join(__dirname, "..", "flow-reagendamiento.json");
+  const flow = JSON.parse(fs.readFileSync(flowPath, "utf8"));
+
+  function visit(value, location = "flow") {
+    if (Array.isArray(value)) {
+      value.forEach((item, index) => visit(item, `${location}[${index}]`));
+      return;
+    }
+    if (value && typeof value === "object") {
+      Object.entries(value).forEach(([key, item]) => visit(item, `${location}.${key}`));
+      return;
+    }
+    if (typeof value !== "string" || !/\$\{(?:data|form)\./.test(value)) return;
+    assert(
+      /^\$\{(?:data|form)\.[A-Za-z0-9_]+\}$/.test(value),
+      `${location} mezcla texto estatico con una referencia dinamica.`
+    );
+  }
+
+  visit(flow);
+}
+
+async function assertProcedureFallbacks() {
+  const harness = createHarness({
+    appointmentWithoutProcedureName: true,
+    agendaWithoutDescription: true,
+  });
+  const { slots } = await navigateToSlots(harness);
+  assert(
+    slots.data.procedimiento === "Procedimiento: 890201",
+    "Sin nombre debe mostrar el codigo del procedimiento."
+  );
+  assert(
+    slots.data.slots[0].description === "Procedimiento 890201",
+    "La descripcion del horario debe reutilizar el procedimiento original como fallback."
+  );
 }
 
 async function confirmAndWait(harness, flowToken) {
@@ -260,6 +317,8 @@ async function assertLostSlot() {
 }
 
 async function main() {
+  assertFlowUsesWholeDynamicProperties();
+  await assertProcedureFallbacks();
   await assertSuccessfulSaga();
   await assertAssignmentRejected();
   await assertCancellationFailure();
