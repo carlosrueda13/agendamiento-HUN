@@ -12,6 +12,7 @@ Dejar documentada la configuracion minima para ejecutar el backend localmente y 
 - `WHATSAPP_TOKEN`: token de acceso de WhatsApp Cloud API.
 - `PHONE_NUMBER_ID`: identificador del numero de WhatsApp Cloud API.
 - `GRAPH_API_VERSION`: version de Graph API. Valor por defecto documentado: `v23.0`.
+- `INBOUND_SESSION_TTL_MINUTES`: duracion en minutos del menu y consentimiento efimero en memoria. Opcional, default `30`; al vencer se solicita consentimiento nuevamente.
 
 ### WhatsApp Flow
 

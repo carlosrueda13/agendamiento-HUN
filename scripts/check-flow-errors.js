@@ -70,6 +70,7 @@ hun.asignarCita = async () => {
 wa.sendText = async (to, message) => {
   sentMessages.push({ to, message });
 };
+wa.sendInteractiveButtons = async () => true;
 
 db.guardarSesionTemporal = async (session) => {
   savedSessions.push(session);

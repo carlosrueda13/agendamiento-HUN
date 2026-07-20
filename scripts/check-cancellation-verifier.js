@@ -16,6 +16,7 @@ function createDeps(responses) {
   const finalStates = [];
   const events = [];
   const messages = [];
+  const completionActions = [];
   let calls = 0;
 
   return {
@@ -36,11 +37,16 @@ function createDeps(responses) {
       },
       whatsapp: {
         sendText: async (to, message) => messages.push({ to, message }),
+        sendInteractiveButtons: async (payload) => {
+          completionActions.push(payload);
+          return true;
+        },
       },
     },
     finalStates,
     events,
     messages,
+    completionActions,
     calls: () => calls,
   };
 }
@@ -65,6 +71,8 @@ async function assertSuccessfulVerification() {
   assert.strictEqual(context.finalStates[0].estado, "cancelada");
   assert.strictEqual(context.events[0].status, "cancelada");
   assert(/cancelada correctamente/i.test(context.messages[0].message));
+  assert.strictEqual(context.completionActions.length, 1);
+  assert.strictEqual(context.completionActions[0].buttons.length, 2);
   assert(!JSON.stringify(context.finalStates).includes("111111"));
   assert(!JSON.stringify(context.events).includes("111111"));
   const retained = verifier._private.operations.get(item.cancelOperationId);
@@ -90,6 +98,7 @@ async function assertFailedVerification() {
   assert.strictEqual(context.finalStates[0].estado, "cancelacion_fallida");
   assert.strictEqual(context.events[0].status, "cancelacion_fallida");
   assert(/No pudimos confirmar/i.test(context.messages[0].message));
+  assert.strictEqual(context.completionActions.length, 1);
 }
 
 function assertResponseClassification() {

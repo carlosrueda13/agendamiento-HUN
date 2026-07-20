@@ -510,6 +510,9 @@ Hacer la consulta de citas mas clara para pacientes: seleccionar primero el tipo
 5. Formatear cada cita reservada con especialidad, fecha/hora, procedimiento, profesional y estado resaltados.
 6. Mejorar los mensajes WhatsApp de menu, consentimiento, consulta, agendamiento, cancelacion y resultado de reagendamiento.
 7. Cubrir el payload de lista, el flujo en dos pasos y la exclusion de citas canceladas o atendidas con pruebas automatizadas.
+8. Enviar botones `Volver al menu` y `Finalizar` despues del resultado definitivo de cada proceso.
+9. Mantener el consentimiento aceptado solo en memoria durante el TTL de la sesion y reutilizarlo al volver al menu.
+10. Al finalizar, borrar el estado operativo y la autorizacion efimera para que una conversacion nueva vuelva a solicitar consentimiento.
 
 ### Criterios de aceptacion
 - [ ] El paciente no necesita conocer abreviaturas de documento.
@@ -519,6 +522,10 @@ Hacer la consulta de citas mas clara para pacientes: seleccionar primero el tipo
 - [ ] Los mensajes usan formato legible, resaltados y emojis sin modificar los Flows publicados en Meta.
 - [ ] Documento, telefono y citas permanecen solo en memoria y no llegan a Supabase ni logs.
 - [ ] Las pruebas de consulta, cancelacion, reagendamiento y confirmacion continuan pasando.
+- [ ] Agendar, consultar, modificar y cancelar ofrecen las mismas acciones al terminar.
+- [ ] Volver al menu dentro de la misma sesion no repite el consentimiento.
+- [ ] Finalizar elimina el consentimiento y contexto temporal de la conversacion.
+- [ ] Ninguna operacion asincrona ofrece cierre antes de recibir su resultado definitivo.
 
 ### Sprint 3 - Campanas y notificaciones
 

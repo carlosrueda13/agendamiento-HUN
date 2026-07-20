@@ -91,6 +91,7 @@ Copiar `.env.example` a `.env` para pruebas locales y completar valores reales s
 - `WHATSAPP_TOKEN`
 - `PHONE_NUMBER_ID`
 - `GRAPH_API_VERSION`
+- `INBOUND_SESSION_TTL_MINUTES` opcional; default `30`. Controla cuanto dura en memoria el consentimiento de la sesion conversacional.
 
 ### WhatsApp Flow
 
@@ -275,7 +276,7 @@ Para campanas de demanda inducida, ejecutar tambien las migraciones incrementale
 ## Flujo WhatsApp
 
 1. `POST /webhook` recibe un mensaje entrante o dispara una campana aprobada.
-2. Para mensajes entrantes, el backend envia menu inicial y consentimiento de tratamiento de datos.
+2. Para mensajes entrantes, el backend envia menu inicial y solicita consentimiento de tratamiento de datos una sola vez durante la sesion conversacional. La autorizacion permanece solo en memoria con TTL y no se persiste.
 3. Si el paciente acepta y elige agendar, el backend envia el Flow de autoagendamiento con `FLOW_ID`: identifica al paciente, permite elegir especialidad, muestra solo los nombres de los procedimientos disponibles y despues separa la seleccion de fecha y hora. Los codigos CUPS se usan unicamente en memoria para filtrar la agenda HUN. Si HUN omite una descripcion, `lib/cupsCatalog.js` la resuelve desde `data/cups-2026.json`, generado del catalogo oficial vigente; cualquier descripcion valida de HUN conserva prioridad.
 4. Si el paciente acepta y elige consultar, el backend muestra una lista con los nombres completos de los tipos de documento, pide el numero en un segundo mensaje y consulta HUN solo en memoria.
 5. La respuesta de consulta muestra exclusivamente citas proximas con estado exacto `Reservada`, en un formato legible con fecha, procedimiento y profesional.
@@ -285,6 +286,7 @@ Para campanas de demanda inducida, ejecutar tambien las migraciones incrementale
 9. La saga de modificacion asigna y confirma primero la nueva cita; solo despues cancela y verifica la original. Si la segunda operacion falla, informa posible doble reserva y marca revision manual.
 10. En Flows, Meta llama `POST /flow-endpoint` con payload cifrado.
 11. `lib/flowCrypto.js` descifra la solicitud y `lib/flowHandler.js` enruta cada Flow consultando HUN.
+12. Al terminar agendamiento, consulta, modificacion o cancelacion, `lib/conversationLifecycle.js` ofrece `Volver al menu` o `Finalizar`. Volver conserva el consentimiento vigente de esa sesion; finalizar elimina el contexto y la autorizacion efimera.
 12. El backend responde a Meta con respuesta cifrada y la confirmacion final se envia por WhatsApp cuando HUN cierra la operacion.
 
 ## Documentacion de trabajo

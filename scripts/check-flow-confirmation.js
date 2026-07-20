@@ -8,6 +8,7 @@ const wa = require("../lib/whatsapp");
 const savedSessions = [];
 const savedEvents = [];
 const sentMessages = [];
+const sentCompletionActions = [];
 const assignedPayloads = [];
 const recipientStateUpdates = [];
 let agendaMode = "available";
@@ -74,6 +75,10 @@ hun.consultarCitaNumero = async () => [
 
 wa.sendText = async (to, message) => {
   sentMessages.push({ to, message });
+};
+wa.sendInteractiveButtons = async (payload) => {
+  sentCompletionActions.push(payload);
+  return true;
 };
 
 db.guardarSesionTemporal = async (session) => {
@@ -178,7 +183,10 @@ async function assertConfirmRequeriesAndAssignsFreshSlot() {
   );
 
   await waitFor(
-    () => assignedPayloads.length === 1 && sentMessages.length === 1,
+    () =>
+      assignedPayloads.length === 1 &&
+      sentMessages.length === 1 &&
+      sentCompletionActions.length === 1,
     "Asignacion asincrona no termino."
   );
 
@@ -190,6 +198,10 @@ async function assertConfirmRequeriesAndAssignsFreshSlot() {
     "Debe incluir procedimiento real consultado por numero de cita."
   );
   assert(sentMessages[0].message.includes("1534700"), "Numero de cita solo debe enviarse al paciente.");
+  assert(
+    sentCompletionActions[0].buttons.length === 2,
+    "Agendamiento terminado debe ofrecer volver al menu o finalizar."
+  );
   assertNoSensitiveEventPayloads();
 }
 

@@ -73,6 +73,7 @@ function createHarness(options = {}) {
   const calls = [];
   const dbWrites = [];
   const messages = [];
+  const completionActions = [];
   let assignmentCount = 0;
   let cancelCount = 0;
   let agendaAvailable = true;
@@ -137,6 +138,10 @@ function createHarness(options = {}) {
         messages.push(message);
         return true;
       },
+      sendInteractiveButtons: async (payload) => {
+        completionActions.push(payload);
+        return true;
+      },
     },
     now: () => Date.parse("2026-07-14T12:00:00-05:00"),
   });
@@ -146,6 +151,7 @@ function createHarness(options = {}) {
     dbWrites,
     handler,
     messages,
+    completionActions,
     setAgendaAvailable: (value) => {
       agendaAvailable = value;
     },
@@ -418,6 +424,7 @@ async function assertSuccessfulSaga() {
   );
   assert(operation.state === "reagendamiento_completado", "Debe cerrar como completado.");
   assert(/modificada correctamente/i.test(harness.messages.at(-1)), "Debe notificar exito final.");
+  assert(harness.completionActions.length === 1, "Debe ofrecer acciones al finalizar.");
   const persisted = JSON.stringify(harness.dbWrites);
   assert(!persisted.includes("123456"), "Supabase no debe recibir documento plano.");
   assert(!persisted.includes("111111"), "Supabase no debe recibir cita original.");

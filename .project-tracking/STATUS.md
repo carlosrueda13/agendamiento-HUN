@@ -9,21 +9,21 @@ Fase activa: Sprint 4 - Cancelacion y reagendamiento
 |------|-------|-------------|-------------|------------|------------|
 | Sprint 0 - Setup | 5 | 5 | 0 | 0 | 0 |
 | Sprint 1 - Core agendamiento | 7 | 7 | 0 | 0 | 0 |
-| Sprint 2 - Integracion WhatsApp | 5 | 4 | 1 | 0 | 0 |
+| Sprint 2 - Integracion WhatsApp | 5 | 5 | 0 | 0 | 0 |
 | Sprint 3 - Campanas y notificaciones | 6 | 6 | 0 | 0 | 0 |
 | Sprint 4 - Cancelacion y reagendamiento | 5 | 4 | 1 | 0 | 0 |
 | Sprint 5 - Operacion y reportes | 2 | 0 | 0 | 0 | 2 |
 | Sprint 6 - QA y seguridad | 3 | 0 | 0 | 0 | 3 |
 | Sprint 7 - Deploy y cierre contractual | 3 | 0 | 0 | 0 | 3 |
 | Sprint 8 - API de campanas para panel del hospital | 11 | 11 | 0 | 0 | 0 |
-| **TOTAL** | **47** | **37** | **2** | **0** | **8** |
+| **TOTAL** | **47** | **38** | **1** | **0** | **8** |
 
-Avance global: 37 / 47 tickets completados (78.7%)
+Avance global: 38 / 47 tickets completados (80.9%)
 
 ## Estado actual
 
-**Proximo ticket recomendado:** Finalizar INTAKE-002 - Mejorar identificacion y consulta conversacional.
-**Tickets en progreso:** RESCH-003, INTAKE-002
+**Proximo ticket recomendado:** Finalizar RESCH-003 - Separar seleccion de fecha y hora en reagendamiento.
+**Tickets en progreso:** RESCH-003
 **Tickets bloqueados:** -
 
 ### Tickets bloqueados por dependencias no resueltas
@@ -520,7 +520,7 @@ Avance global: 37 / 47 tickets completados (78.7%)
 
 ### INTAKE-002 - Mejorar identificacion y consulta conversacional
 
-**Estado:** `in_progress`
+**Estado:** `done`
 **Labels:** `feature`, `backend`, `whatsapp`, `ux`, `testing`
 **Depende de:** INTAKE-001, CORE-001
 **Desbloquea:** QA-001
@@ -533,6 +533,10 @@ Avance global: 37 / 47 tickets completados (78.7%)
 - [x] Excluir del mensaje citas canceladas, atendidas y cualquier otro estado.
 - [x] Mejorar con resaltados y emojis los mensajes conversacionales y confirmaciones asincronas.
 - [x] Agregar pruebas del payload de lista, recorrido en dos pasos y filtro por estado.
+- [x] Enviar acciones `Volver al menu` y `Finalizar` despues del resultado definitivo de agendar, consultar, modificar o cancelar.
+- [x] Conservar el consentimiento solo en memoria durante el TTL de la sesion para no solicitarlo en cada gestion.
+- [x] Revocar consentimiento y limpiar estado operativo al finalizar la conversacion.
+- [x] Mantener pendiente cualquier operacion asincrona hasta su resultado antes de ofrecer acciones de cierre.
 
 **Criterios de aceptacion:**
 - [x] El paciente puede elegir Cedula de ciudadania, Cedula de extranjeria, Permiso temporal, Tarjeta de identidad, Registro civil o Pasaporte sin conocer su abreviatura.
@@ -541,9 +545,12 @@ Avance global: 37 / 47 tickets completados (78.7%)
 - [x] Los mensajes son mas legibles y no requieren modificar ningun Flow publicado en Meta.
 - [x] No se persisten documento, telefono, citas ni payloads HUN.
 - [x] Las pruebas especificas de entrada, cancelacion, reagendamiento y confirmacion son exitosas.
+- [x] Volver al menu durante la misma sesion no repite el consentimiento.
+- [x] Finalizar elimina la autorizacion efimera y una conversacion posterior vuelve a solicitarla.
+- [x] Los cuatro procesos ofrecen las mismas acciones solo despues de su resultado final.
 
-**Evidencia:** implementacion en `lib/inboundRouter.js`, `lib/whatsapp.js`, `lib/flowHandler.js`, `lib/cancellationVerifier.js` y `lib/rescheduleHandler.js`; pruebas en `scripts/check-inbound-router.js`, `scripts/check-cancellation-verifier.js`, `scripts/check-reschedule-flow.js` y `scripts/check-flow-confirmation.js`; documentacion en `README.md` y `PLAN_SPRINTS_AGENDAMIENTO_HUN.md`; `npm.cmd test` completo exitoso el 2026-07-19.
-**Notas:** No requiere publicar JSON ni configurar acciones en Meta porque usa mensajes interactivos estandar de WhatsApp Cloud API. El ticket queda en progreso hasta recibir aprobacion del usuario.
+**Evidencia:** implementacion en `lib/conversationLifecycle.js`, `lib/inboundRouter.js`, `lib/whatsapp.js`, `lib/flowHandler.js`, `lib/cancellationVerifier.js` y `lib/rescheduleHandler.js`; pruebas en `scripts/check-conversation-lifecycle.js`, `scripts/check-inbound-router.js`, `scripts/check-cancellation-verifier.js`, `scripts/check-reschedule-flow.js` y `scripts/check-flow-confirmation.js`; documentacion en `README.md` y `PLAN_SPRINTS_AGENDAMIENTO_HUN.md`; `npm.cmd test` completo exitoso el 2026-07-19.
+**Notas:** Aprobado por el usuario el 2026-07-19. No requiere publicar JSON ni configurar acciones en Meta porque usa mensajes interactivos estandar de WhatsApp Cloud API. El consentimiento vive en un mapa de memoria separado del contexto de cada gestion, vence con `INBOUND_SESSION_TTL_MINUTES` y se elimina explicitamente al finalizar.
 
 ---
 

@@ -6,6 +6,16 @@ o que surgen durante el desarrollo.
 
 ---
 
+## [2026-07-19] Reutilizar consentimiento por sesion y ofrecer cierre explicito
+
+**Ticket relacionado:** INTAKE-002
+**Decision:** El consentimiento aceptado se conserva exclusivamente en memoria durante el TTL configurado de la sesion conversacional. El paciente puede volver al menu y realizar otra gestion sin repetirlo. Despues del resultado definitivo de agendamiento, consulta, modificacion o cancelacion, WhatsApp ofrece `Volver al menu` y `Finalizar`. Finalizar borra tanto el contexto operativo como el consentimiento efimero.
+**Motivo:** Solicitar el mismo consentimiento en cada gestion deteriora el recorrido, mientras conservarlo fuera de la sesion contradice la minimizacion aprobada. Un cierre explicito permite al paciente revocar el contexto de la conversacion y evita que una operacion posterior reutilice una autorizacion anterior.
+**Alternativas descartadas:** Persistir el consentimiento en Supabase; descartado porque no existe requerimiento de auditoria legal aprobado y ampliaria datos almacenados. Incluir botones dentro de cada Flow; descartado porque los procesos conversacionales y asincronos tambien necesitan el mismo cierre y obligaria a republicar varios Flows. Ofrecer cierre antes de finalizar operaciones asincronas; descartado porque podria ocultar resultados pendientes de HUN.
+**Impacto:** `lib/conversationLifecycle.js` centraliza botones y mensaje de cierre. `lib/inboundRouter.js` separa consentimiento y contexto operativo en mapas con TTL. Agendamiento, cancelacion y reagendamiento envian las acciones solo tras su resultado final. No cambia ningun JSON de Meta ni se agregan datos a Supabase.
+
+---
+
 ## [2026-07-19] Resolver descripciones CUPS con catalogo oficial local
 
 **Ticket relacionado:** CORE-007
