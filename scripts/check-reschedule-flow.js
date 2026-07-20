@@ -323,6 +323,16 @@ async function assertDatesAreSeparatedFromSlots() {
   );
   assert(!persistedSessions.includes("2026-07-20"), "Supabase no debe guardar la fecha elegida.");
   assert(!persistedSessions.includes("890201"), "Supabase no debe guardar el procedimiento.");
+
+  const sessionWrites = harness.dbWrites.filter((write) => write.type === "session");
+  assert(sessionWrites.length > 0, "Debe persistir el estado temporal del Flow.");
+  sessionWrites.forEach((write) => {
+    assert(
+      typeof write.expires_at === "string" &&
+        new Date(write.expires_at).toISOString() === write.expires_at,
+      "El vencimiento persistido debe ser un timestamp ISO valido."
+    );
+  });
 }
 
 async function assertStaleDateAndSlotAreRecoverable() {

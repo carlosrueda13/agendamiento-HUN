@@ -1,7 +1,7 @@
 # Project Status - Agendamiento HUN por WhatsApp
 
 Ultima actualizacion: 2026-07-19
-Fase activa: Sprint 4 - Cancelacion y reagendamiento
+Fase activa: Sprint 5 - Operacion y reportes
 
 ## Resumen de avance
 
@@ -11,19 +11,19 @@ Fase activa: Sprint 4 - Cancelacion y reagendamiento
 | Sprint 1 - Core agendamiento | 7 | 7 | 0 | 0 | 0 |
 | Sprint 2 - Integracion WhatsApp | 5 | 5 | 0 | 0 | 0 |
 | Sprint 3 - Campanas y notificaciones | 6 | 6 | 0 | 0 | 0 |
-| Sprint 4 - Cancelacion y reagendamiento | 5 | 4 | 1 | 0 | 0 |
+| Sprint 4 - Cancelacion y reagendamiento | 5 | 5 | 0 | 0 | 0 |
 | Sprint 5 - Operacion y reportes | 2 | 0 | 0 | 0 | 2 |
 | Sprint 6 - QA y seguridad | 3 | 0 | 0 | 0 | 3 |
 | Sprint 7 - Deploy y cierre contractual | 3 | 0 | 0 | 0 | 3 |
 | Sprint 8 - API de campanas para panel del hospital | 11 | 11 | 0 | 0 | 0 |
-| **TOTAL** | **47** | **38** | **1** | **0** | **8** |
+| **TOTAL** | **47** | **39** | **0** | **0** | **8** |
 
-Avance global: 38 / 47 tickets completados (80.9%)
+Avance global: 39 / 47 tickets completados (83.0%)
 
 ## Estado actual
 
-**Proximo ticket recomendado:** Finalizar RESCH-003 - Separar seleccion de fecha y hora en reagendamiento.
-**Tickets en progreso:** RESCH-003
+**Proximo ticket recomendado:** ADMIN-001 - Crear consultas administrativas por perfil.
+**Tickets en progreso:** -
 **Tickets bloqueados:** -
 
 ### Tickets bloqueados por dependencias no resueltas
@@ -879,7 +879,7 @@ Avance global: 38 / 47 tickets completados (80.9%)
 
 ### RESCH-003 - Separar seleccion de fecha y hora en reagendamiento
 
-**Estado:** `in_progress`
+**Estado:** `done`
 **Labels:** `feature`, `backend`, `flow`, `testing`
 **Depende de:** RESCH-002
 **Desbloquea:** QA-001
@@ -904,8 +904,8 @@ Avance global: 38 / 47 tickets completados (80.9%)
 - [x] Supabase no guarda fecha, hora, procedimiento, medico, documento, numero de cita ni slots completos.
 - [x] La saga e idempotencia de RESCH-002 permanecen cubiertas por pruebas.
 
-**Evidencia:** `flow-reagendamiento.json` corregido, aprobado y publicado en Meta por el usuario el 2026-07-19; implementacion en `lib/rescheduleHandler.js`; pruebas en `scripts/check-reschedule-flow.js`; documentacion en `README.md`, `PLAN_SPRINTS_AGENDAMIENTO_HUN.md` y `.project-tracking/DECISIONS.md`; `node --check` exitoso; prueba especifica de reagendamiento exitosa; `npm.cmd test` completo exitoso; `git diff --check` sin errores.
-**Notas:** Meta rechazo inicialmente las autorutas de fecha y horarios por ciclo en `routing_model`. El plan se ajusto a rutas aciclicas: el cambio de fecha usa la flecha nativa y cada dia muestra todos sus horarios en una sola pantalla. El ticket queda en progreso hasta completar verificaciones y recibir aprobacion del usuario.
+**Evidencia:** `flow-reagendamiento.json` corregido, aprobado y publicado en Meta por el usuario el 2026-07-19; implementacion en `lib/rescheduleHandler.js`; pruebas en `scripts/check-reschedule-flow.js`; documentacion en `README.md`, `PLAN_SPRINTS_AGENDAMIENTO_HUN.md` y `.project-tracking/DECISIONS.md`; `node --check` exitoso; prueba especifica de reagendamiento exitosa; `npm.cmd test` completo exitoso; `git diff --check` sin errores. Correccion operativa del 2026-07-19: `expires_at` se convierte a ISO antes de persistir el estado temporal y la prueba de regresion valida todas las escrituras de sesion.
+**Notas:** Meta rechazo inicialmente las autorutas de fecha y horarios por ciclo en `routing_model`. El plan se ajusto a rutas aciclicas: el cambio de fecha usa la flecha nativa y cada dia muestra todos sus horarios en una sola pantalla. En Render se detecto que el estado temporal enviaba milisegundos crudos a una columna `timestamptz`; la operacion continuaba en memoria, pero la persistencia fallaba. El valor ahora se normaliza igual que las operaciones de saga. Aprobado por el usuario el 2026-07-19.
 
 ---
 
