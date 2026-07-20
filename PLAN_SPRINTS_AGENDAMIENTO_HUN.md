@@ -44,6 +44,7 @@ Se construira un MVP operativo para agendar, confirmar, cancelar y ofrecer citas
 | FLOW-002 | Implementar manejo de errores conversacionales | Sprint 2 - Integracion WhatsApp | `feature`, `backend` | FLOW-001, CORE-005 |
 | FLOW-003 | Ejecutar prueba end-to-end de Flow con asignacion | Sprint 2 - Integracion WhatsApp | `testing`, `backend`, `api` | FLOW-001, CORE-005 |
 | INTAKE-001 | Implementar menu inicial y consentimiento WhatsApp | Sprint 2 - Integracion WhatsApp | `feature`, `backend`, `whatsapp`, `privacy` | FLOW-001, CORE-001 |
+| INTAKE-002 | Mejorar identificacion y consulta conversacional | Sprint 2 - Integracion WhatsApp | `feature`, `backend`, `whatsapp`, `ux`, `testing` | INTAKE-001, CORE-001 |
 | CAMPAIGN-001 | Modelar campanas y destinatarios | Sprint 3 - Campanas y notificaciones | `feature`, `database`, `backend` | SETUP-005 |
 | CAMPAIGN-002 | Implementar adaptador de audiencia de demanda inducida | Sprint 3 - Campanas y notificaciones | `feature`, `backend`, `api` | CAMPAIGN-001 |
 | FLOW-004 | Crear Flow separado de demanda inducida | Sprint 3 - Campanas y notificaciones | `feature`, `backend`, `flow` | CAMPAIGN-002, CORE-005, FLOW-001 |
@@ -57,7 +58,7 @@ Se construira un MVP operativo para agendar, confirmar, cancelar y ofrecer citas
 | RESCH-003 | Separar seleccion de fecha y hora en reagendamiento | Sprint 4 - Cancelacion y reagendamiento | `feature`, `backend`, `flow`, `testing` | RESCH-002 |
 | ADMIN-001 | Crear consultas administrativas por perfil | Sprint 5 - Operacion y reportes | `feature`, `backend`, `api` | CORE-002, CAMPAIGN-001, CANCEL-002 |
 | ADMIN-002 | Crear exportes por perfil de trazabilidad | Sprint 5 - Operacion y reportes | `feature`, `backend`, `docs` | ADMIN-001 |
-| QA-001 | Construir matriz de pruebas funcionales | Sprint 6 - QA y seguridad | `testing`, `docs` | CORE-005, FLOW-004, CAMPAIGN-003, CANCEL-002, RESCH-002, RESCH-003, NOTIF-001 |
+| QA-001 | Construir matriz de pruebas funcionales | Sprint 6 - QA y seguridad | `testing`, `docs` | CORE-005, FLOW-004, CAMPAIGN-003, CANCEL-002, RESCH-002, RESCH-003, INTAKE-002, NOTIF-001 |
 | QA-002 | Implementar pruebas automatizadas de modulos criticos | Sprint 6 - QA y seguridad | `testing`, `backend` | QA-001 |
 | SEC-001 | Revisar proteccion de datos personales y secretos | Sprint 6 - QA y seguridad | `security`, `backend`, `docs` | CORE-002, ADMIN-001 |
 | DEPLOY-001 | Preparar despliegue y verificacion de estabilidad | Sprint 7 - Deploy y cierre contractual | `infra`, `backend`, `testing` | QA-002, SEC-001 |
@@ -429,6 +430,33 @@ Cambiar el punto de entrada del webhook para que los mensajes entrantes no abran
 - [ ] La consulta de citas usa HUN como fuente de verdad y no persiste documento, telefono ni citas.
 - [ ] La opcion modificar/cancelar queda como entrada de `CANCEL-001`, sin ejecutar cancelaciones antes de confirmacion.
 - [ ] No se registran documentos, telefonos, citas ni payloads HUN completos en logs o Supabase.
+
+## [INTAKE-002] Mejorar identificacion y consulta conversacional
+
+**Labels**: `feature`, `backend`, `whatsapp`, `ux`, `testing`
+**Depends on**: INTAKE-001, CORE-001
+**Blocked by**: -
+
+### Descripcion
+Hacer la consulta de citas mas clara para pacientes: seleccionar primero el tipo de documento por su nombre completo, ingresar despues solo el numero y recibir exclusivamente las citas proximas cuyo estado HUN sea `Reservada`. Mejorar ademas los mensajes de resultado de agendamiento, cancelacion y reagendamiento con jerarquia visual, resaltados y emojis.
+
+### Microsteps
+1. Crear una lista interactiva de WhatsApp con CC, CE, PT, TI, RC y PA mostrados con nombres completos.
+2. Mantener el tipo elegido solo en la sesion temporal y pedir el numero en un segundo mensaje.
+3. Consultar HUN con el codigo seleccionado y el numero normalizado, sin persistirlos.
+4. Filtrar la respuesta por fecha proxima y estado normalizado exacto `reservada` antes de construir el mensaje.
+5. Formatear cada cita reservada con especialidad, fecha/hora, procedimiento, profesional y estado resaltados.
+6. Mejorar los mensajes WhatsApp de menu, consentimiento, consulta, agendamiento, cancelacion y resultado de reagendamiento.
+7. Cubrir el payload de lista, el flujo en dos pasos y la exclusion de citas canceladas o atendidas con pruebas automatizadas.
+
+### Criterios de aceptacion
+- [ ] El paciente no necesita conocer abreviaturas de documento.
+- [ ] Tipo y numero se solicitan en dos mensajes distintos.
+- [ ] La consulta muestra solo citas futuras con estado `Reservada`.
+- [ ] Las citas `Cancelada`, `Atendida` u otros estados no aparecen en el resultado.
+- [ ] Los mensajes usan formato legible, resaltados y emojis sin modificar los Flows publicados en Meta.
+- [ ] Documento, telefono y citas permanecen solo en memoria y no llegan a Supabase ni logs.
+- [ ] Las pruebas de consulta, cancelacion, reagendamiento y confirmacion continuan pasando.
 
 ### Sprint 3 - Campanas y notificaciones
 
@@ -972,7 +1000,7 @@ Preparar el cierre contractual con informe final de pruebas y documento de traba
 9. Ejecutar CANCEL-001 y CANCEL-002 despues de estabilizar el cliente HUN y trazabilidad.
 10. Ejecutar RESCH-001 despues de CANCEL-002 y CORE-005. Si se aprueba la estrategia, ejecutar RESCH-002 con un tercer Flow publicado y RESCH-003 para separar fecha/hora antes de cerrar la matriz funcional.
 11. Ejecutar ADMIN-001 y ADMIN-002 cuando existan datos de eventos operativos, campanas y cancelaciones verificadas contra HUN.
-12. Ejecutar QA-001 cuando los flujos principales, FLOW-004, RESCH-002, RESCH-003 y NOTIF-001 esten implementados; QA-002 despues de definir la matriz.
+12. Ejecutar QA-001 cuando los flujos principales, FLOW-004, RESCH-002, RESCH-003, INTAKE-002 y NOTIF-001 esten implementados; QA-002 despues de definir la matriz.
 13. Ejecutar SEC-001 antes de cualquier despliegue operativo.
 14. Ejecutar DEPLOY-001 despues de QA-002 y SEC-001.
 15. Ejecutar DOCS-001 y DOCS-002 al cierre, usando evidencia de QA, seguridad, despliegue y operacion.

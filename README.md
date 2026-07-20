@@ -277,14 +277,15 @@ Para campanas de demanda inducida, ejecutar tambien las migraciones incrementale
 1. `POST /webhook` recibe un mensaje entrante o dispara una campana aprobada.
 2. Para mensajes entrantes, el backend envia menu inicial y consentimiento de tratamiento de datos.
 3. Si el paciente acepta y elige agendar, el backend envia el Flow de autoagendamiento con `FLOW_ID`.
-4. Si el paciente acepta y elige consultar, el backend pide identificacion minima y consulta citas HUN solo en memoria.
-5. Si el paciente acepta modificar/cancelar, el backend pregunta si desea modificar o cancelar.
-6. Cancelar conserva la rama conversacional: consulta HUN, usa `cancel_token`, exige confirmacion y verifica asincronicamente el resultado.
-7. Modificar abre `flow-reagendamiento.json`: consulta las citas del paciente, obtiene especialidad y `Cod_Pro` de la cita original, muestra primero los dias con disponibilidad y despues solo los horarios autogestionables del dia elegido para el mismo procedimiento.
-8. La saga de modificacion asigna y confirma primero la nueva cita; solo despues cancela y verifica la original. Si la segunda operacion falla, informa posible doble reserva y marca revision manual.
-9. En Flows, Meta llama `POST /flow-endpoint` con payload cifrado.
-10. `lib/flowCrypto.js` descifra la solicitud y `lib/flowHandler.js` enruta cada Flow consultando HUN.
-11. El backend responde a Meta con respuesta cifrada y la confirmacion final se envia por WhatsApp cuando HUN cierra la operacion.
+4. Si el paciente acepta y elige consultar, el backend muestra una lista con los nombres completos de los tipos de documento, pide el numero en un segundo mensaje y consulta HUN solo en memoria.
+5. La respuesta de consulta muestra exclusivamente citas proximas con estado exacto `Reservada`, en un formato legible con fecha, procedimiento y profesional.
+6. Si el paciente acepta modificar/cancelar, el backend pregunta si desea modificar o cancelar.
+7. Cancelar conserva la rama conversacional: consulta HUN, usa `cancel_token`, exige confirmacion y verifica asincronicamente el resultado.
+8. Modificar abre `flow-reagendamiento.json`: consulta las citas del paciente, obtiene especialidad y `Cod_Pro` de la cita original, muestra primero los dias con disponibilidad y despues solo los horarios autogestionables del dia elegido para el mismo procedimiento.
+9. La saga de modificacion asigna y confirma primero la nueva cita; solo despues cancela y verifica la original. Si la segunda operacion falla, informa posible doble reserva y marca revision manual.
+10. En Flows, Meta llama `POST /flow-endpoint` con payload cifrado.
+11. `lib/flowCrypto.js` descifra la solicitud y `lib/flowHandler.js` enruta cada Flow consultando HUN.
+12. El backend responde a Meta con respuesta cifrada y la confirmacion final se envia por WhatsApp cuando HUN cierra la operacion.
 
 ## Documentacion de trabajo
 

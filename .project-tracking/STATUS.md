@@ -9,21 +9,21 @@ Fase activa: Sprint 4 - Cancelacion y reagendamiento
 |------|-------|-------------|-------------|------------|------------|
 | Sprint 0 - Setup | 5 | 5 | 0 | 0 | 0 |
 | Sprint 1 - Core agendamiento | 5 | 5 | 0 | 0 | 0 |
-| Sprint 2 - Integracion WhatsApp | 4 | 4 | 0 | 0 | 0 |
+| Sprint 2 - Integracion WhatsApp | 5 | 4 | 1 | 0 | 0 |
 | Sprint 3 - Campanas y notificaciones | 6 | 6 | 0 | 0 | 0 |
 | Sprint 4 - Cancelacion y reagendamiento | 5 | 4 | 1 | 0 | 0 |
 | Sprint 5 - Operacion y reportes | 2 | 0 | 0 | 0 | 2 |
 | Sprint 6 - QA y seguridad | 3 | 0 | 0 | 0 | 3 |
 | Sprint 7 - Deploy y cierre contractual | 3 | 0 | 0 | 0 | 3 |
 | Sprint 8 - API de campanas para panel del hospital | 11 | 11 | 0 | 0 | 0 |
-| **TOTAL** | **44** | **35** | **1** | **0** | **8** |
+| **TOTAL** | **45** | **35** | **2** | **0** | **8** |
 
-Avance global: 35 / 44 tickets completados (79.5%)
+Avance global: 35 / 45 tickets completados (77.8%)
 
 ## Estado actual
 
-**Proximo ticket recomendado:** RESCH-003 - Separar seleccion de fecha y hora en reagendamiento.
-**Tickets en progreso:** RESCH-003
+**Proximo ticket recomendado:** INTAKE-002 - Mejorar identificacion y consulta conversacional.
+**Tickets en progreso:** RESCH-003, INTAKE-002
 **Tickets bloqueados:** -
 
 ### Tickets bloqueados por dependencias no resueltas
@@ -449,6 +449,35 @@ Avance global: 35 / 44 tickets completados (79.5%)
 
 ---
 
+### INTAKE-002 - Mejorar identificacion y consulta conversacional
+
+**Estado:** `in_progress`
+**Labels:** `feature`, `backend`, `whatsapp`, `ux`, `testing`
+**Depende de:** INTAKE-001, CORE-001
+**Desbloquea:** QA-001
+
+**Microsteps:**
+- [x] Mostrar los seis tipos de documento por nombre completo en una lista interactiva de WhatsApp.
+- [x] Separar la captura en tipo de documento y numero de documento.
+- [x] Mantener la identificacion unicamente en la sesion temporal en memoria.
+- [x] Filtrar las citas proximas por estado HUN exacto `Reservada`.
+- [x] Excluir del mensaje citas canceladas, atendidas y cualquier otro estado.
+- [x] Mejorar con resaltados y emojis los mensajes conversacionales y confirmaciones asincronas.
+- [x] Agregar pruebas del payload de lista, recorrido en dos pasos y filtro por estado.
+
+**Criterios de aceptacion:**
+- [x] El paciente puede elegir Cedula de ciudadania, Cedula de extranjeria, Permiso temporal, Tarjeta de identidad, Registro civil o Pasaporte sin conocer su abreviatura.
+- [x] El numero se solicita en un segundo mensaje y se envia a HUN junto con el codigo elegido.
+- [x] La respuesta de consulta contiene exclusivamente citas futuras `Reservada`.
+- [x] Los mensajes son mas legibles y no requieren modificar ningun Flow publicado en Meta.
+- [x] No se persisten documento, telefono, citas ni payloads HUN.
+- [x] Las pruebas especificas de entrada, cancelacion, reagendamiento y confirmacion son exitosas.
+
+**Evidencia:** implementacion en `lib/inboundRouter.js`, `lib/whatsapp.js`, `lib/flowHandler.js`, `lib/cancellationVerifier.js` y `lib/rescheduleHandler.js`; pruebas en `scripts/check-inbound-router.js`, `scripts/check-cancellation-verifier.js`, `scripts/check-reschedule-flow.js` y `scripts/check-flow-confirmation.js`; documentacion en `README.md` y `PLAN_SPRINTS_AGENDAMIENTO_HUN.md`; `npm.cmd test` completo exitoso el 2026-07-19.
+**Notas:** No requiere publicar JSON ni configurar acciones en Meta porque usa mensajes interactivos estandar de WhatsApp Cloud API. El ticket queda en progreso hasta recibir aprobacion del usuario.
+
+---
+
 ## Sprint 3 - Campanas y notificaciones
 
 ---
@@ -870,7 +899,7 @@ Avance global: 35 / 44 tickets completados (79.5%)
 
 **Estado:** `pending`
 **Labels:** `testing`, `docs`
-**Depende de:** CORE-005, FLOW-004, CAMPAIGN-003, CANCEL-002, RESCH-002, RESCH-003, NOTIF-001
+**Depende de:** CORE-005, FLOW-004, CAMPAIGN-003, CANCEL-002, RESCH-002, RESCH-003, INTAKE-002, NOTIF-001
 **Desbloquea:** QA-002, DOCS-001
 
 **Microsteps:**

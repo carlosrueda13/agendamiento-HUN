@@ -174,7 +174,7 @@ async function assertConfirmRequeriesAndAssignsFreshSlot() {
 
   assert(assignedPayloads[0].agenda_detalle_id === "AG-777", "Debe asignar con agenda fresca.");
   assert(assignedPayloads[0].eps === "HUN22", "Debe validar EPS antes de asignar.");
-  assert(sentMessages[0].message.includes("Tu cita quedo agendada."), "Debe confirmar por WhatsApp.");
+  assert(sentMessages[0].message.includes("Tu cita quedó agendada"), "Debe confirmar por WhatsApp.");
   assert(
     sentMessages[0].message.includes("CONSULTA DE PRIMERA VEZ POR ANESTESIOLOGIA"),
     "Debe incluir procedimiento real consultado por numero de cita."

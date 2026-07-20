@@ -2,11 +2,17 @@ process.env.FLOW_SESSION_PII_KEY_B64 = Buffer.alloc(32, 17).toString("base64");
 
 const {
   ACTIONS,
+  DOCUMENT_TYPE_OPTIONS,
   buildRejectText,
   formatAppointmentsMessage,
   handleIncomingMessage,
+  parseDocumentNumber,
+  parseDocumentType,
   parseDocumentInput,
 } = require("../lib/inboundRouter");
+const {
+  _private: { buildInteractiveListPayload },
+} = require("../lib/whatsapp");
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -31,6 +37,17 @@ function buttonMessage(id) {
   };
 }
 
+function listMessage(id) {
+  return {
+    from: "573001112233",
+    type: "interactive",
+    interactive: {
+      type: "list_reply",
+      list_reply: { id, title: id },
+    },
+  };
+}
+
 function createDeps() {
   const sent = [];
   const sessions = new Map();
@@ -50,6 +67,9 @@ function createDeps() {
       },
       sendInteractiveButtons: async (payload) => {
         sent.push({ type: "buttons", ...payload });
+      },
+      sendInteractiveList: async (payload) => {
+        sent.push({ type: "list", ...payload });
       },
     },
     hun: {
@@ -78,6 +98,13 @@ function createDeps() {
             Hora_Cita: "11:00:00",
             Nombre_Especialidad: "No cancelable",
             Estado: "Atendida",
+          },
+          {
+            Numero_Cita: "444444",
+            Fecha_Cita: "2026-07-12",
+            Hora_Cita: "12:00:00",
+            Nombre_Especialidad: "Cita cancelada futura",
+            Estado: "Cancelada",
           },
         ];
       },
@@ -159,16 +186,32 @@ async function assertConsultAppointments() {
   await handleIncomingMessage(buttonMessage("INTAKE_MENU_CONSULTAR"), deps);
   await handleIncomingMessage(buttonMessage("INTAKE_CONSENT_ACCEPT"), deps);
   assert(
-    sessions.get("573001112233").step === "awaiting_document",
-    "Consulta aceptada debe pedir documento."
+    sessions.get("573001112233").step === "awaiting_document_type",
+    "Consulta aceptada debe pedir primero el tipo de documento."
+  );
+  assert(sent.at(-1).type === "list", "Tipo de documento debe presentarse como lista.");
+  assert(sent.at(-1).rows.length === 6, "La lista debe incluir los seis tipos soportados.");
+  assert(
+    sent.at(-1).rows.some((row) => row.title === "Pasaporte"),
+    "La lista debe mostrar el nombre completo Pasaporte."
   );
 
-  await handleIncomingMessage(textMessage("CC 123456"), deps);
+  await handleIncomingMessage(listMessage("INTAKE_DOC_CC"), deps);
+  assert(
+    sessions.get("573001112233").step === "awaiting_document_number",
+    "Despues del tipo debe pedir el numero en un segundo mensaje."
+  );
+  assert(/Cédula de ciudadanía/.test(sent.at(-1).text), "Debe confirmar el tipo elegido.");
+
+  await handleIncomingMessage(textMessage("123456"), deps);
   assert(!sessions.has("573001112233"), "Consulta debe limpiar sesion al terminar.");
   const response = sent.at(-1).text;
   assert(/Dermatologia/.test(response), "Debe listar cita proxima desde HUN.");
+  assert(/Reservada/.test(response), "Debe mostrar el estado reservado.");
   assert(!/123456/.test(response), "No debe devolver documento en el mensaje.");
   assert(!/Historica/.test(response), "No debe listar citas pasadas.");
+  assert(!/Atendida/.test(response), "No debe listar citas atendidas.");
+  assert(!/Cita cancelada futura/.test(response), "No debe listar citas canceladas.");
 }
 
 async function assertModifyCancelEntryPoint() {
@@ -184,7 +227,9 @@ async function assertModifyCancelEntryPoint() {
     "Debe ofrecer la opcion explicita de cancelar."
   );
   await handleIncomingMessage(buttonMessage("INTAKE_CANCEL_APPOINTMENT"), deps);
-  await handleIncomingMessage(textMessage("CC 123456"), deps);
+  assert(sent.at(-1).type === "list", "Cancelar debe pedir el tipo como lista.");
+  await handleIncomingMessage(listMessage("INTAKE_DOC_CC"), deps);
+  await handleIncomingMessage(textMessage("123456"), deps);
 
   assert(
     sent.some((message) => /Estas son las citas que puedes cancelar/.test(message.text || "")),
@@ -258,7 +303,7 @@ async function assertLostCancellationContext() {
     events.some((event) => event.error_code === "runtime_context_lost"),
     "Debe registrar perdida de contexto sin datos de cita."
   );
-  assert(/se interrumpio/i.test(sent.at(-1).text), "Debe informar que reinicie el proceso.");
+  assert(/se interrumpió/i.test(sent.at(-1).text), "Debe informar que reinicie el proceso.");
 }
 
 async function assertLostRescheduleContext() {
@@ -283,14 +328,36 @@ async function assertLostRescheduleContext() {
     events.some((event) => event.error_code === "runtime_context_lost"),
     "Debe registrar perdida de contexto sin numeros de cita."
   );
-  assert(/revisada por el hospital/i.test(sent.at(-1).text), "Debe informar conciliacion.");
+  assert(/necesita revisión/i.test(sent.at(-1).text), "Debe informar conciliacion.");
 }
 
 function assertHelpers() {
   assert(parseDocumentInput("CC 123.456").documento === "123456", "Debe normalizar documento.");
   assert(parseDocumentInput("xx 123456") === null, "Debe rechazar tipo invalido.");
+  assert(parseDocumentNumber("123.456") === "123456", "Debe normalizar solo el numero.");
+  assert(parseDocumentNumber("12") === null, "Debe rechazar un numero demasiado corto.");
   assert(
-    /No encontramos citas proximas/.test(formatAppointmentsMessage([], new Date("2026-07-08"))),
+    parseDocumentType({ interactiveId: "INTAKE_DOC_PA" }).type === "PA",
+    "Debe resolver Pasaporte desde la opcion legible."
+  );
+  assert(DOCUMENT_TYPE_OPTIONS.length === 6, "Debe mantener el catalogo completo.");
+  const listPayload = buildInteractiveListPayload({
+    to: "573001112233",
+    body: "Selecciona tu documento",
+    footer: "HUN",
+    button: "Elegir documento",
+    sectionTitle: "Tipos de documento",
+    rows: DOCUMENT_TYPE_OPTIONS,
+  });
+  assert(listPayload.interactive.type === "list", "WhatsApp debe recibir una lista real.");
+  assert(
+    listPayload.interactive.action.sections[0].rows[5].title === "Pasaporte",
+    "El payload real debe conservar nombres legibles."
+  );
+  assert(
+    /No encontramos citas reservadas próximas/.test(
+      formatAppointmentsMessage([], new Date("2026-07-08"))
+    ),
     "Sin citas debe responder mensaje recuperable."
   );
 }
