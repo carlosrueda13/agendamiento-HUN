@@ -8,7 +8,7 @@ Fase activa: Sprint 4 - Cancelacion y reagendamiento
 | Fase | Total | Completados | En progreso | Bloqueados | Pendientes |
 |------|-------|-------------|-------------|------------|------------|
 | Sprint 0 - Setup | 5 | 5 | 0 | 0 | 0 |
-| Sprint 1 - Core agendamiento | 6 | 6 | 0 | 0 | 0 |
+| Sprint 1 - Core agendamiento | 7 | 7 | 0 | 0 | 0 |
 | Sprint 2 - Integracion WhatsApp | 5 | 4 | 1 | 0 | 0 |
 | Sprint 3 - Campanas y notificaciones | 6 | 6 | 0 | 0 | 0 |
 | Sprint 4 - Cancelacion y reagendamiento | 5 | 4 | 1 | 0 | 0 |
@@ -16,13 +16,13 @@ Fase activa: Sprint 4 - Cancelacion y reagendamiento
 | Sprint 6 - QA y seguridad | 3 | 0 | 0 | 0 | 3 |
 | Sprint 7 - Deploy y cierre contractual | 3 | 0 | 0 | 0 | 3 |
 | Sprint 8 - API de campanas para panel del hospital | 11 | 11 | 0 | 0 | 0 |
-| **TOTAL** | **46** | **36** | **2** | **0** | **8** |
+| **TOTAL** | **47** | **37** | **2** | **0** | **8** |
 
-Avance global: 36 / 46 tickets completados (78.3%)
+Avance global: 37 / 47 tickets completados (78.7%)
 
 ## Estado actual
 
-**Proximo ticket recomendado:** INTAKE-002 - Mejorar identificacion y consulta conversacional.
+**Proximo ticket recomendado:** Finalizar INTAKE-002 - Mejorar identificacion y consulta conversacional.
 **Tickets en progreso:** RESCH-003, INTAKE-002
 **Tickets bloqueados:** -
 
@@ -341,7 +341,7 @@ Avance global: 36 / 46 tickets completados (78.3%)
 **Estado:** `done`
 **Labels:** `feature`, `backend`, `api`, `flow`, `testing`
 **Depende de:** CORE-005, FLOW-001
-**Desbloquea:** QA-001
+**Desbloquea:** CORE-007
 
 **Microsteps:**
 - [x] Publicar `flow-agendamiento.json` con `PROCEDIMIENTO` y `FECHA` entre especialidad y horarios.
@@ -368,6 +368,40 @@ Avance global: 36 / 46 tickets completados (78.3%)
 
 **Evidencia:** `flow-agendamiento.json`, `lib/flowHandler.js`, `scripts/check-flow-slots.js`, `scripts/check-flow-confirmation.js`, `scripts/check-flow-errors.js`, `scripts/check-flow-e2e-waiver.js`, `README.md`, `.project-tracking/DECISIONS.md`; JSON publicado en Meta y confirmado por el usuario el 2026-07-19; `node --check lib/flowHandler.js` exitoso; `npm.cmd test` completo exitoso.
 **Notas:** Aprobado por el usuario el 2026-07-19. La identidad del procedimiento se conserva solo en memoria y dentro de tokens HMAC opacos. Supabase recibe exclusivamente el estado coarse `eligiendo_slot`, especialidad, token de slot cuando aplica y expiracion. El Flow de campana continua de identificacion a `SLOTS` para no alterar la oferta dirigida.
+
+---
+
+### CORE-007 - Resolver nombres CUPS cuando HUN omite la descripcion
+
+**Estado:** `done`
+**Labels:** `backend`, `api`, `data`, `testing`
+**Depende de:** CORE-006
+**Desbloquea:** QA-001
+
+**Microsteps:**
+- [x] Verificar la respuesta real de agenda HUN para dermatologia y confirmar `descripcion: null` en los CUPS `890242` y `890342`.
+- [x] Incorporar el catalogo oficial CUPS vigencia 2026 desde la Resolucion 2706 de 2025.
+- [x] Implementar un resolver con prioridad `descripcion HUN -> alias HUN -> catalogo CUPS`.
+- [x] Normalizar `codigo`, `descripcion` y `descripcion_fuente` en memoria desde `lib/hun.js`.
+- [x] Eliminar el fallback visible `Procedimiento disponible`.
+- [x] Omitir opciones cuyo nombre no pueda resolverse y registrar solo conteos agregados.
+- [x] Devolver un error recuperable si ninguna opcion tiene nombre resoluble.
+- [x] Agregar pruebas del catalogo, aliases, prioridad HUN, codigos desconocidos y persistencia minima.
+- [x] Validar en WhatsApp que dermatologia muestra los nombres reales de ambos procedimientos.
+
+**Criterios de aceptacion:**
+- [x] `890242` se muestra como `CONSULTA DE PRIMERA VEZ POR ESPECIALISTA EN DERMATOLOGIA`, conservando la tilde del catalogo oficial.
+- [x] `890342` se muestra como `CONSULTA DE CONTROL O DE SEGUIMIENTO POR ESPECIALISTA EN DERMATOLOGIA`, conservando la tilde del catalogo oficial.
+- [x] Una descripcion valida entregada por HUN tiene prioridad sobre el catalogo.
+- [x] Los aliases documentados de descripcion se reconocen antes del catalogo.
+- [x] Un CUPS desconocido no genera una opcion generica o ambigua.
+- [x] El codigo CUPS, el nombre resuelto y su fuente no se persisten en Supabase ni eventos.
+- [x] `flow-agendamiento.json` no requiere cambios ni nueva publicacion en Meta.
+- [x] La suite automatizada completa finaliza correctamente.
+- [x] La prueba real del Flow confirma el nombre visible correcto.
+
+**Evidencia:** `data/cups-2026.json`, `lib/cupsCatalog.js`, `lib/hun.js`, `lib/flowHandler.js`, `scripts/check-cups-catalog.js`, `scripts/check-hun-client.js`, `scripts/check-flow-slots.js`, `package.json`; consulta HUN de solo lectura para especialidad `200`; anexo oficial de la Resolucion 2706 de 2025; `node --check` exitoso; `npm.cmd test` completo exitoso.
+**Notas:** Aprobado por el usuario el 2026-07-19. El catalogo contiene 9459 procedimientos oficiales de seis caracteres y registra URL, hoja fuente y SHA-256 del archivo oficial. `descripcion_fuente` existe solo en los objetos de agenda en memoria. No se modifico el JSON publicado en Meta porque la pantalla ya consume `title` dinamico.
 
 ---
 
@@ -934,7 +968,7 @@ Avance global: 36 / 46 tickets completados (78.3%)
 
 **Estado:** `pending`
 **Labels:** `testing`, `docs`
-**Depende de:** CORE-006, FLOW-004, CAMPAIGN-003, CANCEL-002, RESCH-002, RESCH-003, INTAKE-002, NOTIF-001
+**Depende de:** CORE-007, FLOW-004, CAMPAIGN-003, CANCEL-002, RESCH-002, RESCH-003, INTAKE-002, NOTIF-001
 **Desbloquea:** QA-002, DOCS-001
 
 **Microsteps:**

@@ -41,6 +41,7 @@ Se construira un MVP operativo para agendar, confirmar, cancelar y ofrecer citas
 | CORE-004 | Implementar seleccion robusta de cupos autogestionables | Sprint 1 - Core agendamiento | `feature`, `backend`, `api` | CORE-003 |
 | CORE-005 | Implementar confirmacion asincrona de cita | Sprint 1 - Core agendamiento | `feature`, `backend`, `api` | CORE-004 |
 | CORE-006 | Separar procedimiento, fecha y hora en autoagendamiento | Sprint 1 - Core agendamiento | `feature`, `backend`, `api`, `flow`, `testing` | CORE-005, FLOW-001 |
+| CORE-007 | Resolver nombres CUPS cuando HUN omite la descripcion | Sprint 1 - Core agendamiento | `backend`, `api`, `data`, `testing` | CORE-006 |
 | FLOW-001 | Validar cifrado y publicacion de WhatsApp Flow | Sprint 2 - Integracion WhatsApp | `feature`, `backend`, `security` | CORE-003 |
 | FLOW-002 | Implementar manejo de errores conversacionales | Sprint 2 - Integracion WhatsApp | `feature`, `backend` | FLOW-001, CORE-005 |
 | FLOW-003 | Ejecutar prueba end-to-end de Flow con asignacion | Sprint 2 - Integracion WhatsApp | `testing`, `backend`, `api` | FLOW-001, CORE-005 |
@@ -59,7 +60,7 @@ Se construira un MVP operativo para agendar, confirmar, cancelar y ofrecer citas
 | RESCH-003 | Separar seleccion de fecha y hora en reagendamiento | Sprint 4 - Cancelacion y reagendamiento | `feature`, `backend`, `flow`, `testing` | RESCH-002 |
 | ADMIN-001 | Crear consultas administrativas por perfil | Sprint 5 - Operacion y reportes | `feature`, `backend`, `api` | CORE-002, CAMPAIGN-001, CANCEL-002 |
 | ADMIN-002 | Crear exportes por perfil de trazabilidad | Sprint 5 - Operacion y reportes | `feature`, `backend`, `docs` | ADMIN-001 |
-| QA-001 | Construir matriz de pruebas funcionales | Sprint 6 - QA y seguridad | `testing`, `docs` | CORE-006, FLOW-004, CAMPAIGN-003, CANCEL-002, RESCH-002, RESCH-003, INTAKE-002, NOTIF-001 |
+| QA-001 | Construir matriz de pruebas funcionales | Sprint 6 - QA y seguridad | `testing`, `docs` | CORE-007, FLOW-004, CAMPAIGN-003, CANCEL-002, RESCH-002, RESCH-003, INTAKE-002, NOTIF-001 |
 | QA-002 | Implementar pruebas automatizadas de modulos criticos | Sprint 6 - QA y seguridad | `testing`, `backend` | QA-001 |
 | SEC-001 | Revisar proteccion de datos personales y secretos | Sprint 6 - QA y seguridad | `security`, `backend`, `docs` | CORE-002, ADMIN-001 |
 | DEPLOY-001 | Preparar despliegue y verificacion de estabilidad | Sprint 7 - Deploy y cierre contractual | `infra`, `backend`, `testing` | QA-002, SEC-001 |
@@ -364,6 +365,35 @@ Modificar exclusivamente el Flow de autoagendamiento para que, despues de elegir
 - [ ] Procedimiento, CUPS, fecha, hora y payload de agenda no se guardan en Supabase ni en eventos operativos.
 - [ ] Un procedimiento, fecha o slot vencido genera recuperacion conversacional sin asignar datos obsoletos.
 - [ ] Campanas y reagendamiento conservan sus recorridos independientes.
+- [ ] La suite automatizada completa finaliza correctamente.
+
+## [CORE-007] Resolver nombres CUPS cuando HUN omite la descripcion
+
+**Labels**: `backend`, `api`, `data`, `testing`
+**Depends on**: CORE-006
+**Blocked by**: -
+
+### Descripcion
+Resolver el nombre visible de cada procedimiento cuando la agenda HUN entrega el codigo CUPS pero omite su descripcion. La resolucion debe usar un catalogo oficial local y versionado, conservar a HUN como fuente prioritaria cuando entregue un nombre valido y evitar opciones genericas que impidan al paciente distinguir procedimientos.
+
+### Microsteps
+1. Incorporar el Anexo Tecnico 2 de la Resolucion 2706 de 2025 como catalogo CUPS vigencia 2026, con trazabilidad de fuente y hash.
+2. Normalizar codigos CUPS con y sin puntos antes de consultar el catalogo.
+3. Resolver nombres con prioridad: `descripcion` HUN, aliases HUN y catalogo oficial local.
+4. Exponer `descripcion_fuente` solo en memoria para facilitar diagnostico, sin enviarla al Flow ni persistirla.
+5. Omitir procedimientos desconocidos que no tengan nombre resoluble.
+6. Registrar solamente el conteo agregado de opciones omitidas.
+7. Si no queda ningun procedimiento resoluble, volver a especialidad con un mensaje recuperable.
+8. Agregar pruebas para descripcion nula, prioridad HUN, aliases, CUPS desconocido y minimizacion.
+
+### Criterios de aceptacion
+- [ ] Los CUPS `890242` y `890342` muestran sus nombres oficiales aunque HUN entregue `descripcion: null`.
+- [ ] Una descripcion valida de HUN tiene prioridad sobre el catalogo local.
+- [ ] No se muestra `Procedimiento disponible` ni otro nombre generico para opciones diferentes.
+- [ ] Un procedimiento desconocido se omite sin exponer su codigo.
+- [ ] Si todos los procedimientos son desconocidos, el paciente recibe una recuperacion conversacional.
+- [ ] No se persiste CUPS, procedimiento, fuente de descripcion ni payload de agenda.
+- [ ] El JSON de Meta no cambia cuando ya consume el `title` dinamico del backend.
 - [ ] La suite automatizada completa finaliza correctamente.
 
 ### Sprint 2 - Integracion WhatsApp
@@ -862,7 +892,7 @@ Permitir exportar informacion separada para informes medico-operativos y para so
 ## [QA-001] Construir matriz de pruebas funcionales
 
 **Labels**: `testing`, `docs`
-**Depends on**: CORE-006, FLOW-004, CAMPAIGN-003, CANCEL-002, RESCH-002, RESCH-003, INTAKE-002, NOTIF-001
+**Depends on**: CORE-007, FLOW-004, CAMPAIGN-003, CANCEL-002, RESCH-002, RESCH-003, INTAKE-002, NOTIF-001
 **Blocked by**: -
 
 ### Descripcion
@@ -1025,14 +1055,14 @@ Preparar el cierre contractual con informe final de pruebas y documento de traba
 2. Ejecutar SETUP-002 despues de SETUP-001.
 3. Ejecutar SETUP-005 inmediatamente despues de SETUP-002; este ticket bloquea cualquier trabajo funcional que toque `lib/db.js`, `lib/flowHandler.js`, Supabase, Flow state, notificaciones o eventos operativos.
 4. Ejecutar CORE-001 y CORE-002 en paralelo cuando SETUP-005 y SETUP-004 esten listos.
-5. Ejecutar CORE-003, CORE-004 y CORE-005 en secuencia; ejecutar CORE-006 despues de publicar las nuevas pantallas de autoagendamiento en Meta.
+5. Ejecutar CORE-003, CORE-004 y CORE-005 en secuencia; ejecutar CORE-006 despues de publicar las nuevas pantallas de autoagendamiento en Meta y CORE-007 despues de CORE-006.
 6. Ejecutar FLOW-001 cuando CORE-003 este listo; FLOW-002 despues de FLOW-001 y CORE-005; ejecutar FLOW-003 solo despues de FLOW-001 y CORE-005 para probar asignacion real.
 7. Ejecutar CAMPAIGN-001 solo despues de SETUP-005; luego CAMPAIGN-002, FLOW-004 y CAMPAIGN-003. CAMPAIGN-003 no debe enviar plantillas que abran el Flow de autoagendamiento; debe esperar a que `CAMPAIGN_FLOW_ID` este creado/publicado. Si el API real de demanda inducida/orquestador no esta disponible, CAMPAIGN-002 debe avanzar con el adaptador/mock contractual, sin declarar `CONTRACT_READY` salvo waiver formal.
 8. Ejecutar NOTIF-001 despues de CORE-005 y CAMPAIGN-001; al cerrar NOTIF-001 se debe elevar advertencia si el proveedor/API de correo no esta definido. NOTIF-002 solo puede hacer envio real cuando exista proveedor/API aprobado; si no, se limita a interfaz/adaptador placeholder.
 9. Ejecutar CANCEL-001 y CANCEL-002 despues de estabilizar el cliente HUN y trazabilidad.
 10. Ejecutar RESCH-001 despues de CANCEL-002 y CORE-005. Si se aprueba la estrategia, ejecutar RESCH-002 con un tercer Flow publicado y RESCH-003 para separar fecha/hora antes de cerrar la matriz funcional.
 11. Ejecutar ADMIN-001 y ADMIN-002 cuando existan datos de eventos operativos, campanas y cancelaciones verificadas contra HUN.
-12. Ejecutar QA-001 cuando CORE-006, FLOW-004, RESCH-002, RESCH-003, INTAKE-002 y NOTIF-001 esten implementados; QA-002 despues de definir la matriz.
+12. Ejecutar QA-001 cuando CORE-007, FLOW-004, CAMPAIGN-003, CANCEL-002, RESCH-002, RESCH-003, INTAKE-002 y NOTIF-001 esten implementados; QA-002 despues de definir la matriz.
 13. Ejecutar SEC-001 antes de cualquier despliegue operativo.
 14. Ejecutar DEPLOY-001 despues de QA-002 y SEC-001.
 15. Ejecutar DOCS-001 y DOCS-002 al cierre, usando evidencia de QA, seguridad, despliegue y operacion.
@@ -1040,7 +1070,7 @@ Preparar el cierre contractual con informe final de pruebas y documento de traba
 ## Cobertura de requerimientos
 
 - Canal WhatsApp con backend: SETUP-001, FLOW-001, DEPLOY-001.
-- WhatsApp Flow de autoagendamiento: CORE-003, CORE-004, CORE-005, CORE-006, FLOW-002, FLOW-003.
+- WhatsApp Flow de autoagendamiento: CORE-003, CORE-004, CORE-005, CORE-006, CORE-007, FLOW-002, FLOW-003.
 - WhatsApp Flow de demanda inducida: CAMPAIGN-002, FLOW-004, CAMPAIGN-003.
 - API HUN de especialidades, agenda, historial y asignacion: SETUP-004, CORE-001, CORE-005.
 - Campana de oferta de citas: CAMPAIGN-001, CAMPAIGN-002, FLOW-004, CAMPAIGN-003.

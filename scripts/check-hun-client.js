@@ -51,6 +51,14 @@ async function testAgendaNormalizada() {
               cups: [
                 { codigo: " 890201 ", descripcion: " Consulta ", id_agenda_detalle: " CUP-1 " },
                 { codigo: " 890202 ", descripcion: " Control " },
+                { codigo: " 890242 ", descripcion: null },
+                { codigo: "89.0.3.42", descripcion: null },
+                {
+                  codigo_cups: " ABC123 ",
+                  descripcion: null,
+                  descripcion_cups: " Nombre desde alias ",
+                },
+                { codigo: " ZZZZZZ ", descripcion: null },
               ],
             },
           ],
@@ -64,6 +72,22 @@ async function testAgendaNormalizada() {
   assert.strictEqual(agenda[0].cups[0].codigo, "890201");
   assert.strictEqual(agenda[0].cups[0].agenda_detalle_id, "CUP-1");
   assert.strictEqual(agenda[0].cups[1].agenda_detalle_id, "ROW-1");
+  assert.strictEqual(agenda[0].cups[0].descripcion, "Consulta");
+  assert.strictEqual(agenda[0].cups[0].descripcion_fuente, "hun");
+  assert.strictEqual(
+    agenda[0].cups[2].descripcion,
+    "CONSULTA DE PRIMERA VEZ POR ESPECIALISTA EN DERMATOLOGÍA"
+  );
+  assert.strictEqual(agenda[0].cups[2].descripcion_fuente, "catalogo_cups");
+  assert.strictEqual(agenda[0].cups[3].codigo, "890342");
+  assert.strictEqual(
+    agenda[0].cups[3].descripcion,
+    "CONSULTA DE CONTROL O DE SEGUIMIENTO POR ESPECIALISTA EN DERMATOLOGÍA"
+  );
+  assert.strictEqual(agenda[0].cups[4].descripcion, "Nombre desde alias");
+  assert.strictEqual(agenda[0].cups[4].descripcion_fuente, "hun");
+  assert.strictEqual(agenda[0].cups[5].descripcion, null);
+  assert.strictEqual(agenda[0].cups[5].descripcion_fuente, null);
 }
 
 async function testCitasYCancelacion() {

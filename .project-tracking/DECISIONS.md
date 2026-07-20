@@ -6,6 +6,16 @@ o que surgen durante el desarrollo.
 
 ---
 
+## [2026-07-19] Resolver descripciones CUPS con catalogo oficial local
+
+**Ticket relacionado:** CORE-007
+**Decision:** Cuando la agenda HUN omita el nombre del procedimiento, el backend resolvera el codigo contra un catalogo local generado desde el Anexo Tecnico 2 de la Resolucion 2706 de 2025, vigencia 2026. La prioridad sera `descripcion HUN -> alias HUN -> catalogo CUPS`. Un codigo desconocido se omitira y nunca se mostrara con un texto generico.
+**Motivo:** La respuesta real de agenda para dermatologia entrega `890242` y `890342` con `descripcion: null`, aunque el contrato documentado anuncia ese campo. El endpoint alternativo de disponibilidad tampoco aporta el nombre. Mostrar `Procedimiento disponible` crea opciones indistinguibles y puede llevar al paciente a escoger un servicio equivocado.
+**Alternativas descartadas:** Depender de otro endpoint HUN en cada interaccion; descartado porque el endpoint disponible tambien omite la descripcion y agregaria latencia. Mostrar el codigo CUPS; descartado por experiencia de usuario y por la decision de no exponerlo. Mantener el fallback generico; descartado por ambiguedad.
+**Impacto:** `lib/cupsCatalog.js` centraliza la resolucion; `lib/hun.js` normaliza los procedimientos; `lib/flowHandler.js` omite opciones desconocidas y registra solo conteos agregados. El catalogo es una dependencia versionada que debe actualizarse cuando cambie la vigencia CUPS. No cambia `flow-agendamiento.json` ni la politica de minimizacion.
+
+---
+
 ## [2026-07-19] Mostrar procedimiento, fecha y hora por etapas en autoagendamiento
 
 **Ticket relacionado:** CORE-006

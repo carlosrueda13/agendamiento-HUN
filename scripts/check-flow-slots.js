@@ -40,6 +40,37 @@ function agendaSlot({ date, time, detailId, code, description, auto = "si" }) {
 }
 
 hun.getAgendaPorEspecialidad = async () => {
+  if (agendaMode === "catalog-null") {
+    return [
+      agendaSlot({
+        date: "2026-08-10",
+        time: "08:00:00",
+        detailId: "DERMA-1",
+        code: "890242",
+        description: null,
+      }),
+      agendaSlot({
+        date: "2026-08-11",
+        time: "09:00:00",
+        detailId: "DERMA-2",
+        code: "890342",
+        description: null,
+      }),
+    ];
+  }
+
+  if (agendaMode === "unknown-null") {
+    return [
+      agendaSlot({
+        date: "2026-08-12",
+        time: "10:00:00",
+        detailId: "UNKNOWN",
+        code: "ZZZZZZ",
+        description: null,
+      }),
+    ];
+  }
+
   if (agendaMode === "empty") {
     return [
       agendaSlot({
@@ -256,10 +287,63 @@ async function assertNoProceduresIsRecoverable() {
   );
 }
 
+async function assertCatalogResolvesNullHunDescriptions() {
+  agendaMode = "catalog-null";
+  const flowToken = "flow_slots_catalog_null";
+  await identify(flowToken);
+  const response = await selectSpecialty(flowToken);
+  assert(response.screen === "PROCEDIMIENTO", "Debe resolver nombres desde catalogo.");
+  assert(
+    response.data.procedimientos.map((item) => item.title).join("|") ===
+      [
+        "CONSULTA DE CONTROL O DE SEGUIMIENTO POR ESPECIALISTA EN DERMATOLOGÍA",
+        "CONSULTA DE PRIMERA VEZ POR ESPECIALISTA EN DERMATOLOGÍA",
+      ].join("|"),
+    "Debe mostrar los nombres oficiales de ambos procedimientos."
+  );
+  assert(
+    !JSON.stringify(response).includes("Procedimiento disponible"),
+    "No debe mostrar el fallback generico."
+  );
+  assert(
+    !JSON.stringify(response).includes("catalogo_cups"),
+    "El Flow no debe exponer la fuente de la descripcion."
+  );
+  for (const persisted of savedSessions) assertMinimalSessionPersistence(persisted);
+  assert(
+    !JSON.stringify(savedEvents).includes("catalogo_cups"),
+    "Los eventos no deben guardar la fuente de la descripcion."
+  );
+}
+
+async function assertUnknownProceduresAreOmitted() {
+  agendaMode = "unknown-null";
+  const flowToken = "flow_slots_unknown_null";
+  await identify(flowToken);
+  const response = await selectSpecialty(flowToken);
+  assert(response.screen === "ESPECIALIDAD", "CUPS sin nombre debe ser recuperable.");
+  assert(
+    response.data.error_message.includes("no informo los nombres"),
+    "Debe explicar que HUN no entrego nombres resolubles."
+  );
+  assert(
+    savedEvents.some(
+      (event) =>
+        event.resultado_operativo === "sin_procedimientos" &&
+        event.motivo_fallo_simple === "nombres_procedimiento_no_disponibles" &&
+        event.conteo_resultados?.procedimientos_omitidos_sin_nombre === 1
+    ),
+    "Debe registrar solo el conteo agregado de opciones omitidas."
+  );
+  assert(!JSON.stringify(savedEvents).includes("ZZZZZZ"), "El evento no debe guardar CUPS.");
+}
+
 async function main() {
   assertPublishedFlowContract();
   await assertProcedureDateAndTimeSelection();
   await assertNoProceduresIsRecoverable();
+  await assertCatalogResolvesNullHunDescriptions();
+  await assertUnknownProceduresAreOmitted();
   console.log("Flow procedure/date/slot checks passed.");
 }
 
