@@ -6,6 +6,16 @@ o que surgen durante el desarrollo.
 
 ---
 
+## [2026-07-19] Mostrar procedimiento, fecha y hora por etapas en autoagendamiento
+
+**Ticket relacionado:** CORE-006
+**Decision:** El autoagendamiento sigue la ruta `IDENTIFICACION -> ESPECIALIDAD -> PROCEDIMIENTO -> FECHA -> SLOTS -> CONFIRMAR -> FINAL`. El paciente ve solamente el nombre del procedimiento. El codigo CUPS se usa internamente para deduplicar procedimientos, firmar la seleccion y filtrar la agenda, pero no se muestra ni se persiste. Cada seleccion se valida mediante token opaco firmado y reconsulta HUN.
+**Motivo:** Una especialidad puede publicar varios procedimientos y concentrar numerosos horarios en un mismo dia. Seleccionar primero el procedimiento y despues separar fecha/hora evita ambiguedad y permite acceder a toda la disponibilidad sin saturar una pantalla.
+**Alternativas descartadas:** Mostrar codigo CUPS; descartado porque no aporta valor al paciente. Mantener una lista global de horarios; descartado porque oculta fechas posteriores. Persistir la seleccion completa en Supabase; descartado por minimizacion de datos.
+**Impacto:** `flow-agendamiento.json` incorpora `PROCEDIMIENTO` y `FECHA`; `lib/flowHandler.js` genera tokens `procedure_v1` y `date_v1`, reconsulta HUN en cada etapa y mantiene la disponibilidad solo en memoria. El Flow de campana conserva su recorrido directo y el Flow de reagendamiento no cambia.
+
+---
+
 ## [2026-07-19] Separar fecha y hora sin ciclos en el Flow de reagendamiento
 
 **Ticket relacionado:** RESCH-003

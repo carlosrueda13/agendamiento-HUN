@@ -8,7 +8,7 @@ Fase activa: Sprint 4 - Cancelacion y reagendamiento
 | Fase | Total | Completados | En progreso | Bloqueados | Pendientes |
 |------|-------|-------------|-------------|------------|------------|
 | Sprint 0 - Setup | 5 | 5 | 0 | 0 | 0 |
-| Sprint 1 - Core agendamiento | 5 | 5 | 0 | 0 | 0 |
+| Sprint 1 - Core agendamiento | 6 | 6 | 0 | 0 | 0 |
 | Sprint 2 - Integracion WhatsApp | 5 | 4 | 1 | 0 | 0 |
 | Sprint 3 - Campanas y notificaciones | 6 | 6 | 0 | 0 | 0 |
 | Sprint 4 - Cancelacion y reagendamiento | 5 | 4 | 1 | 0 | 0 |
@@ -16,9 +16,9 @@ Fase activa: Sprint 4 - Cancelacion y reagendamiento
 | Sprint 6 - QA y seguridad | 3 | 0 | 0 | 0 | 3 |
 | Sprint 7 - Deploy y cierre contractual | 3 | 0 | 0 | 0 | 3 |
 | Sprint 8 - API de campanas para panel del hospital | 11 | 11 | 0 | 0 | 0 |
-| **TOTAL** | **45** | **35** | **2** | **0** | **8** |
+| **TOTAL** | **46** | **36** | **2** | **0** | **8** |
 
-Avance global: 35 / 45 tickets completados (77.8%)
+Avance global: 36 / 46 tickets completados (78.3%)
 
 ## Estado actual
 
@@ -308,7 +308,7 @@ Avance global: 35 / 45 tickets completados (77.8%)
 **Estado:** `done`
 **Labels:** `feature`, `backend`, `api`
 **Depende de:** CORE-004
-**Desbloquea:** FLOW-002, FLOW-003, NOTIF-001, RESCH-001, QA-001
+**Desbloquea:** CORE-006, FLOW-002, FLOW-003, NOTIF-001, RESCH-001
 
 **Microsteps:**
 - [x] Reconsultar HUN por `cod_especialidad` y `fecha_final` antes de confirmar.
@@ -333,6 +333,41 @@ Avance global: 35 / 45 tickets completados (77.8%)
 
 **Evidencia:** `lib/flowHandler.js`, `scripts/check-flow-confirmation.js`, `package.json`; `npm.cmd test` exitoso; `node --check lib/flowHandler.js` exitoso; `node --check scripts/check-flow-confirmation.js` exitoso; busqueda sin mojibake en `lib/flowHandler.js`, `flow-agendamiento.json` y `README.md`.
 **Notas:** Aprobado por el usuario el 2026-07-02. La seleccion y confirmacion reconsultan HUN, regeneran tokens de la agenda vigente y solo usan el slot si sigue disponible/autogestionable. Si el cupo vence, el Flow devuelve error recuperable y no ejecuta asignacion. La asignacion asincrona usa el slot fresco guardado en memoria inmediatamente antes de procesar; Supabase conserva solo estado minimo, `slot_token`, resultado agregado y errores tecnicos no sensibles.
+
+---
+
+### CORE-006 - Separar procedimiento, fecha y hora en autoagendamiento
+
+**Estado:** `done`
+**Labels:** `feature`, `backend`, `api`, `flow`, `testing`
+**Depende de:** CORE-005, FLOW-001
+**Desbloquea:** QA-001
+
+**Microsteps:**
+- [x] Publicar `flow-agendamiento.json` con `PROCEDIMIENTO` y `FECHA` entre especialidad y horarios.
+- [x] Recolectar procedimientos futuros y autogestionables desde todos los `cups[]` de la agenda y deduplicarlos internamente por CUPS.
+- [x] Mostrar solamente el nombre del procedimiento, sin exponer el codigo CUPS.
+- [x] Generar tokens opacos firmados `procedure_v1` y `date_v1` vinculados a sesion y expiracion.
+- [x] Reconsultar HUN al seleccionar procedimiento y agrupar toda la disponibilidad por fecha sin recorte global.
+- [x] Reconsultar HUN al seleccionar fecha y mostrar solo las horas de ese dia y procedimiento.
+- [x] Reconsultar HUN al seleccionar y confirmar el `slot_token`.
+- [x] Mantener procedimientos, fechas y slots solo en memoria con TTL.
+- [x] Conservar sin cambios el recorrido directo de campanas.
+- [x] Extender pruebas de Flow, errores, confirmacion y waiver E2E.
+
+**Criterios de aceptacion:**
+- [x] El Flow publicado sigue `IDENTIFICACION -> ESPECIALIDAD -> PROCEDIMIENTO -> FECHA -> SLOTS -> CONFIRMAR -> FINAL`.
+- [x] El paciente ve nombres de procedimientos y nunca codigos CUPS.
+- [x] Procedimientos repetidos con el mismo CUPS aparecen una sola vez.
+- [x] Todas las fechas disponibles quedan accesibles aunque el primer dia supere `FLOW_MAX_SLOTS`.
+- [x] La pantalla de horas contiene solo opciones del procedimiento y fecha seleccionados.
+- [x] Procedimiento, CUPS, fecha, hora y agenda no se guardan en Supabase ni eventos operativos.
+- [x] Cupos vencidos o errores HUN generan recuperacion conversacional sin asignar datos obsoletos.
+- [x] Campanas y reagendamiento conservan sus Flows independientes.
+- [x] La suite automatizada completa finaliza correctamente.
+
+**Evidencia:** `flow-agendamiento.json`, `lib/flowHandler.js`, `scripts/check-flow-slots.js`, `scripts/check-flow-confirmation.js`, `scripts/check-flow-errors.js`, `scripts/check-flow-e2e-waiver.js`, `README.md`, `.project-tracking/DECISIONS.md`; JSON publicado en Meta y confirmado por el usuario el 2026-07-19; `node --check lib/flowHandler.js` exitoso; `npm.cmd test` completo exitoso.
+**Notas:** Aprobado por el usuario el 2026-07-19. La identidad del procedimiento se conserva solo en memoria y dentro de tokens HMAC opacos. Supabase recibe exclusivamente el estado coarse `eligiendo_slot`, especialidad, token de slot cuando aplica y expiracion. El Flow de campana continua de identificacion a `SLOTS` para no alterar la oferta dirigida.
 
 ---
 
@@ -899,7 +934,7 @@ Avance global: 35 / 45 tickets completados (77.8%)
 
 **Estado:** `pending`
 **Labels:** `testing`, `docs`
-**Depende de:** CORE-005, FLOW-004, CAMPAIGN-003, CANCEL-002, RESCH-002, RESCH-003, INTAKE-002, NOTIF-001
+**Depende de:** CORE-006, FLOW-004, CAMPAIGN-003, CANCEL-002, RESCH-002, RESCH-003, INTAKE-002, NOTIF-001
 **Desbloquea:** QA-002, DOCS-001
 
 **Microsteps:**

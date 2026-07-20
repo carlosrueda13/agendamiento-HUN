@@ -120,7 +120,17 @@ async function identifyAndList(flowToken) {
       correo: "paciente@example.com",
     })
   );
-  return handleFlow(flowPayload(flowToken, "ESPECIALIDAD", { especialidad: "21" }));
+  const procedures = await handleFlow(
+    flowPayload(flowToken, "ESPECIALIDAD", { especialidad: "21" })
+  );
+  const dates = await handleFlow(
+    flowPayload(flowToken, "PROCEDIMIENTO", {
+      procedimiento_token: procedures.data.procedimientos[0].id,
+    })
+  );
+  return handleFlow(
+    flowPayload(flowToken, "FECHA", { fecha_token: dates.data.fechas[0].id })
+  );
 }
 
 async function waitFor(predicate, message) {
@@ -194,8 +204,8 @@ async function assertExpiredSlotIsRecoverable() {
   agendaMode = "unavailable";
   const response = await handleFlow(flowPayload(flowToken, "CONFIRMAR"));
   assert(
-    response.screen === "ESPECIALIDAD" || response.screen === "SLOTS",
-    "Slot vencido debe devolver una pantalla recuperable."
+    response.screen === "FECHA" || response.screen === "SLOTS",
+    `Slot vencido debe devolver una pantalla recuperable. Recibido: ${JSON.stringify(response)}`
   );
   assert(
     /cupo ya no esta disponible/i.test(response.data.error_message),

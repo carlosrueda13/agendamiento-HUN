@@ -109,6 +109,20 @@ async function selectSpecialty(flowToken) {
   return handleFlow(flowPayload(flowToken, "ESPECIALIDAD", { especialidad: "590" }));
 }
 
+async function selectProcedureAndDate(flowToken) {
+  const procedures = await selectSpecialty(flowToken);
+  assert(procedures.screen === "PROCEDIMIENTO", "Debe listar procedimientos en modo waiver.");
+  const dates = await handleFlow(
+    flowPayload(flowToken, "PROCEDIMIENTO", {
+      procedimiento_token: procedures.data.procedimientos[0].id,
+    })
+  );
+  assert(dates.screen === "FECHA", "Debe listar fechas en modo waiver.");
+  return handleFlow(
+    flowPayload(flowToken, "FECHA", { fecha_token: dates.data.fechas[0].id })
+  );
+}
+
 async function waitFor(predicate, message) {
   const started = Date.now();
   while (Date.now() - started < 1000) {
@@ -148,7 +162,7 @@ async function assertUnauthorizedDocumentDoesNotBypass() {
 async function assertAllowedDocumentAssignsAndCancels() {
   const flowToken = "flow_waiver_allowed";
   await identify(flowToken, "41531776");
-  const listed = await selectSpecialty(flowToken);
+  const listed = await selectProcedureAndDate(flowToken);
 
   assert(listed.screen === "SLOTS", "Documento autorizado debe ver slots en modo waiver.");
   assert(listed.data.slots.length === 1, "Debe exponer el cupo no autogestionable solo en waiver.");

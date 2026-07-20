@@ -117,6 +117,20 @@ async function selectSpecialty(flowToken) {
   return handleFlow(flowPayload(flowToken, "ESPECIALIDAD", { especialidad: "21" }));
 }
 
+async function selectProcedureAndDate(flowToken) {
+  const procedures = await selectSpecialty(flowToken);
+  assert(procedures.screen === "PROCEDIMIENTO", "Debe listar procedimientos disponibles.");
+  const dates = await handleFlow(
+    flowPayload(flowToken, "PROCEDIMIENTO", {
+      procedimiento_token: procedures.data.procedimientos[0].id,
+    })
+  );
+  assert(dates.screen === "FECHA", "Debe listar fechas del procedimiento.");
+  return handleFlow(
+    flowPayload(flowToken, "FECHA", { fecha_token: dates.data.fechas[0].id })
+  );
+}
+
 async function waitFor(predicate, message) {
   const started = Date.now();
   while (Date.now() - started < 1000) {
@@ -185,9 +199,9 @@ async function assertNoSlotsHasRetryAction() {
   assert(
     savedEvents.some(
       (event) =>
-        event.event_type === "flow_cupos" &&
+        event.event_type === "flow_especialidad" &&
         event.status === "fallida" &&
-        event.error_code === "sin_cupos"
+        event.resultado_operativo === "sin_procedimientos"
     ),
     "Sin cupos debe registrar evento de error no sensible."
   );
@@ -221,7 +235,7 @@ async function assertAsyncAssignmentFailureNotifiesPatient() {
   asignarMode = "throw";
   const flowToken = "flow_error_assignment";
   await identify(flowToken);
-  const listed = await selectSpecialty(flowToken);
+  const listed = await selectProcedureAndDate(flowToken);
   const slotToken = listed.data.slots[0].id;
   await handleFlow(flowPayload(flowToken, "SLOTS", { slot: slotToken }));
   const final = await handleFlow(flowPayload(flowToken, "CONFIRMAR"));

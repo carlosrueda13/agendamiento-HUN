@@ -1,6 +1,8 @@
-process.env.FLOW_SLOT_TOKEN_SECRET_B64 = Buffer.alloc(32, 7).toString("base64");
+process.env.FLOW_SLOT_TOKEN_SECRET_B64 = Buffer.alloc(32, 11).toString("base64");
 process.env.FLOW_MAX_SLOTS = "2";
 
+const fs = require("fs");
+const path = require("path");
 const hun = require("../lib/hun");
 const db = require("../lib/db");
 
@@ -9,10 +11,7 @@ const savedEvents = [];
 let agendaMode = "mixed";
 
 hun.consultarCitasDocumento = async () => [
-  {
-    Nombre_Paciente: " PACIENTE SLOT ",
-    Cod_Eps: " HUN22 ",
-  },
+  { Nombre_Paciente: " PACIENTE SLOT ", Cod_Eps: " HUN22 " },
 ];
 
 hun.getEspecialidades = async () => [
@@ -20,130 +19,113 @@ hun.getEspecialidades = async () => [
   { id: "30", title: "CARDIOLOGIA" },
 ];
 
-hun.getAgendaPorEspecialidad = async (codEspecialidad) => {
+function agendaSlot({ date, time, detailId, code, description, auto = "si" }) {
+  return {
+    codigo_medico: `ME-${detailId}`,
+    fecha_atencion: date,
+    hora_inicial: time,
+    nombre_medico: `MEDICO ${detailId}`,
+    nombre_especialidad: "ANESTESIOLOGIA",
+    numero_consultorio: "101",
+    tiempo_intervalo: "20",
+    cups: [
+      {
+        agenda_detalle_id: detailId,
+        autogestionable: auto,
+        codigo: code,
+        descripcion: description,
+      },
+    ],
+  };
+}
+
+hun.getAgendaPorEspecialidad = async () => {
   if (agendaMode === "empty") {
     return [
-      {
-        codigo_medico: " ME999 ",
-        fecha_atencion: "2026-08-01",
-        hora_inicial: "10:00:00",
-        nombre_medico: " MEDICO SIN CUPO ",
-        nombre_especialidad: " ANESTESIOLOGIA ",
-        numero_consultorio: "101",
-        tiempo_intervalo: "20",
-        cups: [
-          {
-            agenda_detalle_id: "A-0",
-            autogestionable: "no",
-            codigo: "890201",
-            descripcion: "No autogestionable",
-          },
-        ],
-      },
+      agendaSlot({
+        date: "2026-08-01",
+        time: "10:00:00",
+        detailId: "EMPTY",
+        code: "890999",
+        description: "No visible",
+        auto: "no",
+      }),
     ];
   }
 
   return [
-    {
-      codigo_medico: " ME000 ",
-      fecha_atencion: "2026-07-01",
-      hora_inicial: "07:00:00",
-      nombre_medico: " MEDICO PASADO ",
-      nombre_especialidad: " ANESTESIOLOGIA ",
-      numero_consultorio: "100",
-      tiempo_intervalo: "20",
-      cups: [
-        {
-          agenda_detalle_id: "A-PAST",
-          autogestionable: "SI",
-          codigo: "890200",
-          descripcion: "No visible por fecha",
-        },
-      ],
-    },
-    {
-      codigo_medico: " ME002 ",
-      fecha_atencion: "2026-08-02",
-      hora_inicial: "09:00:00",
-      nombre_medico: " MEDICO B ",
-      nombre_especialidad: " ANESTESIOLOGIA ",
-      numero_consultorio: "202",
-      tiempo_intervalo: "30",
-      cups: [
-        {
-          agenda_detalle_id: "A-2",
-          autogestionable: "SI",
-          codigo: "890202",
-          descripcion: "Consulta B",
-        },
-        {
-          agenda_detalle_id: "A-3",
-          autogestionable: "no",
-          codigo: "890203",
-          descripcion: "No visible",
-        },
-      ],
-    },
-    {
-      codigo_medico: " ME001 ",
-      fecha_atencion: "2026-08-01",
-      hora_inicial: "07:00:00",
-      nombre_medico: " MEDICO A ",
-      nombre_especialidad: " ANESTESIOLOGIA ",
-      numero_consultorio: "101",
-      tiempo_intervalo: "20",
-      cups: [
-        {
-          agenda_detalle_id: "A-1",
-          autogestionable: " si ",
-          codigo: "890201",
-          descripcion: "Consulta A",
-        },
-        {
-          agenda_detalle_id: "A-4",
-          autogestionable: "no",
-          codigo: "890204",
-          descripcion: "No visible por filtro",
-        },
-        {
-          autogestionable: "si",
-          codigo: "890205",
-          descripcion: "Sin agenda_detalle_id",
-        },
-      ],
-    },
-  ].map((row) => ({
-    ...row,
-    nombre_especialidad: `${row.nombre_especialidad} ${codEspecialidad}`.trim(),
-  }));
+    agendaSlot({
+      date: "2026-07-01",
+      time: "07:00:00",
+      detailId: "PAST",
+      code: "890201",
+      description: "Consulta A",
+    }),
+    agendaSlot({
+      date: "2026-08-01",
+      time: "07:00:00",
+      detailId: "A1",
+      code: "890201",
+      description: "Consulta A",
+    }),
+    agendaSlot({
+      date: "2026-08-01",
+      time: "08:00:00",
+      detailId: "A2",
+      code: "890201",
+      description: "Consulta A",
+    }),
+    agendaSlot({
+      date: "2026-08-01",
+      time: "09:00:00",
+      detailId: "A3",
+      code: "890201",
+      description: "Consulta A",
+    }),
+    agendaSlot({
+      date: "2026-08-02",
+      time: "10:00:00",
+      detailId: "A4",
+      code: "890201",
+      description: "Consulta A",
+    }),
+    agendaSlot({
+      date: "2026-08-03",
+      time: "11:00:00",
+      detailId: "B1",
+      code: "890202",
+      description: "Consulta B",
+    }),
+    agendaSlot({
+      date: "2026-08-03",
+      time: "11:30:00",
+      detailId: "MALFORMED",
+      code: undefined,
+      description: "Registro sin CUPS",
+    }),
+    agendaSlot({
+      date: "2026-08-04",
+      time: "12:00:00",
+      detailId: "NOAUTO",
+      code: "890203",
+      description: "No visible",
+      auto: "no",
+    }),
+  ];
 };
 
-db.guardarSesionTemporal = async (session) => {
-  savedSessions.push(session);
-};
-
-db.guardarEventoOperativo = async (event) => {
-  savedEvents.push(event);
-};
-
+db.guardarSesionTemporal = async (session) => savedSessions.push(session);
+db.guardarEventoOperativo = async (event) => savedEvents.push(event);
 db.finalizarSesionTemporal = async () => {};
 
 const { handleFlow } = require("../lib/flowHandler");
 
 function assert(condition, message) {
-  if (!condition) {
-    throw new Error(message);
-  }
+  if (!condition) throw new Error(message);
 }
 
-function flowPayload(flowToken, screen, data) {
-  return {
-    action: "data_exchange",
-    screen,
-    flow_token: flowToken,
-    version: "7.3",
-    data,
-  };
+function flowPayload(flowToken, screen, data = {}) {
+  return { action: "data_exchange", screen, flow_token: flowToken, version: "7.3", data };
 }
 
 async function identify(flowToken) {
@@ -157,11 +139,7 @@ async function identify(flowToken) {
 }
 
 async function selectSpecialty(flowToken) {
-  return handleFlow(
-    flowPayload(flowToken, "ESPECIALIDAD", {
-      especialidad: "21",
-    })
-  );
+  return handleFlow(flowPayload(flowToken, "ESPECIALIDAD", { especialidad: "21" }));
 }
 
 function assertMinimalSessionPersistence(session) {
@@ -178,79 +156,111 @@ function assertMinimalSessionPersistence(session) {
     "descripcion",
     "cups",
   ].forEach((forbidden) => {
-    assert(
-      !serialized.includes(forbidden),
-      `Sesion temporal no debe persistir dato de slot: ${forbidden}`
-    );
+    assert(!serialized.includes(forbidden), `Sesion temporal contiene ${forbidden}.`);
   });
 }
 
-async function assertAutogestionableSlots() {
-  const flowToken = "flow_slots_mixed";
-  await identify(flowToken);
-  const response = await selectSpecialty(flowToken);
-
-  assert(response.screen === "SLOTS", "Debe avanzar a seleccion de slots.");
-  assert(response.data.slots.length === 2, "Debe respetar FLOW_MAX_SLOTS.");
-
-  const [first, second] = response.data.slots;
-  assert(first.title.includes("01 ago 07:00"), "Slots deben ordenarse por fecha/hora.");
-  assert(second.title.includes("02 ago 09:00"), "Segundo slot ordenado incorrectamente.");
-  assert(first.description === "Consulta A", "Debe aplanar CUPS en opcion independiente.");
-  assert(!JSON.stringify(response.data.slots).includes("No visible"), "No debe ofrecer cupos no autogestionables.");
-  assert(!JSON.stringify(response.data.slots).includes("MEDICO PASADO"), "No debe ofrecer cupos vencidos.");
+function assertPublishedFlowContract() {
+  const flow = JSON.parse(
+    fs.readFileSync(path.join(__dirname, "..", "flow-agendamiento.json"), "utf8")
+  );
+  const ids = flow.screens.map((screen) => screen.id);
   assert(
-    /^slot_v1_[a-z0-9]+_[A-Za-z0-9_-]+$/.test(first.id),
-    "slot_token debe tener formato opaco firmado."
+    ids.join(">") === "IDENTIFICACION>ESPECIALIDAD>PROCEDIMIENTO>FECHA>SLOTS>CONFIRMAR>FINAL",
+    "El JSON debe separar procedimiento, fecha y hora."
   );
-
-  const repeat = await selectSpecialty(flowToken);
+  assert(flow.routing_model.ESPECIALIDAD.includes("PROCEDIMIENTO"), "Falta ruta a procedimiento.");
+  assert(flow.routing_model.PROCEDIMIENTO.includes("FECHA"), "Falta ruta a fecha.");
+  assert(flow.routing_model.FECHA.includes("SLOTS"), "Falta ruta a horarios.");
+  const procedure = flow.screens.find((screen) => screen.id === "PROCEDIMIENTO");
   assert(
-    repeat.data.slots[0].id === first.id,
-    "slot_token debe poder regenerarse para la misma agenda vigente."
+    !/cups|890201/i.test(JSON.stringify(procedure.data.procedimientos.__example__)),
+    "El ejemplo visible no debe exponer el codigo CUPS."
   );
-
-  const eligiendoSlot = savedSessions.find(
-    (session) => session.flow_token === flowToken && session.estado === "eligiendo_slot"
-  );
-  assert(eligiendoSlot, "Debe guardar sesion temporal al listar slots.");
-  assert(eligiendoSlot.especialidad_codigo === "21", "Debe persistir especialidad minima.");
-  assert(eligiendoSlot.slot_token === null, "No debe persistir slot antes de seleccion.");
-  assertMinimalSessionPersistence(eligiendoSlot);
-
-  const confirm = await handleFlow(flowPayload(flowToken, "SLOTS", { slot: first.id }));
-  assert(confirm.screen === "CONFIRMAR", "Seleccion de slot debe avanzar a confirmar.");
-
-  const confirmando = savedSessions.find(
-    (session) => session.flow_token === flowToken && session.estado === "confirmando"
-  );
-  assert(confirmando, "Debe guardar sesion temporal al seleccionar slot.");
-  assert(confirmando.slot_token === first.id, "Debe guardar solo el slot_token seleccionado.");
-  assertMinimalSessionPersistence(confirmando);
 }
 
-async function assertNoSlotsIsRecoverable() {
+async function assertProcedureDateAndTimeSelection() {
+  const flowToken = "flow_slots_grouped";
+  await identify(flowToken);
+  const procedures = await selectSpecialty(flowToken);
+
+  assert(procedures.screen === "PROCEDIMIENTO", "Especialidad debe abrir procedimientos.");
+  assert(procedures.data.procedimientos.length === 2, "Debe deduplicar por CUPS interno.");
+  assert(
+    procedures.data.procedimientos.map((item) => item.title).join("|") === "Consulta A|Consulta B",
+    "Solo debe mostrar nombres de procedimiento ordenados."
+  );
+  assert(!JSON.stringify(procedures.data).includes("890201"), "No debe exponer CUPS.");
+  assert(
+    /^procedure_v1_[a-z0-9]+_[A-Za-z0-9_-]+$/.test(procedures.data.procedimientos[0].id),
+    "El procedimiento debe usar token opaco firmado."
+  );
+
+  const procedureToken = procedures.data.procedimientos[0].id;
+  const dates = await handleFlow(
+    flowPayload(flowToken, "PROCEDIMIENTO", { procedimiento_token: procedureToken })
+  );
+  assert(dates.screen === "FECHA", "Procedimiento debe abrir fechas.");
+  assert(dates.data.fechas.length === 2, "Debe mostrar todos los dias del procedimiento.");
+  assert(
+    dates.data.fechas[0].description === "3 horarios disponibles",
+    "La fecha debe indicar cuantos horarios contiene."
+  );
+  assert(
+    /^date_v1_[a-z0-9]+_[A-Za-z0-9_-]+$/.test(dates.data.fechas[0].id),
+    "La fecha debe usar token opaco firmado."
+  );
+
+  const repeatedDates = await handleFlow(
+    flowPayload(flowToken, "PROCEDIMIENTO", { procedimiento_token: procedureToken })
+  );
+  assert(
+    repeatedDates.data.fechas[0].id === dates.data.fechas[0].id,
+    "Los tokens deben regenerarse de forma deterministica al reconsultar HUN."
+  );
+
+  const slots = await handleFlow(
+    flowPayload(flowToken, "FECHA", { fecha_token: dates.data.fechas[0].id })
+  );
+  assert(slots.screen === "SLOTS", "Fecha debe abrir horarios.");
+  assert(slots.data.slots.length === 3, "El limite global anterior no debe ocultar horas del dia.");
+  assert(slots.data.slots[0].title.startsWith("07:00"), "Debe mostrar primero la hora.");
+  assert(slots.data.slots.every((slot) => !slot.title.includes("02 ago")), "No debe mezclar dias.");
+  assert(slots.data.procedimiento_seleccionado.includes("Consulta A"), "Debe recordar procedimiento.");
+
+  const confirm = await handleFlow(
+    flowPayload(flowToken, "SLOTS", { slot: slots.data.slots[0].id })
+  );
+  assert(confirm.screen === "CONFIRMAR", "Horario vigente debe avanzar a confirmar.");
+
+  for (const persisted of savedSessions) assertMinimalSessionPersistence(persisted);
+  const serializedEvents = JSON.stringify(savedEvents);
+  assert(!serializedEvents.includes("890201"), "Los eventos no deben guardar CUPS.");
+  assert(!serializedEvents.includes("2026-08-01"), "Los eventos no deben guardar fechas.");
+}
+
+async function assertNoProceduresIsRecoverable() {
   agendaMode = "empty";
   const flowToken = "flow_slots_empty";
   await identify(flowToken);
   const response = await selectSpecialty(flowToken);
-
-  assert(response.screen === "ESPECIALIDAD", "Sin cupos debe volver a especialidad.");
-  assert(response.data.error_message, "Sin cupos debe devolver error recuperable.");
+  assert(response.screen === "ESPECIALIDAD", "Sin procedimientos debe volver a especialidad.");
+  assert(response.data.error_message, "Debe devolver un error recuperable.");
   assert(
     savedEvents.some(
       (event) =>
         event.event_type === "flow_especialidad" &&
-        event.resultado_operativo === "sin_cupos"
+        event.resultado_operativo === "sin_procedimientos"
     ),
-    "Sin cupos debe registrar evento operativo no sensible."
+    "Debe registrar solo el resultado agregado sin procedimientos."
   );
 }
 
 async function main() {
-  await assertAutogestionableSlots();
-  await assertNoSlotsIsRecoverable();
-  console.log("Flow slot checks passed.");
+  assertPublishedFlowContract();
+  await assertProcedureDateAndTimeSelection();
+  await assertNoProceduresIsRecoverable();
+  console.log("Flow procedure/date/slot checks passed.");
 }
 
 main().catch((error) => {

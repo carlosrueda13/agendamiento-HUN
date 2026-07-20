@@ -3,7 +3,9 @@
   "data_api_version": "3.0",
   "routing_model": {
     "IDENTIFICACION": ["ESPECIALIDAD"],
-    "ESPECIALIDAD": ["SLOTS"],
+    "ESPECIALIDAD": ["PROCEDIMIENTO"],
+    "PROCEDIMIENTO": ["FECHA"],
+    "FECHA": ["SLOTS"],
     "SLOTS": ["CONFIRMAR"],
     "CONFIRMAR": ["FINAL"],
     "FINAL": []
@@ -126,9 +128,144 @@
       }
     },
     {
-      "id": "SLOTS",
-      "title": "Disponibilidad",
+      "id": "PROCEDIMIENTO",
+      "title": "Procedimiento",
       "data": {
+        "especialidad_seleccionada": {
+          "type": "string",
+          "__example__": "Especialidad: DERMATOLOGIA"
+        },
+        "procedimientos": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "title": { "type": "string" },
+              "description": { "type": "string" }
+            }
+          },
+          "__example__": [
+            {
+              "id": "procedure_token_ejemplo",
+              "title": "Consulta de primera vez por dermatologia"
+            }
+          ]
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextBody",
+            "text": "${data.especialidad_seleccionada}"
+          },
+          {
+            "type": "TextBody",
+            "text": "Selecciona el procedimiento que necesitas."
+          },
+          {
+            "type": "Form",
+            "name": "form_procedimiento",
+            "children": [
+              {
+                "type": "RadioButtonsGroup",
+                "name": "procedimiento_token",
+                "label": "Procedimientos disponibles",
+                "required": true,
+                "data-source": "${data.procedimientos}"
+              },
+              {
+                "type": "Footer",
+                "label": "Ver fechas disponibles",
+                "on-click-action": {
+                  "name": "data_exchange",
+                  "payload": {
+                    "procedimiento_token": "${form.procedimiento_token}"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "FECHA",
+      "title": "Fecha disponible",
+      "data": {
+        "procedimiento_seleccionado": {
+          "type": "string",
+          "__example__": "Procedimiento: CONSULTA DE PRIMERA VEZ POR DERMATOLOGIA"
+        },
+        "fechas": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "title": { "type": "string" },
+              "description": { "type": "string" }
+            }
+          },
+          "__example__": [
+            {
+              "id": "date_token_ejemplo",
+              "title": "Martes 21 de julio",
+              "description": "12 horarios disponibles"
+            }
+          ]
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextBody",
+            "text": "${data.procedimiento_seleccionado}"
+          },
+          {
+            "type": "TextBody",
+            "text": "Selecciona el dia que prefieres para tu cita."
+          },
+          {
+            "type": "Form",
+            "name": "form_fecha",
+            "children": [
+              {
+                "type": "Dropdown",
+                "name": "fecha_token",
+                "label": "Fechas disponibles",
+                "required": true,
+                "data-source": "${data.fechas}"
+              },
+              {
+                "type": "Footer",
+                "label": "Ver horarios",
+                "on-click-action": {
+                  "name": "data_exchange",
+                  "payload": {
+                    "fecha_token": "${form.fecha_token}"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "SLOTS",
+      "title": "Horarios disponibles",
+      "data": {
+        "procedimiento_seleccionado": {
+          "type": "string",
+          "__example__": "Procedimiento: CONSULTA DE PRIMERA VEZ POR DERMATOLOGIA"
+        },
+        "fecha_seleccionada": {
+          "type": "string",
+          "__example__": "Fecha: martes 21 de julio"
+        },
         "slots": {
           "type": "array",
           "items": {
@@ -141,9 +278,9 @@
           },
           "__example__": [
             {
-              "id": "9913",
-              "title": "29 jun 07:00 · ALMA PRIETO RAMIREZ",
-              "description": "Consulta de primera vez por especialista en anestesiología"
+              "id": "slot_token_ejemplo",
+              "title": "14:00 - JOSE TOMAS PERALTA",
+              "description": "Consultorio HUN"
             }
           ]
         }
@@ -153,7 +290,15 @@
         "children": [
           {
             "type": "TextBody",
-            "text": "Selecciona el horario disponible."
+            "text": "${data.procedimiento_seleccionado}"
+          },
+          {
+            "type": "TextBody",
+            "text": "${data.fecha_seleccionada}"
+          },
+          {
+            "type": "TextBody",
+            "text": "Selecciona una hora. Si ninguna te sirve, regresa para escoger otra fecha."
           },
           {
             "type": "Form",

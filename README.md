@@ -276,7 +276,7 @@ Para campanas de demanda inducida, ejecutar tambien las migraciones incrementale
 
 1. `POST /webhook` recibe un mensaje entrante o dispara una campana aprobada.
 2. Para mensajes entrantes, el backend envia menu inicial y consentimiento de tratamiento de datos.
-3. Si el paciente acepta y elige agendar, el backend envia el Flow de autoagendamiento con `FLOW_ID`.
+3. Si el paciente acepta y elige agendar, el backend envia el Flow de autoagendamiento con `FLOW_ID`: identifica al paciente, permite elegir especialidad, muestra solo los nombres de los procedimientos disponibles y despues separa la seleccion de fecha y hora. Los codigos CUPS se usan unicamente en memoria para filtrar la agenda HUN.
 4. Si el paciente acepta y elige consultar, el backend muestra una lista con los nombres completos de los tipos de documento, pide el numero en un segundo mensaje y consulta HUN solo en memoria.
 5. La respuesta de consulta muestra exclusivamente citas proximas con estado exacto `Reservada`, en un formato legible con fecha, procedimiento y profesional.
 6. Si el paciente acepta modificar/cancelar, el backend pregunta si desea modificar o cancelar.
