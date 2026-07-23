@@ -10,26 +10,27 @@ Fase activa: Sprint 3 - Campanas y notificaciones (reabierto)
 | Sprint 0 - Setup | 5 | 5 | 0 | 0 | 0 |
 | Sprint 1 - Core agendamiento | 7 | 7 | 0 | 0 | 0 |
 | Sprint 2 - Integracion WhatsApp | 5 | 5 | 0 | 0 | 0 |
-| Sprint 3 - Campanas y notificaciones | 6 | 5 | 1 | 0 | 0 |
+| Sprint 3 - Campanas y notificaciones | 6 | 5 | 0 | 1 | 0 |
 | Sprint 4 - Cancelacion y reagendamiento | 5 | 5 | 0 | 0 | 0 |
 | Sprint 5 - Operacion y reportes | 2 | 0 | 0 | 0 | 2 |
 | Sprint 6 - QA y seguridad | 3 | 0 | 0 | 0 | 3 |
 | Sprint 7 - Deploy y cierre contractual | 3 | 0 | 0 | 0 | 3 |
 | Sprint 8 - API de campanas para panel del hospital | 11 | 11 | 0 | 0 | 0 |
-| **TOTAL** | **47** | **38** | **1** | **0** | **8** |
+| **TOTAL** | **47** | **38** | **0** | **1** | **8** |
 
 Avance global: 38 / 47 tickets completados (80.9%)
 
 ## Estado actual
 
-**Proximo ticket recomendado:** NOTIF-001 - Implementar confirmaciones inmediatas y recordatorios desde HUN.
-**Tickets en progreso:** NOTIF-001
-**Tickets bloqueados:** -
+**Proximo ticket recomendado:** ADMIN-001 - Crear consultas administrativas por perfil.
+**Tickets en progreso:** -
+**Tickets bloqueados:** NOTIF-001
 
 ### Tickets bloqueados por dependencias no resueltas
 
 | Ticket | Bloqueado por |
 |--------|---------------|
+| NOTIF-001 | Aprobacion en Meta de la plantilla WhatsApp de recordatorio |
 | ADMIN-002 | ADMIN-001 |
 | QA-002 | QA-001 |
 | SEC-001 | ADMIN-001 |
@@ -688,7 +689,7 @@ Avance global: 38 / 47 tickets completados (80.9%)
 
 ### NOTIF-001 - Implementar confirmaciones inmediatas y recordatorios desde HUN
 
-**Estado:** `in_progress`
+**Estado:** `blocked`
 **Labels:** `feature`, `backend`, `api`, `infra`, `database`
 **Depende de:** CORE-005, CAMPAIGN-001
 **Desbloquea:** QA-001
@@ -717,7 +718,7 @@ Avance global: 38 / 47 tickets completados (80.9%)
 - [ ] Existe evidencia de ejecucion manual controlada y del timer de AWS configurado.
 
 **Evidencia parcial:** `lib/hun.js`; `lib/reminders.js`; `lib/whatsapp.js`; `lib/email.js`; `lib/db.js`; `scripts/send-appointment-reminders.js`; `scripts/check-notifications.js`; `scripts/check-hun-client.js`; `scripts/check-flow-confirmation.js`; `supabase/009_notification_reminder_dedupe.sql`; `NOTIFICACIONES_HUN.md`; `npm.cmd test` y `git diff --check` exitosos. Prueba seca real del 2026-07-22 para `2026-07-23`: 762 citas consultadas/elegibles, 730 con WhatsApp valido y 722 con correo valido, sin envios ni escrituras. El check de reagendamiento tambien quedo estabilizado al usar el reloj inyectado para validar slots, evitando que sus fechas fijas dependan del reloj real. El 2026-07-23 se agrego una prueba que verifica que el correo recibido en el Flow llega al adaptador EmailJS y trazabilidad sanitizada del resultado.
-**Notas:** Reabierto el 2026-07-22 porque HUN habilito `GET /webServiceFechaMedico/consultar` con `fecha_inicial` y `fecha_final`, eliminando el bloqueo del proveedor por ventana. El usuario confirmo las plantillas externas: WhatsApp usa fecha, hora, especialidad y nombre; EmailJS usa correo, nombre, especialidad, medico, procedimiento, fecha, hora, numero de cita y anio. `consultorio` fue retirado porque el endpoint no lo entrega. Los datos solo se usan en memoria y no se persisten. El usuario confirmo la migracion 009 y las variables de Render con `REMINDER_SEND_ENABLED=false`. El despliegue se esta trasladando a AWS; el scheduler objetivo es un timer `systemd` que ejecuta un contenedor de una sola corrida. Quedan pendientes una prueba real con 1-3 citas controladas y habilitar el timer despues de esa evidencia. El endpoint HUN actual usa HTTP y transporta datos personales; su uso productivo exige HTTPS, red privada/VPN o aceptacion formal del riesgo. Las confirmaciones inmediatas ya aprobadas permanecen vigentes. Para confirmaciones inmediatas, el correo se captura antes de limpiar la sesion temporal y EmailJS devuelve un resultado operativo no sensible; una omision ya no queda silenciosa.
+**Notas:** Reabierto el 2026-07-22 porque HUN habilito `GET /webServiceFechaMedico/consultar` con `fecha_inicial` y `fecha_final`, eliminando el bloqueo del proveedor por ventana. El usuario confirmo las plantillas externas: WhatsApp usa fecha, hora, especialidad y nombre; EmailJS usa correo, nombre, especialidad, medico, procedimiento, fecha, hora, numero de cita y anio. `consultorio` fue retirado porque el endpoint no lo entrega. Los datos solo se usan en memoria y no se persisten. El usuario confirmo la migracion 009 y las variables de Render con `REMINDER_SEND_ENABLED=false`. El despliegue se esta trasladando a AWS; el scheduler objetivo es un timer `systemd` que ejecuta un contenedor de una sola corrida. El endpoint HUN actual usa HTTP y transporta datos personales; su uso productivo exige HTTPS, red privada/VPN o aceptacion formal del riesgo. Las confirmaciones inmediatas ya aprobadas permanecen vigentes. Para confirmaciones inmediatas, el correo se captura antes de limpiar la sesion temporal y EmailJS devuelve un resultado operativo no sensible; una omision ya no queda silenciosa. Prueba controlada AWS del 2026-07-23: HUN devolvio 602 citas reservadas para `2026-07-24`, la allowlist proceso solo la cita autorizada y EmailJS envio el correo. WhatsApp quedo pendiente porque Meta devolvio `132001` mientras la traduccion editada de la plantilla estaba en revision. `agendamiento-hun-reminders.timer` permanece sin instalar (`not-found`) e inactivo; no hay ejecuciones automaticas. Retomar al aprobarse la plantilla, reconciliar la prueba WhatsApp e instalar/habilitar el timer.
 
 ---
 
