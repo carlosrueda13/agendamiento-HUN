@@ -13,3 +13,6 @@ agendamiento-HUN.env
 *.pem
 graphify-out/
 .tmp-hun-orquestador/
+.agents/
+.claude/
+skills-lock.json
