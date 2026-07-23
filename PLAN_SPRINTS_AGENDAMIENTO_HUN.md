@@ -648,33 +648,34 @@ Enviar mensajes de oferta de citas por WhatsApp a destinatarios de campana, enla
 
 ## [NOTIF-001] Implementar confirmaciones inmediatas y recordatorios desde HUN
 
-**Labels**: `feature`, `backend`
+**Labels**: `feature`, `backend`, `api`, `infra`, `database`
 **Depends on**: CORE-005, CAMPAIGN-001
 **Blocked by**: -
 
 ### Descripcion
-Agregar confirmaciones inmediatas y recordatorios calculados desde HUN. La confirmacion de una cita recien agendada se envia inmediatamente tras asignacion exitosa y no requiere guardar la cita en Supabase. Los recordatorios se generan consultando HUN por ventanas de fechas, no desde citas almacenadas localmente.
+Mantener las confirmaciones inmediatas existentes e implementar recordatorios calculados desde HUN mediante `GET /webServiceFechaMedico/consultar`. Un proceso programado consultara las citas del dia siguiente y enviara un recordatorio independiente por WhatsApp y correo para cada cita reservada. HUN seguira siendo la fuente de verdad y los datos de contacto y cita permaneceran solo en memoria durante la ejecucion.
 
 ### Microsteps
-1. Definir tipos de notificacion: confirmacion, recordatorio, error y cancelacion.
-2. Crear funcion reusable para registrar y enviar notificaciones.
-3. Enviar confirmacion inmediata despues de asignacion exitosa de `CORE-005`, usando datos frescos disponibles en memoria y el correo transitorio cifrado de la sesion solo si existe proveedor/API de correo aprobado.
-4. Definir `ReminderCandidateProvider` para obtener candidatos de recordatorio desde HUN por ventana de fechas.
-5. Definir reglas de ventana de envio, deduplicacion y numero maximo de intentos.
-6. Asociar notificaciones con campana, destinatario o sesion temporal, sin asociar datos de cita.
-7. Guardar solo eventos de intento de notificacion, canal, tipo, estado, proveedor, error tecnico y timestamp; nunca guardar direccion de correo plano ni cuerpo completo.
-8. Si HUN no expone datos suficientes para recordatorios por ventana, dejar advertencia operativa y bloquear recordatorios reales hasta contar con endpoint suficiente.
-9. Revisar si ya existe definicion formal de proveedor/API de correo antes de habilitar `NOTIF-002`.
-10. Si el proveedor/API de correo sigue indefinido, elevar advertencia y dejar `NOTIF-002` condicionado a definicion operativa.
+1. Crear y aprobar primero las plantillas externas de recordatorio en Meta y EmailJS.
+2. Agregar `consultarRecordatoriosVentana({ fechaInicial, fechaFinal })` al cliente HUN y completar `HunReminderCandidateProvider`.
+3. Consultar diariamente la fecha del dia siguiente en `America/Bogota`, normalizar la respuesta y procesar solo citas con estado `Reservada`.
+4. Enviar por WhatsApp fecha, hora, especialidad y nombre. Enviar por correo nombre, especialidad, medico, procedimiento, fecha, hora, numero de cita y anio; validar contactos y mantener cada canal independiente. Todos estos datos viven solo en memoria.
+5. Calcular una clave HMAC no reversible por cita y usarla para deduplicacion y trazabilidad minima, sin persistir datos de cita o contacto.
+6. Aplicar concurrencia limitada y reintentos solo para timeout, desconexion, HTTP 429 y errores 5xx.
+7. Crear `npm run reminders:send`, con opciones `--dry-run` y `--date YYYY-MM-DD`, y configurar un Render Cron Job diario.
+8. Agregar pruebas de consulta, zona horaria, filtros, payloads, deduplicacion, reintentos, minimizacion y ejecucion controlada.
 
 ### Criterios de aceptacion
 - [ ] Una cita agendada genera notificacion de confirmacion.
 - [ ] Los recordatorios no dependen de citas almacenadas en Supabase.
-- [ ] El modelo soporta recordatorios programables mediante consulta HUN por ventana de fechas.
-- [ ] Si HUN no tiene endpoint suficiente, queda implementada la interfaz `ReminderCandidateProvider` y los recordatorios reales quedan bloqueados con advertencia operativa.
-- [ ] Cada intento queda registrado con estado.
-- [ ] Un fallo de WhatsApp no rompe el proceso principal.
-- [ ] Antes de pasar a `NOTIF-002`, queda documentado si el proveedor/API de correo esta definido o si debe elevarse advertencia.
+- [ ] La consulta envia la misma fecha del dia siguiente como `fecha_inicial` y `fecha_final`.
+- [ ] Solo las citas `Reservada` son candidatas y cada una genera como maximo un envio por canal.
+- [ ] WhatsApp muestra fecha, hora, especialidad y nombre; correo muestra ademas medico, procedimiento, numero de cita y anio, sin persistir esos datos.
+- [ ] Un fallo de WhatsApp no bloquea correo y un fallo de correo no bloquea WhatsApp.
+- [ ] Reejecutar el proceso no duplica recordatorios aceptados por el proveedor.
+- [ ] Supabase y los logs no contienen numero de cita, fecha, hora, especialidad, telefono, correo, documento, medico, procedimiento ni payload HUN.
+- [ ] El comando soporta prueba seca, fecha controlada y ejecucion programada en Render.
+- [ ] El endpoint HTTP queda registrado como riesgo y no se declara `CONTRACT_READY` sin HTTPS, red privada/VPN o aceptacion formal.
 
 ## [NOTIF-002] Preparar integracion de correo transaccional
 

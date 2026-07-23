@@ -158,6 +158,7 @@ create table if not exists public.notificaciones (
   proveedor text,
   mensaje_template_id text,
   external_message_id_hash text,
+  dedupe_key_hash text,
   error_code text,
   error_category text,
   retry_count integer not null default 0 check (retry_count >= 0),
@@ -196,6 +197,9 @@ create index if not exists idx_notificaciones_campaign on public.notificaciones(
 create index if not exists idx_notificaciones_recipient on public.notificaciones(recipient_id);
 create index if not exists idx_notificaciones_estado on public.notificaciones(estado);
 create index if not exists idx_notificaciones_created_at on public.notificaciones(created_at);
+create unique index if not exists uq_notificaciones_recordatorio_dedupe
+on public.notificaciones(canal, tipo, dedupe_key_hash)
+where tipo = 'recordatorio' and dedupe_key_hash is not null;
 
 create or replace view public.vista_medica_operativa as
 select

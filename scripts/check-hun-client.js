@@ -98,6 +98,23 @@ async function testCitasYCancelacion() {
     "GET /webServiceCitaNumero/consultar_citas_numero": {
       data: { results: [{ Estado: " ASIGNADA " }] },
     },
+    "GET /webServiceFechaMedico/consultar": ({ params }) => {
+      assert.deepStrictEqual(params, {
+        fecha_inicial: "2026-07-23",
+        fecha_final: "2026-07-23",
+      });
+      return {
+        data: {
+          results: [
+            {
+              ESTADO: " Reservada ",
+              Numero_Cita: " 123 ",
+              Correo: " paciente@example.com ",
+            },
+          ],
+        },
+      };
+    },
     "POST /webServiceCancelarCitaH/cancelar_cita": (payload) => {
       assert.deepStrictEqual(payload, {
         cita: "123",
@@ -117,6 +134,24 @@ async function testCitasYCancelacion() {
   assert.deepStrictEqual(await api.consultarCitaNumero("123"), [
     { Estado: "ASIGNADA" },
   ]);
+  assert.deepStrictEqual(
+    await api.consultarRecordatoriosVentana({
+      fechaInicial: "2026-07-23",
+      fechaFinal: "2026-07-23",
+    }),
+    [
+      {
+        ESTADO: "Reservada",
+        Numero_Cita: "123",
+        Correo: "paciente@example.com",
+      },
+    ]
+  );
+  await assert.rejects(
+    () => api.consultarRecordatoriosVentana({ fechaInicial: "2026-07-23" }),
+    (error) =>
+      error instanceof hun.HunApiError && error.category === "invalid_request"
+  );
   assert.deepStrictEqual(await api.cancelarCita("123", "cc", "999"), {
     success: true,
     message: "OK",

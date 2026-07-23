@@ -246,6 +246,16 @@ o que surgen durante el desarrollo.
 
 ---
 
+## [2026-07-22] Ejecutar recordatorios desde HUN con Cron e idempotencia HMAC
+
+**Ticket relacionado:** NOTIF-001
+**Decision:** Un Render Cron Job consultara cada dia las citas del dia siguiente en `/webServiceFechaMedico/consultar` y enviara recordatorios independientes por WhatsApp y EmailJS. La idempotencia se basa en un HMAC no reversible por cita y canal almacenado en `notificaciones`; los datos personales y de cita solo viven en memoria.
+**Motivo:** HUN ya ofrece la ventana diaria necesaria y debe seguir siendo la fuente de verdad. El HMAC permite trazabilidad y evita duplicados sin romper la minimizacion de Supabase.
+**Alternativas descartadas:** Guardar citas localmente para programar recordatorios; descartado por minimizacion. Ejecutar `setInterval` dentro del web service; descartado porque reinicios o multiples instancias pueden omitir o duplicar corridas. Reenviar automaticamente registros `enviando`; descartado porque una respuesta perdida del proveedor podria duplicar el contacto.
+**Impacto:** Afecta `lib/hun.js`, `lib/reminders.js`, adaptadores WhatsApp/EmailJS, `notificaciones`, Render Cron, QA-001 y el gate `CONTRACT_READY`. El endpoint HTTP requiere mitigacion antes de produccion contractual.
+
+---
+
 <!-- Las entradas se agregan aqui durante el desarrollo con este formato:
 
 ## [YYYY-MM-DD] Titulo breve de la decision

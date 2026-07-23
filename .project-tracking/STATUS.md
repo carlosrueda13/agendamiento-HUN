@@ -1,7 +1,7 @@
 # Project Status - Agendamiento HUN por WhatsApp
 
-Ultima actualizacion: 2026-07-19
-Fase activa: Sprint 5 - Operacion y reportes
+Ultima actualizacion: 2026-07-22
+Fase activa: Sprint 3 - Campanas y notificaciones (reabierto)
 
 ## Resumen de avance
 
@@ -10,20 +10,20 @@ Fase activa: Sprint 5 - Operacion y reportes
 | Sprint 0 - Setup | 5 | 5 | 0 | 0 | 0 |
 | Sprint 1 - Core agendamiento | 7 | 7 | 0 | 0 | 0 |
 | Sprint 2 - Integracion WhatsApp | 5 | 5 | 0 | 0 | 0 |
-| Sprint 3 - Campanas y notificaciones | 6 | 6 | 0 | 0 | 0 |
+| Sprint 3 - Campanas y notificaciones | 6 | 5 | 1 | 0 | 0 |
 | Sprint 4 - Cancelacion y reagendamiento | 5 | 5 | 0 | 0 | 0 |
 | Sprint 5 - Operacion y reportes | 2 | 0 | 0 | 0 | 2 |
 | Sprint 6 - QA y seguridad | 3 | 0 | 0 | 0 | 3 |
 | Sprint 7 - Deploy y cierre contractual | 3 | 0 | 0 | 0 | 3 |
 | Sprint 8 - API de campanas para panel del hospital | 11 | 11 | 0 | 0 | 0 |
-| **TOTAL** | **47** | **39** | **0** | **0** | **8** |
+| **TOTAL** | **47** | **38** | **1** | **0** | **8** |
 
-Avance global: 39 / 47 tickets completados (83.0%)
+Avance global: 38 / 47 tickets completados (80.9%)
 
 ## Estado actual
 
-**Proximo ticket recomendado:** ADMIN-001 - Crear consultas administrativas por perfil.
-**Tickets en progreso:** -
+**Proximo ticket recomendado:** NOTIF-001 - Implementar confirmaciones inmediatas y recordatorios desde HUN.
+**Tickets en progreso:** NOTIF-001
 **Tickets bloqueados:** -
 
 ### Tickets bloqueados por dependencias no resueltas
@@ -688,34 +688,36 @@ Avance global: 39 / 47 tickets completados (83.0%)
 
 ### NOTIF-001 - Implementar confirmaciones inmediatas y recordatorios desde HUN
 
-**Estado:** `done`
-**Labels:** `feature`, `backend`
+**Estado:** `in_progress`
+**Labels:** `feature`, `backend`, `api`, `infra`, `database`
 **Depende de:** CORE-005, CAMPAIGN-001
-**Desbloquea:** NOTIF-002, QA-001
+**Desbloquea:** QA-001
 
 **Microsteps:**
-- [x] Definir tipos de notificacion: confirmacion, recordatorio, error y cancelacion.
-- [x] Crear funcion reusable para registrar y enviar notificaciones.
-- [x] Enviar confirmacion inmediata despues de asignacion exitosa de `CORE-005`, usando datos frescos disponibles en memoria y el correo transitorio cifrado de la sesion solo si existe proveedor/API de correo aprobado.
-- [x] Definir `ReminderCandidateProvider` para obtener candidatos de recordatorio desde HUN por ventana de fechas.
-- [x] Definir reglas de ventana de envio, deduplicacion y numero maximo de intentos.
-- [x] Asociar notificaciones con campana, destinatario o sesion temporal, sin asociar datos de cita.
-- [x] Guardar solo eventos de intento de notificacion, canal, tipo, estado, proveedor, error tecnico y timestamp; nunca guardar direccion de correo plano ni cuerpo completo.
-- [x] Si HUN no expone datos suficientes para recordatorios por ventana, dejar advertencia operativa y bloquear recordatorios reales hasta contar con endpoint suficiente.
-- [x] Revisar si ya existe definicion formal de proveedor/API de correo antes de habilitar `NOTIF-002`.
-- [x] Si el proveedor/API de correo sigue indefinido, elevar advertencia y dejar `NOTIF-002` condicionado a definicion operativa.
+- [x] Mantener las confirmaciones inmediatas existentes por WhatsApp y correo.
+- [x] Crear y aprobar primero las plantillas externas de recordatorio en Meta y EmailJS.
+- [x] Integrar `/webServiceFechaMedico/consultar` en `lib/hun.js` y completar `HunReminderCandidateProvider`.
+- [x] Filtrar unicamente citas `Reservada` correspondientes al dia siguiente en `America/Bogota`.
+- [x] Implementar envio independiente por WhatsApp y correo, con validacion de contactos, concurrencia limitada y reintentos.
+- [x] Implementar deduplicacion no reversible y trazabilidad minima en `notificaciones`.
+- [ ] Crear el comando de ejecucion unica y configurar el Render Cron Job.
+- [x] Agregar pruebas, documentacion, variables de entorno y evidencia de una ejecucion controlada.
 
 **Criterios de aceptacion:**
 - [x] Una cita agendada genera notificacion de confirmacion.
-- [x] Los recordatorios no dependen de citas almacenadas en Supabase.
-- [x] El modelo soporta recordatorios programables mediante consulta HUN por ventana de fechas.
-- [x] Si HUN no tiene endpoint suficiente, queda implementada la interfaz `ReminderCandidateProvider` y los recordatorios reales quedan bloqueados con advertencia operativa.
-- [x] Cada intento queda registrado con estado.
-- [x] Un fallo de WhatsApp no rompe el proceso principal.
-- [x] Antes de pasar a `NOTIF-002`, queda documentado si el proveedor/API de correo esta definido o si debe elevarse advertencia.
+- [x] La consulta usa la misma fecha del dia siguiente como `fecha_inicial` y `fecha_final`.
+- [x] Solo se procesan citas cuyo estado normalizado sea `Reservada`.
+- [x] Cada cita genera como maximo un recordatorio por canal.
+- [x] WhatsApp muestra fecha, hora, especialidad y nombre; correo muestra ademas medico, procedimiento, numero de cita y anio, sin persistir esos datos.
+- [x] Un fallo en un canal no bloquea el otro.
+- [x] Reejecutar el proceso no duplica mensajes ya aceptados por el proveedor.
+- [x] Supabase no guarda numero de cita, fecha, hora, especialidad, telefono, correo, documento, medico, procedimiento ni payload HUN.
+- [x] Los logs no contienen informacion personal ni respuestas completas.
+- [x] El comando falla de forma explicita si HUN o la configuracion obligatoria no estan disponibles.
+- [ ] Existe evidencia de ejecucion manual controlada y del Cron Job configurado.
 
-**Evidencia:** `lib/notifications.js`; `lib/reminders.js`; `lib/flowHandler.js`; `scripts/check-notifications.js`; `NOTIFICACIONES_HUN.md`; `package.json`; `node --check` exitoso para archivos JS modificados; `npm.cmd test` exitoso; `git diff --check` sin errores; commits en `main`: `1e70600`, `328d70f`.
-**Notas:** Aprobado por el usuario el 2026-07-07. La confirmacion de cita exitosa se envia por WhatsApp y ahora tambien registra intento en `notificaciones` con `session_id_hash`, canal, tipo, estado y proveedor, sin cuerpo del mensaje ni datos de cita. Los recordatorios reales quedan bloqueados operativamente hasta que HUN entregue un endpoint suficiente para consultar candidatos por ventana; mientras tanto queda implementada la interfaz `HunReminderCandidateProvider` y reglas de ventana/reintentos. EmailJS existe como adaptador condicionado por variables, pero el alcance completo de correo queda en `NOTIF-002`. Ajuste 2026-07-12: la confirmacion de agendamiento consulta HUN por numero de cita para mostrar `Procedimiento` real cuando HUN lo entrega; no se persiste procedimiento, numero de cita ni payload completo. En prueba real, correo de confirmacion fue enviado y WhatsApp quedo aceptado por Meta/registrado como enviado; queda como observacion de QA validar entrega final por estado webhook de Meta o auditoria no sensible.
+**Evidencia parcial:** `lib/hun.js`; `lib/reminders.js`; `lib/whatsapp.js`; `lib/email.js`; `lib/db.js`; `scripts/send-appointment-reminders.js`; `scripts/check-notifications.js`; `scripts/check-hun-client.js`; `supabase/009_notification_reminder_dedupe.sql`; `NOTIFICACIONES_HUN.md`; `npm.cmd test` y `git diff --check` exitosos. Prueba seca real del 2026-07-22 para `2026-07-23`: 762 citas consultadas/elegibles, 730 con WhatsApp valido y 722 con correo valido, sin envios ni escrituras. El check de reagendamiento tambien quedo estabilizado al usar el reloj inyectado para validar slots, evitando que sus fechas fijas dependan del reloj real.
+**Notas:** Reabierto el 2026-07-22 porque HUN habilito `GET /webServiceFechaMedico/consultar` con `fecha_inicial` y `fecha_final`, eliminando el bloqueo del proveedor por ventana. El usuario confirmo las plantillas externas: WhatsApp usa fecha, hora, especialidad y nombre; EmailJS usa correo, nombre, especialidad, medico, procedimiento, fecha, hora, numero de cita y anio. `consultorio` fue retirado porque el endpoint no lo entrega. Los datos solo se usan en memoria y no se persisten. El usuario confirmo la migracion 009 y las variables de Render con `REMINDER_SEND_ENABLED=false`. Quedan pendientes una prueba real con 1-3 citas controladas y la creacion del Cron Job. El endpoint HUN actual usa HTTP y transporta datos personales; su uso productivo exige HTTPS, red privada/VPN o aceptacion formal del riesgo. Las confirmaciones inmediatas ya aprobadas permanecen vigentes.
 
 ---
 
