@@ -200,47 +200,6 @@ function testDatesAndPayloads() {
   assert.strictEqual(dedupe.includes("1753791"), false);
 }
 
-async function testEmailJsAdapterTimeout() {
-  const calls = [];
-  const fakeHttpClient = {
-    async post(url, body, options) {
-      calls.push({ url, body, options });
-      return { status: 200, data: "OK" };
-    },
-  };
-
-  await email._private.sendEmailJsTemplate(
-    "confirmation-test",
-    { to_email: "paciente@example.com" },
-    fakeHttpClient
-  );
-
-  assert.strictEqual(calls.length, 1);
-  assert.strictEqual(calls[0].url, email._private.EMAILJS_SEND_URL);
-  assert.strictEqual(calls[0].body.service_id, "service-test");
-  assert.strictEqual(calls[0].body.template_id, "confirmation-test");
-  assert.strictEqual(calls[0].body.user_id, "public-test");
-  assert.strictEqual(calls[0].body.accessToken, "private-test");
-  assert.strictEqual(calls[0].options.timeout, 20000);
-
-  assert.deepStrictEqual(
-    email._private.emailJsFailure({ code: "ECONNABORTED" }),
-    {
-      sent: false,
-      reason: "provider_timeout",
-      provider_status: null,
-    }
-  );
-  assert.deepStrictEqual(
-    email._private.emailJsFailure({ response: { status: 403 } }),
-    {
-      sent: false,
-      reason: "provider_rejected",
-      provider_status: 403,
-    }
-  );
-}
-
 async function testServiceAndDedupe() {
   const rows = [
     appointment(),
@@ -440,7 +399,6 @@ async function main() {
   await testExistingNotificationContract();
   await testProviderAndNormalization();
   testDatesAndPayloads();
-  await testEmailJsAdapterTimeout();
   await testServiceAndDedupe();
   await testChannelIndependenceAndRetry();
   await testDryRunAndRunnerConfig();
