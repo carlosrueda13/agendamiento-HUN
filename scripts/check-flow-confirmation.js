@@ -4,11 +4,13 @@ process.env.FLOW_MAX_SLOTS = "5";
 const hun = require("../lib/hun");
 const db = require("../lib/db");
 const wa = require("../lib/whatsapp");
+const email = require("../lib/email");
 
 const savedSessions = [];
 const savedEvents = [];
 const sentMessages = [];
 const sentCompletionActions = [];
+const sentEmails = [];
 const assignedPayloads = [];
 const recipientStateUpdates = [];
 let agendaMode = "available";
@@ -79,6 +81,10 @@ wa.sendText = async (to, message) => {
 wa.sendInteractiveButtons = async (payload) => {
   sentCompletionActions.push(payload);
   return true;
+};
+email.enviarConfirmacion = async (payload) => {
+  sentEmails.push(payload);
+  return { sent: true, reason: null };
 };
 
 db.guardarSesionTemporal = async (session) => {
@@ -186,7 +192,8 @@ async function assertConfirmRequeriesAndAssignsFreshSlot() {
     () =>
       assignedPayloads.length === 1 &&
       sentMessages.length === 1 &&
-      sentCompletionActions.length === 1,
+      sentCompletionActions.length === 1 &&
+      sentEmails.length === 1,
     "Asignacion asincrona no termino."
   );
 
@@ -201,6 +208,10 @@ async function assertConfirmRequeriesAndAssignsFreshSlot() {
   assert(
     sentCompletionActions[0].buttons.length === 2,
     "Agendamiento terminado debe ofrecer volver al menu o finalizar."
+  );
+  assert(
+    sentEmails[0].to_email === "paciente@example.com",
+    "La confirmacion por correo debe usar la direccion recibida desde el Flow."
   );
   assertNoSensitiveEventPayloads();
 }
