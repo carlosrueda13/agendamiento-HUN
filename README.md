@@ -64,7 +64,9 @@ Reglas vigentes:
 | Metodo | Ruta | Uso |
 | --- | --- | --- |
 | GET | `/` | Health check. Responde `Backend WhatsApp Flow activo`. |
-| GET | `/test-hun` | Smoke test de conectividad con especialidades HUN. |
+| GET | `/health/live` | Confirma que el proceso HTTP esta activo. |
+| GET | `/health/ready` | Confirma que la configuracion minima obligatoria esta disponible. |
+| GET | `/test-hun` | Smoke test HUN, disponible solo con `ENABLE_DIAGNOSTIC_ENDPOINTS=true`. |
 | GET | `/webhook` | Verificacion de webhook de Meta con `hub.challenge`. |
 | POST | `/webhook` | Recibe mensajes entrantes, muestra menu inicial, solicita consentimiento y enruta a Flow o consulta HUN. |
 | POST | `/flow-endpoint` | Endpoint cifrado de WhatsApp Flow `data_exchange`. |
@@ -153,7 +155,9 @@ Estas variables son opcionales hasta que el proveedor de correo quede aprobado y
 
 ### Servidor local
 
-- `PORT` es opcional para local. No configurarlo manualmente en Render; Render lo inyecta automaticamente.
+- `PORT` es opcional para local. Render lo inyecta automaticamente y Docker usa `3000`.
+- `ENABLE_DIAGNOSTIC_ENDPOINTS` debe permanecer en `false` salvo durante una validacion controlada.
+- `REQUEST_BODY_LIMIT` limita el JSON recibido; el valor recomendado es `256kb`.
 
 ## Ejecutar localmente
 
@@ -187,8 +191,29 @@ curl http://localhost:3000/
 Conectividad HUN:
 
 ```bash
+ENABLE_DIAGNOSTIC_ENDPOINTS=true npm start
 curl http://localhost:3000/test-hun
 ```
+
+## Despliegue Docker en AWS
+
+El despliegue de staging usa `Dockerfile` y `compose.yml`. El backend se publica
+solo en `127.0.0.1:3000`; un proxy HTTPS instalado en el host sera el unico
+componente expuesto en los puertos `80/443`.
+
+Los secretos viven exclusivamente en `/etc/agendamiento-hun/backend.env`, fuera
+del repositorio y del contexto de construccion Docker. El archivo debe pertenecer
+a `root:root` y tener permisos `0600`.
+
+```bash
+sudo APP_ENV_FILE=.env.example docker compose config --quiet
+sudo docker compose build backend
+sudo systemctl enable --now agendamiento-hun.service
+```
+
+El job de recordatorios usa un contenedor de ejecucion unica mediante
+`agendamiento-hun-reminders.timer`. El timer debe permanecer deshabilitado hasta
+completar una prueba real controlada. Consultar `deploy/AWS_STAGING.md`.
 
 Contrato HTTP del API administrativo de campanas, con servidor y dependencias
 simulados localmente:

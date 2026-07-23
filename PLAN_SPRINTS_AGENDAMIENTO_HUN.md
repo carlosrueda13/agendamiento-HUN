@@ -662,7 +662,7 @@ Mantener las confirmaciones inmediatas existentes e implementar recordatorios ca
 4. Enviar por WhatsApp fecha, hora, especialidad y nombre. Enviar por correo nombre, especialidad, medico, procedimiento, fecha, hora, numero de cita y anio; validar contactos y mantener cada canal independiente. Todos estos datos viven solo en memoria.
 5. Calcular una clave HMAC no reversible por cita y usarla para deduplicacion y trazabilidad minima, sin persistir datos de cita o contacto.
 6. Aplicar concurrencia limitada y reintentos solo para timeout, desconexion, HTTP 429 y errores 5xx.
-7. Crear `npm run reminders:send`, con opciones `--dry-run` y `--date YYYY-MM-DD`, y configurar un Render Cron Job diario.
+7. Crear `npm run reminders:send`, con opciones `--dry-run` y `--date YYYY-MM-DD`, y configurar un scheduler diario de la plataforma. En AWS staging se usa `agendamiento-hun-reminders.timer`.
 8. Agregar pruebas de consulta, zona horaria, filtros, payloads, deduplicacion, reintentos, minimizacion y ejecucion controlada.
 
 ### Criterios de aceptacion

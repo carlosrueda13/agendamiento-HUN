@@ -256,6 +256,16 @@ o que surgen durante el desarrollo.
 
 ---
 
+## [2026-07-22] Preparar AWS staging con Docker y scheduler del host
+
+**Ticket relacionado:** NOTIF-001, DEPLOY-001
+**Decision:** El backend se empaqueta como imagen Docker no privilegiada y se ejecuta en AWS Ubuntu mediante Compose. El puerto Node se enlaza solo a `127.0.0.1:3000`; HTTPS terminara en un proxy del host. Los recordatorios se ejecutan como contenedor de una sola corrida desde un timer `systemd`, no con `setInterval` dentro del proceso web.
+**Motivo:** AWS permite reproducir el modelo operativo esperado del servidor hospitalario, controlar proceso, firewall, logs y scheduler, y trasladar despues el mismo contenedor a infraestructura Ubuntu compatible.
+**Alternativas descartadas:** Ejecutar Node directamente en el host; descartado porque aumenta diferencias entre AWS y el servidor final. Publicar el puerto 3000; descartado porque el backend debe quedar detras de HTTPS. Mantener Render Cron como scheduler definitivo; reemplazado por el timer del host durante la migracion.
+**Impacto:** Agrega `Dockerfile`, `compose.yml`, health checks, cierre controlado, rotacion de logs y unidades `systemd`. Los secretos quedan en `/etc/agendamiento-hun/backend.env`, fuera del repositorio y de las capas Docker. DEPLOY-001 permanece pendiente hasta completar sus dependencias y pruebas externas.
+
+---
+
 <!-- Las entradas se agregan aqui durante el desarrollo con este formato:
 
 ## [YYYY-MM-DD] Titulo breve de la decision

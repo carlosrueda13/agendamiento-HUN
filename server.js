@@ -12,7 +12,8 @@ const hun = require("./lib/hun");
 const whatsapp = require("./lib/whatsapp");
 
 const app = express();
-app.use(express.json());
+app.disable("x-powered-by");
+app.use(express.json({ limit: process.env.REQUEST_BODY_LIMIT || "256kb" }));
 
 // Variables de entorno.
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
@@ -24,6 +25,18 @@ const RESCHEDULE_FLOW_ID = process.env.RESCHEDULE_FLOW_ID;
 const RESCHEDULE_FLOW_SCREEN_ID =
   process.env.RESCHEDULE_FLOW_SCREEN_ID || "IDENTIFICACION_REAGENDAMIENTO";
 const GRAPH_API_VERSION = process.env.GRAPH_API_VERSION || "v23.0";
+const REQUIRED_RUNTIME_CONFIG = [
+  "VERIFY_TOKEN",
+  "WHATSAPP_TOKEN",
+  "PHONE_NUMBER_ID",
+  "FLOW_ID",
+  "FLOW_PRIVATE_KEY_B64",
+  "FLOW_SESSION_PII_KEY_B64",
+  "HUN_API_BASE",
+  "HUN_API_KEY",
+  "SUPABASE_URL",
+  "SUPABASE_SERVICE_ROLE_KEY",
+];
 
 function redactFlowData(data = {}) {
   const sensitive = new Set([
@@ -50,33 +63,40 @@ app.get("/", (req, res) => {
   res.send("Backend WhatsApp Flow activo");
 });
 
-// Diagnostico: Render alcanza la API del HUN?
-// Abrir en el navegador: https://agendamiento-hun.onrender.com/test-hun
+app.get("/health/live", (req, res) => {
+  res.status(200).json({ status: "ok" });
+});
+
+app.get("/health/ready", (req, res) => {
+  const missing = REQUIRED_RUNTIME_CONFIG.filter(
+    (key) => !String(process.env[key] || "").trim()
+  );
+  return res.status(missing.length ? 503 : 200).json({
+    status: missing.length ? "not_ready" : "ready",
+  });
+});
+
+// Diagnostico temporal de conectividad HUN. Debe permanecer deshabilitado
+// salvo durante una ventana controlada de despliegue.
 app.get("/test-hun", async (req, res) => {
+  if (String(process.env.ENABLE_DIAGNOSTIC_ENDPOINTS || "").toLowerCase() !== "true") {
+    return res.sendStatus(404);
+  }
+
   const inicio = Date.now();
   try {
-    const r = await axios.get(
-      "http://190.109.10.204/webServiceEspecialidad/especialidades",
-      {
-        headers: { "x-api-key": "HospitalUniversitarioNacionaldeColombia" },
-        timeout: 15000,
-      }
-    );
-    const total = r.data?.data?.length ?? 0;
+    const especialidades = await hun.getEspecialidades();
     res.status(200).json({
       alcanzable: true,
-      mensaje: "Render SI alcanza la API del HUN",
-      status_hun: r.status,
-      especialidades_recibidas: total,
-      ejemplo: r.data?.data?.slice(0, 2) ?? null,
+      mensaje: "El backend alcanza la API HUN",
+      especialidades_recibidas: especialidades.length,
       tiempo_ms: Date.now() - inicio,
     });
   } catch (error) {
-    res.status(200).json({
+    res.status(503).json({
       alcanzable: false,
-      mensaje: "Render NO alcanza la API del HUN",
-      error: error.message,
-      codigo: error.code ?? null,
+      mensaje: "El backend no alcanza la API HUN",
+      categoria: error.category || "hun_api_error",
       tiempo_ms: Date.now() - inicio,
     });
   }
@@ -263,9 +283,34 @@ async function sendRescheduleFlowMessage(to, flowToken) {
 // 5. API administrativa de campanas para el panel del hospital.
 app.use("/api/campanas", createCampaignAdminRouter());
 
-// Render asigna process.env.PORT automaticamente.
+// Render inyecta PORT; Docker y ejecucion local usan 3000 por defecto.
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Servidor activo en puerto ${PORT}`);
 });
+
+let shuttingDown = false;
+function shutdown(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log(`Cierre controlado iniciado por ${signal}.`);
+
+  const forceExit = setTimeout(() => {
+    console.error("Cierre controlado excedio el tiempo limite.");
+    process.exit(1);
+  }, 15000);
+  forceExit.unref();
+
+  server.close((error) => {
+    clearTimeout(forceExit);
+    if (error) {
+      console.error("Error cerrando servidor HTTP:", error.message);
+      process.exit(1);
+    }
+    process.exit(0);
+  });
+}
+
+process.once("SIGTERM", () => shutdown("SIGTERM"));
+process.once("SIGINT", () => shutdown("SIGINT"));

@@ -18,8 +18,6 @@ const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
 
-const DEFAULT_BASE_URL = "http://190.109.10.204";
-const DEFAULT_API_KEY = "HospitalUniversitarioNacionaldeColombia";
 const DEFAULT_OUTPUT = "resultados-api-hun.resumen.json";
 
 function parseArgs(argv) {
@@ -46,8 +44,8 @@ Uso:
   node explorar-api-hun.js [opciones]
 
 Opciones de lectura:
-  --base-url URL            Default: HUN_API_BASE o ${DEFAULT_BASE_URL}
-  --api-key KEY             Default: HUN_API_KEY o valor de pruebas documentado
+  --base-url URL            Obligatorio: argumento o HUN_API_BASE
+  --api-key KEY             Obligatorio: argumento o HUN_API_KEY
   --fecha-inicial YYYY-MM-DD
   --fecha-final YYYY-MM-DD
   --dias N                  Default: 60, usado si no se pasa --fecha-final
@@ -88,8 +86,8 @@ function configFromArgs(args) {
   const fechaFinal = args["fecha-final"] || isoDate(addDays(today, dias));
 
   return {
-    baseUrl: args["base-url"] || process.env.HUN_API_BASE || DEFAULT_BASE_URL,
-    apiKey: args["api-key"] || process.env.HUN_API_KEY || DEFAULT_API_KEY,
+    baseUrl: args["base-url"] || process.env.HUN_API_BASE,
+    apiKey: args["api-key"] || process.env.HUN_API_KEY,
     fechaInicial,
     fechaFinal,
     especialidad: String(args.especialidad || "21"),
@@ -395,6 +393,14 @@ async function main() {
   }
 
   const config = configFromArgs(args);
+  const missing = [
+    !config.baseUrl && "HUN_API_BASE/--base-url",
+    !config.apiKey && "HUN_API_KEY/--api-key",
+  ].filter(Boolean);
+  if (missing.length) {
+    throw new Error(`Configuracion obligatoria faltante: ${missing.join(", ")}`);
+  }
+
   const client = axios.create({
     baseURL: config.baseUrl,
     headers: { "x-api-key": config.apiKey },

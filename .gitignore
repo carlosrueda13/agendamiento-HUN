@@ -10,6 +10,8 @@ resultados-api-hun*.txt
 ACTUALIZACION_PRESENTACION_PROYECTO_HUN.md
 INSTRUCTIVO_PANEL_CAMPANAS.md
 agendamiento-HUN.env
+backend.env
+*.env.local
 *.pem
 graphify-out/
 .tmp-hun-orquestador/

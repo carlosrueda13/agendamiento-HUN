@@ -1,0 +1,13 @@
+[Unit]
+Description=Send HUN appointment reminders
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/agendamiento-hun
+Environment=APP_ENV_FILE=/etc/agendamiento-hun/backend.env
+Environment=APP_IMAGE_TAG=aws-staging
+ExecStart=/usr/bin/docker compose --profile jobs run --rm reminders
+TimeoutStartSec=30min

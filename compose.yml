@@ -1,0 +1,47 @@
+name: agendamiento-hun
+
+x-runtime-security: &runtime-security
+  init: true
+  read_only: true
+  tmpfs:
+    - /tmp:rw,noexec,nosuid,size=64m
+  cap_drop:
+    - ALL
+  security_opt:
+    - no-new-privileges:true
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: "5"
+
+services:
+  backend:
+    <<: *runtime-security
+    build:
+      context: .
+      target: runtime
+    image: agendamiento-hun:${APP_IMAGE_TAG:-local}
+    restart: unless-stopped
+    stop_grace_period: 20s
+    env_file:
+      - ${APP_ENV_FILE:-/etc/agendamiento-hun/backend.env}
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+    ports:
+      - "127.0.0.1:3000:3000"
+
+  reminders:
+    <<: *runtime-security
+    profiles:
+      - jobs
+    image: agendamiento-hun:${APP_IMAGE_TAG:-local}
+    env_file:
+      - ${APP_ENV_FILE:-/etc/agendamiento-hun/backend.env}
+    environment:
+      NODE_ENV: production
+    command:
+      - node
+      - scripts/send-appointment-reminders.js
+    restart: "no"

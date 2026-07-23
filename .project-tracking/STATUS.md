@@ -700,7 +700,7 @@ Avance global: 38 / 47 tickets completados (80.9%)
 - [x] Filtrar unicamente citas `Reservada` correspondientes al dia siguiente en `America/Bogota`.
 - [x] Implementar envio independiente por WhatsApp y correo, con validacion de contactos, concurrencia limitada y reintentos.
 - [x] Implementar deduplicacion no reversible y trazabilidad minima en `notificaciones`.
-- [ ] Crear el comando de ejecucion unica y configurar el Render Cron Job.
+- [ ] Configurar el comando de ejecucion unica en el scheduler de AWS (`agendamiento-hun-reminders.timer`).
 - [x] Agregar pruebas, documentacion, variables de entorno y evidencia de una ejecucion controlada.
 
 **Criterios de aceptacion:**
@@ -714,10 +714,10 @@ Avance global: 38 / 47 tickets completados (80.9%)
 - [x] Supabase no guarda numero de cita, fecha, hora, especialidad, telefono, correo, documento, medico, procedimiento ni payload HUN.
 - [x] Los logs no contienen informacion personal ni respuestas completas.
 - [x] El comando falla de forma explicita si HUN o la configuracion obligatoria no estan disponibles.
-- [ ] Existe evidencia de ejecucion manual controlada y del Cron Job configurado.
+- [ ] Existe evidencia de ejecucion manual controlada y del timer de AWS configurado.
 
 **Evidencia parcial:** `lib/hun.js`; `lib/reminders.js`; `lib/whatsapp.js`; `lib/email.js`; `lib/db.js`; `scripts/send-appointment-reminders.js`; `scripts/check-notifications.js`; `scripts/check-hun-client.js`; `supabase/009_notification_reminder_dedupe.sql`; `NOTIFICACIONES_HUN.md`; `npm.cmd test` y `git diff --check` exitosos. Prueba seca real del 2026-07-22 para `2026-07-23`: 762 citas consultadas/elegibles, 730 con WhatsApp valido y 722 con correo valido, sin envios ni escrituras. El check de reagendamiento tambien quedo estabilizado al usar el reloj inyectado para validar slots, evitando que sus fechas fijas dependan del reloj real.
-**Notas:** Reabierto el 2026-07-22 porque HUN habilito `GET /webServiceFechaMedico/consultar` con `fecha_inicial` y `fecha_final`, eliminando el bloqueo del proveedor por ventana. El usuario confirmo las plantillas externas: WhatsApp usa fecha, hora, especialidad y nombre; EmailJS usa correo, nombre, especialidad, medico, procedimiento, fecha, hora, numero de cita y anio. `consultorio` fue retirado porque el endpoint no lo entrega. Los datos solo se usan en memoria y no se persisten. El usuario confirmo la migracion 009 y las variables de Render con `REMINDER_SEND_ENABLED=false`. Quedan pendientes una prueba real con 1-3 citas controladas y la creacion del Cron Job. El endpoint HUN actual usa HTTP y transporta datos personales; su uso productivo exige HTTPS, red privada/VPN o aceptacion formal del riesgo. Las confirmaciones inmediatas ya aprobadas permanecen vigentes.
+**Notas:** Reabierto el 2026-07-22 porque HUN habilito `GET /webServiceFechaMedico/consultar` con `fecha_inicial` y `fecha_final`, eliminando el bloqueo del proveedor por ventana. El usuario confirmo las plantillas externas: WhatsApp usa fecha, hora, especialidad y nombre; EmailJS usa correo, nombre, especialidad, medico, procedimiento, fecha, hora, numero de cita y anio. `consultorio` fue retirado porque el endpoint no lo entrega. Los datos solo se usan en memoria y no se persisten. El usuario confirmo la migracion 009 y las variables de Render con `REMINDER_SEND_ENABLED=false`. El despliegue se esta trasladando a AWS; el scheduler objetivo es un timer `systemd` que ejecuta un contenedor de una sola corrida. Quedan pendientes una prueba real con 1-3 citas controladas y habilitar el timer despues de esa evidencia. El endpoint HUN actual usa HTTP y transporta datos personales; su uso productivo exige HTTPS, red privada/VPN o aceptacion formal del riesgo. Las confirmaciones inmediatas ya aprobadas permanecen vigentes.
 
 ---
 
@@ -940,7 +940,7 @@ Avance global: 38 / 47 tickets completados (80.9%)
 - [ ] No se exponen documento plano, numero de cita, EPS, medico, fecha/hora exacta, CUPS ni respuesta HUN completa.
 
 **Evidencia:**
-**Notas:**
+**Notas:** Preparacion anticipada solicitada por el usuario el 2026-07-22: instancia AWS Ubuntu 24.04 `t3.medium`, volumen EBS cifrado, UFW, Docker Engine y Compose instalados; repositorio clonado. Los artefactos `Dockerfile`, `compose.yml`, health checks y unidades `systemd` se preparan en la rama `infra/aws-deployment`. El ticket conserva estado `pending` y no se considera cerrado hasta completar QA-002, SEC-001, URL HTTPS, Meta y evidencia de estabilidad.
 
 ---
 

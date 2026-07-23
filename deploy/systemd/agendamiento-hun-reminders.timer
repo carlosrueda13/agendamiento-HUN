@@ -1,0 +1,12 @@
+[Unit]
+Description=Run HUN appointment reminders daily
+
+[Timer]
+OnCalendar=*-*-* 08:00:00
+Persistent=true
+RandomizedDelaySec=5min
+AccuracySec=1min
+Unit=agendamiento-hun-reminders.service
+
+[Install]
+WantedBy=timers.target

@@ -16,7 +16,7 @@ Base URL de pruebas: `http://190.109.10.204`
 Header obligatorio:
 
 ```http
-x-api-key: HospitalUniversitarioNacionaldeColombia
+x-api-key: <HUN_API_KEY>
 ```
 
 Endpoints confirmados por documentacion y prueba viva:

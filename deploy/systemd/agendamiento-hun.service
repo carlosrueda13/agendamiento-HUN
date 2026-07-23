@@ -1,0 +1,19 @@
+[Unit]
+Description=Agendamiento HUN backend containers
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/agendamiento-hun
+Environment=APP_ENV_FILE=/etc/agendamiento-hun/backend.env
+Environment=APP_IMAGE_TAG=aws-staging
+ExecStart=/usr/bin/docker compose up -d --remove-orphans backend
+ExecStop=/usr/bin/docker compose stop backend
+TimeoutStartSec=10min
+TimeoutStopSec=1min
+
+[Install]
+WantedBy=multi-user.target
